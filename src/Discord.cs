@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Web.Script.Serialization;
 
-namespace Vilife
+namespace Villife
 {
     sealed class DiscordPresenceState
     {
@@ -41,7 +41,7 @@ namespace Vilife
     sealed class DiscordRpcClient : IDisposable
     {
         const string ApplicationId = "1568764693965971518";
-        const string MessagePrefix = "vilife-discord:";
+        const string MessagePrefix = "villife-discord:";
         const int MaximumPayloadLength = 1024 * 1024;
         static readonly long UnixEpochTicks = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks;
         readonly object stateLock = new object();
@@ -61,7 +61,7 @@ namespace Vilife
             this.pipeNamePrefix = pipeNamePrefix;
             worker = new Thread(Run);
             worker.IsBackground = true;
-            worker.Name = "Vilife Discord RPC";
+            worker.Name = "Villife Discord RPC";
             worker.Start();
         }
 
@@ -206,7 +206,7 @@ namespace Vilife
                         NamedPipeClientStream connectedPipe = pipe;
                         reader = new Thread(() => ReadResponses(connectedPipe, connectionLost));
                         reader.IsBackground = true;
-                        reader.Name = "Vilife Discord RPC reader";
+                        reader.Name = "Villife Discord RPC reader";
                         reader.Start();
                         lastSignature = null;
                         activitySent = false;

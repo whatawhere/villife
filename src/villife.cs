@@ -15,7 +15,7 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.WinForms;
 
-namespace Vilife
+namespace Villife
 {
     static class Program
     {
@@ -203,9 +203,9 @@ namespace Vilife
                             mime = "application/javascript; charset=utf-8";
                         }
                     }
-                    else if (path == "/vilife.ico")
+                    else if (path == "/villife.ico")
                     {
-                        var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "vilife.ico");
+                        var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "villife.ico");
                         if (!File.Exists(iconPath))
                         {
                             status = 404;
@@ -379,7 +379,7 @@ namespace Vilife
                             body = JsonError("a track title and artist are required");
                             mime = "application/json; charset=utf-8";
                         }
-                        else if (String.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("VILIFE_YOUTUBE_API_KEY")))
+                        else if (String.IsNullOrWhiteSpace(GetYouTubeApiKey()))
                         {
                             status = 503;
                             body = JsonError("YouTube Data API key is not configured.");
@@ -632,7 +632,7 @@ namespace Vilife
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Method = "GET";
-            request.UserAgent = "Vilife/1.0";
+            request.UserAgent = "Villife/1.0";
             request.Accept = "application/json";
             request.Timeout = 12000;
             request.ReadWriteTimeout = 12000;
@@ -1524,7 +1524,7 @@ namespace Vilife
 
         static string SearchYouTubeVideos(string term)
         {
-            var apiKey = Environment.GetEnvironmentVariable("VILIFE_YOUTUBE_API_KEY");
+            var apiKey = GetYouTubeApiKey();
             if (String.IsNullOrWhiteSpace(apiKey))
                 throw new InvalidOperationException("YouTube Data API key is not configured.");
 
@@ -1532,7 +1532,7 @@ namespace Vilife
                 "&safeSearch=moderate&maxResults=10&q=" + Uri.EscapeDataString(term);
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Method = "GET";
-            request.UserAgent = "Vilife/1.0";
+            request.UserAgent = "Villife/1.0";
             request.Accept = "application/json";
             request.Headers["X-Goog-Api-Key"] = apiKey;
             request.Timeout = 15000;
@@ -1587,6 +1587,14 @@ namespace Vilife
             return serializer.Serialize(output);
         }
 
+        static string GetYouTubeApiKey()
+        {
+            var apiKey = Environment.GetEnvironmentVariable("VILLIFE_YOUTUBE_API_KEY");
+            return String.IsNullOrWhiteSpace(apiKey)
+                ? Environment.GetEnvironmentVariable("VILIFE_YOUTUBE_API_KEY")
+                : apiKey;
+        }
+
         static string Escape(string s)
         {
             if (s == null) return "";
@@ -1633,7 +1641,7 @@ namespace Vilife
         {
             discordRpc = new DiscordRpcClient();
             storagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Velo.exe.WebView2");
-            Text = "Vilife";
+            Text = "Villife";
             Size = new Size(1423, 768);
             MinimumSize = new Size(960, 600);
             FormBorderStyle = FormBorderStyle.None;
@@ -1642,7 +1650,7 @@ namespace Vilife
 
             try
             {
-                var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "vilife.ico");
+                var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "villife.ico");
                 if (File.Exists(iconPath)) Icon = new Icon(iconPath);
             }
             catch
@@ -1676,7 +1684,7 @@ namespace Vilife
                         discordRpc.Update(message);
                         return;
                     }
-                    const string youtubePrefix = "vilife-youtube:";
+                    const string youtubePrefix = "villife-youtube:";
                     if (message != null && message.StartsWith(youtubePrefix, StringComparison.Ordinal))
                     {
                         var videoId = message.Substring(youtubePrefix.Length);
@@ -1684,7 +1692,7 @@ namespace Vilife
                             OpenYouTubeVideo(videoId);
                         return;
                     }
-                    const string windowPrefix = "vilife-window:";
+                    const string windowPrefix = "villife-window:";
                     if (message != null && message.StartsWith(windowPrefix, StringComparison.Ordinal))
                     {
                         var command = message.Substring(windowPrefix.Length);
@@ -1713,7 +1721,7 @@ namespace Vilife
                                 return;
                         }
                     }
-                    const string trayPrefix = "vilife-tray:";
+                    const string trayPrefix = "villife-tray:";
                     if (message != null && message.StartsWith(trayPrefix, StringComparison.Ordinal))
                     {
                         try
@@ -1728,16 +1736,16 @@ namespace Vilife
                         }
                         return;
                     }
-                    const string exportPrefix = "vilife-export:";
+                    const string exportPrefix = "villife-export:";
                     if (message == null || !message.StartsWith(exportPrefix, StringComparison.Ordinal)) return;
 
                     using (var dialog = new SaveFileDialog())
                     {
-                        dialog.Title = "Экспорт библиотеки Vilife";
+                        dialog.Title = "Экспорт библиотеки Villife";
                         dialog.Filter = "JSON-файл (*.json)|*.json";
                         dialog.DefaultExt = "json";
                         dialog.AddExtension = true;
-                        dialog.FileName = "vilife-library-" + DateTime.Now.ToString("yyyy-MM-dd") + ".json";
+                        dialog.FileName = "villife-library-" + DateTime.Now.ToString("yyyy-MM-dd") + ".json";
                         if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
                         try
@@ -1746,8 +1754,8 @@ namespace Vilife
                         }
                         catch (Exception error)
                         {
-                            Trace.TraceError("Could not export the Vilife library: " + error);
-                            MessageBox.Show(this, "Не удалось сохранить файл библиотеки.\n\n" + error.Message, "Vilife", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Trace.TraceError("Could not export the Villife library: " + error);
+                            MessageBox.Show(this, "Не удалось сохранить файл библиотеки.\n\n" + error.Message, "Villife", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                 };
@@ -1772,7 +1780,7 @@ namespace Vilife
                 BackColor = Color.FromArgb(25, 26, 29),
                 Size = new Size(328, 124),
                 Opacity = 0,
-                AccessibleName = "Vilife playback controls"
+                AccessibleName = "Villife playback controls"
             };
             trayPopup.Paint += delegate(object sender, PaintEventArgs e)
             {
@@ -1797,7 +1805,7 @@ namespace Vilife
                 Size = new Size(190, 22),
                 ForeColor = Color.FromArgb(239, 239, 241),
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
-                Text = "Vilife"
+                Text = "Villife"
             };
             trayArtist = new Label
             {
@@ -1835,7 +1843,7 @@ namespace Vilife
 
             trayIcon = new NotifyIcon
             {
-                Text = "Vilife",
+                Text = "Villife",
                 Icon = CreateTrayIcon(),
                 Visible = true
             };
@@ -1937,7 +1945,7 @@ namespace Vilife
         void UpdateTrayTrack(Dictionary<string, object> payload)
         {
             if (payload == null) return;
-            trayTitle.Text = TrayValue(payload, "title", "Vilife");
+            trayTitle.Text = TrayValue(payload, "title", "Villife");
             trayArtist.Text = TrayValue(payload, "artist", "");
             var playingValue = payload.ContainsKey("playing") && payload["playing"] is bool && (bool)payload["playing"];
             trayPlayPauseButton.Image = GetTrayGlyph(playingValue ? "pause" : "play");
@@ -2113,7 +2121,7 @@ namespace Vilife
         void ExecutePlayerCommand(string command)
         {
             if (web == null || web.CoreWebView2 == null) return;
-            web.CoreWebView2.ExecuteScriptAsync("window.vilifeNative && window.vilifeNative." + command + "()");
+            web.CoreWebView2.ExecuteScriptAsync("window.villifeNative && window.villifeNative." + command + "()");
         }
 
         void OpenStorageLocation()
@@ -2125,8 +2133,8 @@ namespace Vilife
             }
             catch (Exception error)
             {
-                Trace.TraceError("Could not open the Vilife storage location: " + error);
-                MessageBox.Show(this, "Не удалось открыть папку данных Vilife.\n\n" + error.Message, "Vilife", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Trace.TraceError("Could not open the Villife storage location: " + error);
+                MessageBox.Show(this, "Не удалось открыть папку данных Villife.\n\n" + error.Message, "Villife", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -2142,7 +2150,7 @@ namespace Vilife
             }
             catch (Exception error)
             {
-                Trace.TraceError("Could not open the Vilife website: " + error);
+                Trace.TraceError("Could not open the Villife website: " + error);
             }
         }
 

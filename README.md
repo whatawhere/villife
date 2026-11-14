@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="vilife.ico" alt="Vilife app icon" width="88">
+  <img src="villife.ico" alt="Villife app icon" width="88">
 </p>
 
-<h1 align="center">Vilife</h1>
+<h1 align="center">Villife</h1>
 
 <p align="center">
   <strong>Find your sound. Make it yours.</strong><br>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://villife.hs.vc/"><img src="https://img.shields.io/badge/Visit%20Vilife-website-24252a?style=for-the-badge" alt="Visit the Vilife website"></a>
+  <a href="https://villife.hs.vc/"><img src="https://img.shields.io/badge/Visit%20Villife-website-24252a?style=for-the-badge" alt="Visit the Villife website"></a>
 </p>
 
 <p align="center">
@@ -31,9 +31,9 @@
 
 ---
 
-## What is Vilife?
+## What is Villife?
 
-Vilife brings music discovery and your personal collection together in a focused desktop player. Search for tracks, albums, and playlists, save the ones you want to keep, and move between your queue, listening history, and recommendations.
+Villife brings music discovery and your personal collection together in a focused desktop player. Search for tracks, albums, and playlists, save the ones you want to keep, and move between your queue, listening history, and recommendations.
 
 The app is built as a lightweight Windows host with a web-based interface. Your library and preferences are stored locally in the WebView2 profile.
 
@@ -45,7 +45,7 @@ The app is built as a lightweight Windows host with a web-based interface. Your 
 - Keep listening with a queue, playback history, shuffle, and repeat.
 - Add tracks from playlists to Favorites without leaving the playlist.
 
-> **Spotify playback:** Spotify provides public track metadata, not a full playable stream. Vilife resolves imported tracks against available audio sources, so a match may not always be available.
+> **Spotify playback:** Spotify provides public track metadata, not a full playable stream. Villife resolves imported tracks against available audio sources, so a match may not always be available.
 
 ## Make it yours
 
@@ -60,7 +60,7 @@ Optional YouTube music-video backgrounds are also available. Video search needs 
 
 ## Windows integration
 
-Vilife is designed to feel at home on Windows:
+Villife is designed to feel at home on Windows:
 
 - **Media Session** exposes track information and playback controls to Windows.
 - **System tray** provides Previous, Play/Pause, Next, and Quit controls.
@@ -69,9 +69,9 @@ Vilife is designed to feel at home on Windows:
 
 ## Install
 
-Visit the [Vilife website](https://villife.hs.vc/) for project information and available downloads.
+Visit the [Villife website](https://villife.hs.vc/) for project information and available downloads.
 
-When using a packaged build, extract the complete folder and launch `Vilife.exe`. Keep the `src` and `webview2` folders and the WebView2 support files alongside it. Microsoft Edge WebView2 Runtime is required.
+When using a packaged build, extract the complete folder and launch `Villife.exe`. Keep the `src` and `webview2` folders and the WebView2 support files alongside it. Microsoft Edge WebView2 Runtime is required.
 
 ## Build from source
 
@@ -86,36 +86,39 @@ When using a packaged build, extract the complete folder and launch `Vilife.exe`
 Build from the project directory:
 
 ```powershell
-msbuild .\src\Vilife.csproj /t:Build /p:Configuration=Release
+msbuild .\src\Villife.csproj /t:Build /p:Configuration=Release
 ```
 
-The project writes `Vilife.exe` to the root folder. The app expects the `src` and `webview2` folders and `vilife.ico` to remain available beside the executable.
+The project writes `Villife.exe` to the root folder. The app expects the `src` and `webview2` folders and `villife.ico` to remain available beside the executable.
 
 ### Project layout
 
 ```text
 .
 ├── src/
-│   ├── Vilife.csproj       Windows desktop project
+│   ├── Villife.csproj       Windows desktop project
 │   ├── villife.cs          App window, local server, and service endpoints
 │   ├── Discord.cs          Discord Rich Presence
 │   ├── index.html          Interface markup
 │   ├── css/app.css         Interface styles
 │   └── js/app.js           Player and interface behavior
+├── index.html              Villife website
+├── villife.css             Website styles
+├── villife.js              Website language and interactions
 ├── webview2/               WebView2 assemblies
-├── vilife.ico              App icon
+├── villife.ico              App icon
 └── README.md
 ```
 
 ## Privacy and services
 
-Your library, Favorites, history, and settings are kept in the local WebView2 profile. Vilife contacts the relevant providers when you use their features: SoundCloud for music discovery and streams, Spotify for public metadata, LRCLIB for lyrics, and optionally YouTube for video search. Discord Rich Presence communicates with the local desktop Discord client.
+Your library, Favorites, history, and settings are kept in the local WebView2 profile. Villife contacts the relevant providers when you use their features: SoundCloud for music discovery and streams, Spotify for public metadata, LRCLIB for lyrics, and optionally YouTube for video search. Discord Rich Presence communicates with the local desktop Discord client.
 
 ## FAQ
 
 <details>
   <summary>Do I need a Spotify account?</summary>
-  <p>Vilife uses public Spotify metadata for importing tracks and playlists. It does not provide full playback from Spotify itself.</p>
+  <p>Villife uses public Spotify metadata for importing tracks and playlists. It does not provide full playback from Spotify itself.</p>
 </details>
 
 <details>
@@ -125,17 +128,17 @@ Your library, Favorites, history, and settings are kept in the local WebView2 pr
 
 <details>
   <summary>Where is my library stored?</summary>
-  <p>In the local WebView2 profile used by Vilife. Use the app's library export option to make a portable JSON copy.</p>
+  <p>In the local WebView2 profile used by Villife. Use the app's library export option to make a portable JSON copy.</p>
 </details>
 
 <details>
-  <summary>Can I build Vilife without Visual Studio?</summary>
+  <summary>Can I build Villife without Visual Studio?</summary>
   <p>Yes, if MSBuild and the required .NET Framework targeting pack are installed. Run the build command above from PowerShell.</p>
 </details>
 
 ---
 
 <p align="center">
-  <strong>Vilife — find your sound.</strong><br>
+  <strong>Villife — find your sound.</strong><br>
   <a href="https://villife.hs.vc/">villife.hs.vc</a>
 </p>

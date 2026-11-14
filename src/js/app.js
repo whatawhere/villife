@@ -12,7 +12,7 @@ const homeText = {
     playlist_save_error: "Не удалось сохранить плейлист: отсутствует его идентификатор.",
     shuffle_label: "Перемешивание", repeat_off: "Повтор выключен", repeat_all: "Повтор очереди", repeat_one: "Повтор трека",
     wave_back: "Назад", wave_prev: "Предыдущий трек", wave_empty_title: "Сначала добавь музыку в библиотеку",
-    wave_empty_description: "Сохрани любимые треки — и Vilife соберёт для тебя персональную волну.",
+    wave_empty_description: "Сохрани любимые треки — и Villife соберёт для тебя персональную волну.",
     wave_empty_filtered_title: "Пока больше нечего предложить",
     wave_empty_filtered_description: "Попробуй найти новую музыку или измени список «Неинтересно».",
     wave_find_music: "Найти музыку", wave_playing: "Играет для тебя",
@@ -26,7 +26,7 @@ const homeText = {
     youtube_fullscreen: "Открыть клип на весь экран", youtube_fullscreen_exit: "Выйти из полноэкранного режима",
     youtube_playback_unavailable: "Этот ролик не воспроизводится во встроенном плеере. Открой его на YouTube или установи AV1 Video Extension в Windows.",
     youtube_open: "Открыть на YouTube",
-    youtube_key_required: "Для поиска клипов задай VILIFE_YOUTUBE_API_KEY и перезапусти Vilife.",
+    youtube_key_required: "Для поиска клипов задай VILLIFE_YOUTUBE_API_KEY и перезапусти Villife.",
     youtube_search_failed: "Не удалось подобрать клип для этого трека."
   },
   en: {
@@ -42,7 +42,7 @@ const homeText = {
     playlist_save_error: "Could not save this playlist because its ID is missing.",
     shuffle_label: "Shuffle", repeat_off: "Repeat off", repeat_all: "Repeat queue", repeat_one: "Repeat track",
     wave_back: "Back", wave_prev: "Previous track", wave_empty_title: "Add some music to your library first",
-    wave_empty_description: "Save favorite tracks and Vilife will make a personal wave for you.",
+    wave_empty_description: "Save favorite tracks and Villife will make a personal wave for you.",
     wave_empty_filtered_title: "Nothing else to recommend right now",
     wave_empty_filtered_description: "Find new music or update your “Not interested” list.",
     wave_find_music: "Find music", wave_playing: "Playing for you",
@@ -56,7 +56,7 @@ const homeText = {
     youtube_fullscreen: "Open clip fullscreen", youtube_fullscreen_exit: "Exit fullscreen",
     youtube_playback_unavailable: "This video can't play in the embedded player. Open it on YouTube or install the AV1 Video Extension on Windows.",
     youtube_open: "Open on YouTube",
-    youtube_key_required: "Set VILIFE_YOUTUBE_API_KEY and restart Vilife to search for clips.",
+    youtube_key_required: "Set VILLIFE_YOUTUBE_API_KEY and restart Villife to search for clips.",
     youtube_search_failed: "Could not find a matching video for this track."
   }
 };
@@ -193,10 +193,10 @@ const themeAccentColors = {
 };
 const settingsText = {
   ru: {
-    settings_title: "Настройки", settings_close: "Закрыть настройки",     settings_description: "Настройки Vilife", settings_interface: "Интерфейс",
+    settings_title: "Настройки", settings_close: "Закрыть настройки",     settings_description: "Настройки Villife", settings_interface: "Интерфейс",
     settings_collection: "Импорт и экспорт", settings_collection_description: "Добавляй треки из Spotify и сохраняй копию своей библиотеки.",
     settings_theme: "Тема", settings_storage: "Хранилище", settings_playback: "Воспроизведение",
-    settings_advanced: "Дополнительно", settings_about: "Об приложении", settings_language_description: "Выбери язык интерфейса Vilife.",
+    settings_advanced: "Дополнительно", settings_about: "Об приложении", settings_language_description: "Выбери язык интерфейса Villife.",
     settings_theme_description: "Выбери оформление приложения.", settings_theme_system: "Как в Windows",
     settings_theme_light: "Светлая", settings_theme_dark: "Тёмная", settings_storage_description: "Треки и настройки хранятся локально в этом приложении.",
     settings_accent_title: "Акцентный цвет", settings_accent_description: "Выбери цвет для выделения элементов интерфейса.",
@@ -205,7 +205,7 @@ const settingsText = {
     settings_saved_tracks: "Треки в библиотеке", settings_saved_playlists: "Плейлисты",
     settings_storage_used: "Занято настройками и данными", settings_import: "Импортировать из Spotify",
     settings_export: "Экспортировать библиотеку",
-    settings_open_storage: "Открыть расположение", settings_website: "Сайт Vilife",
+    settings_open_storage: "Открыть расположение", settings_website: "Сайт Villife",
     settings_clear_library: "Очистить библиотеку", settings_playback_description: "Управляй громкостью и поведением плеера.",
     settings_volume: "Громкость", settings_volume_description: "Настрой уровень звука плеера.",
     settings_crossfade: "Плавный переход между треками",
@@ -222,7 +222,7 @@ const settingsText = {
     settings_ambient_transparency: "Прозрачность заднего фона",
     settings_ambient_transparency_description: "Настрой прозрачность размытой обложки играющего трека.",
     settings_youtube_clips: "Видео-клипы на волне",
-    settings_youtube_clips_description: "Автоматически подбирать клипы и запрашивать до 4K, если ролик поддерживает. Нужен API key в VILIFE_YOUTUBE_API_KEY.",
+    settings_youtube_clips_description: "Автоматически подбирать клипы и запрашивать до 4K, если ролик поддерживает. Нужен API key в VILLIFE_YOUTUBE_API_KEY.",
     settings_about_eyebrow: "ТВОЯ МУЗЫКА — В ОДНОМ МЕСТЕ",
     settings_app_subtitle: "Музыкальный плеер для Windows",
     settings_about_description: "Музыка, которую ты находишь, и коллекция, которую собираешь сам.",
@@ -234,10 +234,10 @@ const settingsText = {
     settings_export_error: "Не удалось экспортировать библиотеку"
   },
   en: {
-    settings_title: "Settings", settings_close: "Close settings",     settings_description: "Vilife settings", settings_interface: "Interface",
+    settings_title: "Settings", settings_close: "Close settings", settings_description: "Villife settings", settings_interface: "Interface",
     settings_collection: "Import & export", settings_collection_description: "Import tracks from Spotify and keep a backup of your library.",
     settings_theme: "Theme", settings_storage: "Storage", settings_playback: "Playback",
-    settings_advanced: "Advanced", settings_about: "About", settings_language_description: "Choose the Vilife interface language.",
+    settings_advanced: "Advanced", settings_about: "About", settings_language_description: "Choose the Villife interface language.",
     settings_theme_description: "Choose the app appearance.", settings_theme_system: "System",
     settings_theme_light: "Light", settings_theme_dark: "Dark", settings_storage_description: "Tracks and settings are stored locally in this app.",
     settings_accent_title: "Accent color", settings_accent_description: "Choose a color to highlight interface elements.",
@@ -246,7 +246,7 @@ const settingsText = {
     settings_saved_tracks: "Tracks in library", settings_saved_playlists: "Playlists",
     settings_storage_used: "Space used by settings and data", settings_import: "Import from Spotify",
     settings_export: "Export library",
-    settings_open_storage: "Open storage location", settings_website: "Vilife website",
+    settings_open_storage: "Open storage location", settings_website: "Villife website",
     settings_clear_library: "Clear library", settings_playback_description: "Control volume and player behavior.",
     settings_volume: "Volume", settings_volume_description: "Set the player's playback volume.",
     settings_crossfade: "Crossfade between tracks",
@@ -263,7 +263,7 @@ const settingsText = {
     settings_ambient_transparency: "Background transparency",
     settings_ambient_transparency_description: "Adjust how transparent the blurred artwork looks while a track plays.",
     settings_youtube_clips: "YouTube video backgrounds",
-    settings_youtube_clips_description: "Automatically match clips and request up to 4K when available. Requires an API key in VILIFE_YOUTUBE_API_KEY.",
+    settings_youtube_clips_description: "Automatically match clips and request up to 4K when available. Requires an API key in VILLIFE_YOUTUBE_API_KEY.",
     settings_about_eyebrow: "YOUR MUSIC, ALL IN ONE PLACE",
     settings_app_subtitle: "Music player for Windows",
     settings_about_description: "Music you discover, and a collection you make your own.",
@@ -852,7 +852,7 @@ function exportLibrary() {
   try {
     const data = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), tracks: lib, playlists: savedPlaylists }, null, 2);
     if (!window.chrome || !window.chrome.webview) throw new Error("Native file dialog is unavailable.");
-    window.chrome.webview.postMessage("vilife-export:" + data);
+    window.chrome.webview.postMessage("villife-export:" + data);
   } catch (error) {
     console.error("Could not export the saved library.", error);
     toast(st("settings_export_error"));
@@ -1150,7 +1150,7 @@ function openYoutubeClipExternally() {
   const videoId = typeof candidate === "string" ? candidate : candidate && candidate.id;
   if (!/^[A-Za-z0-9_-]{11}$/.test(videoId || "")) return;
   if (window.chrome && window.chrome.webview) {
-    window.chrome.webview.postMessage("vilife-youtube:" + videoId);
+    window.chrome.webview.postMessage("villife-youtube:" + videoId);
     return;
   }
   window.open("https://www.youtube.com/watch?v=" + videoId, "_blank", "noopener");
@@ -2314,7 +2314,7 @@ function togglePlay() {
 
 function sendWindowCommand(command) {
   if (!window.chrome || !window.chrome.webview) return;
-  window.chrome.webview.postMessage("vilife-window:" + command);
+  window.chrome.webview.postMessage("villife-window:" + command);
 }
 
 function toggleMiniPlayer(forceOpen) {
@@ -2339,7 +2339,7 @@ function toggleMiniPlayer(forceOpen) {
   }
 }
 
-window.vilifeNative = {
+window.villifeNative = {
   previous: previousTrack,
   togglePlay: togglePlay,
   next: () => step(1)
@@ -2353,12 +2353,12 @@ function syncTrayStatus(track) {
     if (firstArtwork) artwork = firstArtwork.artwork;
   }
   const payload = {
-    title: track && track.title || "Vilife",
+    title: track && track.title || "Villife",
     artist: track && track.artist || "",
     artwork: artwork || "",
     playing: !!(track && !audio.paused)
   };
-  window.chrome.webview.postMessage("vilife-tray:" + JSON.stringify(payload));
+  window.chrome.webview.postMessage("villife-tray:" + JSON.stringify(payload));
 }
 
 function renderPlayer() {
@@ -2743,7 +2743,7 @@ function updateDiscordPresence() {
     isPlaying: !audio.paused && !audio.ended
   } : { active: false };
   try {
-    window.chrome.webview.postMessage("vilife-discord:" + JSON.stringify(message));
+    window.chrome.webview.postMessage("villife-discord:" + JSON.stringify(message));
   } catch (error) {
     console.error("Could not update Discord Rich Presence.", error);
   }

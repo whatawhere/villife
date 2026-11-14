@@ -13,3 +13,4 @@ Velo.exe.WebView2/
 .vs/
 lib/
 norm*.nlp
+.vercel/
