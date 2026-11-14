@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vilife</title>
+<link rel="icon" type="image/x-icon" href="/vilife.ico">
+<link rel="stylesheet" href="/css/app.css?v=88">
+</head>
+<body>
+
+<div id="ambient-background" aria-hidden="true">
+  <img id="ambient-image-a" alt="">
+  <img id="ambient-image-b" alt="">
+  <img id="ambient-video-poster" class="youtube-video-poster" alt="" hidden>
+  <div class="ambient-video-layer" id="ambient-video-layer" aria-hidden="true" hidden>
+    <iframe id="ambient-video-frame" title="YouTube music video background" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+  <div class="ambient-shade"></div>
+</div>
+
+<div class="youtube-fullscreen" id="youtube-fullscreen" hidden>
+  <iframe id="youtube-fullscreen-frame" title="YouTube music video" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  <div class="youtube-fallback" id="youtube-fallback" hidden>
+    <img id="youtube-fallback-thumbnail" alt="">
+    <div class="youtube-fallback-copy">
+      <strong id="youtube-fallback-title"></strong>
+      <span data-home-i18n="youtube_playback_unavailable">Этот ролик не воспроизводится во встроенном плеере.</span>
+      <button class="btn btn-default" id="youtube-fallback-open" type="button" data-home-i18n="youtube_open">Открыть на YouTube</button>
+    </div>
+  </div>
+  <button class="youtube-fullscreen-close" id="youtube-fullscreen-close" type="button" aria-label="Выйти из полноэкранного режима" title="Выйти из полноэкранного режима">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+  </button>
+</div>
+
+<button class="youtube-fullscreen-button" id="youtube-fullscreen-open" type="button" aria-label="Открыть клип на весь экран" title="На весь экран" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+</button>
+
+<div class="window-shell">
+  <div class="window-actions">
+    <button class="window-button window-minimize" id="window-minimize" type="button" aria-label="Свернуть окно">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+    </button>
+    <button class="window-button window-maximize" id="window-maximize" type="button" aria-label="Развернуть окно">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12"/></svg>
+    </button>
+    <button class="window-button window-close" id="window-close" type="button" aria-label="Закрыть окно">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="welcome">
+  <div class="welcome-bg">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+    <div class="welcome-grid"></div>
+  </div>
+  <div class="welcome-content welcome-anim">
+    <div class="welcome-mark" aria-hidden="true"></div>
+    <h1>Welcome to Vilife!</h1>
+    <p class="sub" id="welcome-sub">Выбери язык интерфейса</p>
+    <div class="lang-row">
+      <button class="lang-card" data-lang="ru">
+        <div class="name">Русский</div>
+        <div class="code">RU</div>
+      </button>
+      <button class="lang-card" data-lang="en">
+        <div class="name">English</div>
+        <div class="code">EN</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <aside class="sidebar">
+    <button class="brand brand-trigger" id="brand-wave" type="button" aria-label="Для тебя">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Vilife</span>
+    </button>
+    <nav class="nav">
+      <button class="nav-item active" data-view="search" aria-label="Поиск">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span data-i18n="nav_search">Поиск</span>
+      </button>
+      <button class="nav-item" data-view="library" aria-label="Библиотека">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>
+        <span data-i18n="nav_library">Библиотека</span>
+        <span class="badge badge-secondary nav-count" id="lib-count" style="display:none">0</span>
+      </button>
+      <button class="nav-item" data-view="favorites" aria-label="Избранное">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+        <span data-home-i18n="favorites_title">Избранное</span>
+      </button>
+      <button class="nav-item" data-view="queue" aria-label="Очередь">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m17 14 4 4-4 4"/></svg>
+        <span data-home-i18n="queue_title">Очередь</span>
+      </button>
+      <button class="nav-item" data-view="history" aria-label="История">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5m4-1v5l3 2"/></svg>
+        <span data-home-i18n="history_title">История</span>
+      </button>
+    </nav>
+    <div class="sidebar-settings">
+      <button class="nav-item" data-view="settings" aria-label="Настройки">
+        <svg class="settings-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 2.7 4 0 .7 2.6a7.7 7.7 0 0 1 1.8 1l2.5-.8 2 3.5-2 1.8a7.7 7.7 0 0 1 0 2.2l2 1.8-2 3.5-2.5-.8a7.7 7.7 0 0 1-1.8 1l-.7 2.6h-4l-.7-2.6a7.7 7.7 0 0 1-1.8-1l-2.5.8-2-3.5 2-1.8a7.7 7.7 0 0 1 0-2.2l-2-1.8 2-3.5 2.5.8a7.7 7.7 0 0 1 1.8-1z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span data-settings-i18n="settings_title">Настройки</span>
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-resize" id="sidebar-resize" role="separator" aria-label="Изменить ширину боковой панели" aria-orientation="vertical" aria-valuemin="68" aria-valuemax="360" tabindex="0"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <img class="search-art" id="search-art" alt="" hidden>
+        <input class="input" id="search-input" type="text" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="content-inner">
+        <div id="view-search">
+          <section class="search-section for-you-home" id="for-you-home" hidden>
+            <div class="section-head">
+              <h2 data-home-i18n="for_you">Для тебя</h2>
+            </div>
+            <button type="button" class="for-you-card" id="for-you-card">
+              <span class="for-you-card-art" id="for-you-card-art"></span>
+              <span class="for-you-card-copy">
+                <strong data-home-i18n="for_you">Для тебя</strong>
+                <small data-home-i18n="for_you_based">Подборка из твоей библиотеки</small>
+              </span>
+              <span class="for-you-card-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+            </button>
+          </section>
+          <div class="search-section" id="playlists-section" style="display:none">
+            <div class="section-head">
+              <h2 data-i18n="section_playlists">Альбомы и плейлисты</h2>
+              <span class="badge badge-outline" id="playlists-count"></span>
+            </div>
+            <div class="playlist-rail at-start no-overflow" id="playlist-rail">
+              <div class="grid playlist-grid" id="playlists"></div>
+              <div class="playlist-fade playlist-fade-left" aria-hidden="true"></div>
+              <div class="playlist-fade playlist-fade-right" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="search-section" id="tracks-section">
+            <div class="section-head">
+              <h2 data-i18n="section_tracks">Треки</h2>
+              <span class="badge badge-outline" id="results-count" style="display:none">0</span>
+            </div>
+            <div class="list" id="results" style="display:none"></div>
+            <div class="list" id="results-skeleton" style="display:none"></div>
+          </div>
+          <div class="empty" id="results-empty">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <h3 id="empty-title">Ничего не найдено</h3>
+            <p id="empty-sub">Начни вводить название трека или артиста</p>
+          </div>
+        </div>
+        <section id="view-wave" class="wave-view" hidden aria-label="Для тебя">
+          <button class="wave-back btn btn-ghost" id="wave-back" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M20 12H9"/></svg>
+            <span data-home-i18n="wave_back">Назад</span>
+          </button>
+          <div class="wave-stage" id="wave-stage">
+            <div class="wave-backdrop" id="wave-backdrop" aria-hidden="true">
+              <img id="wave-backdrop-image" alt="">
+              <img id="wave-video-poster" class="youtube-video-poster" alt="" hidden>
+              <div class="wave-video-layer" id="wave-video-layer" hidden>
+                <iframe id="wave-video-frame" title="YouTube music video" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              </div>
+            </div>
+            <div class="wave-content">
+              <h1 id="wave-heading" data-home-i18n="for_you">Для тебя</h1>
+              <div class="wave-track-art" id="wave-track-art"></div>
+              <div class="wave-track-meta">
+                <div class="wave-track-copy">
+                  <strong id="wave-title"></strong>
+                  <span id="wave-track-artist"></span>
+                </div>
+                <div class="wave-progress" aria-hidden="true"><span id="wave-progress-fill"></span></div>
+              </div>
+              <div class="wave-actions">
+                <button class="btn btn-ghost btn-icon wave-step" id="wave-prev" type="button" title="Предыдущий трек" aria-label="Предыдущий трек">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14l-11-7z"/></svg>
+                </button>
+                <button class="wave-play" id="wave-play" type="button" aria-label="Воспроизвести">
+                  <svg class="wave-play-icon wave-play-icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                  <svg class="wave-play-icon wave-play-icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+                </button>
+                <button class="btn btn-ghost btn-icon wave-step" id="wave-next" type="button" title="Следующий трек" aria-label="Следующий трек">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="wave-empty" id="wave-empty" hidden>
+            <h2 id="wave-empty-title" data-home-i18n="wave_empty_title">Сначала добавь музыку в библиотеку</h2>
+            <p id="wave-empty-description" data-home-i18n="wave_empty_description">Сохрани любимые треки — и Vilife соберёт для тебя персональную волну.</p>
+            <button class="btn btn-default" id="wave-find-music" type="button" data-home-i18n="wave_find_music">Найти музыку</button>
+          </div>
+        </section>
+        <div id="view-library" style="display:none">
+          <div class="section-head">
+            <h2 id="section-title">Библиотека</h2>
+            <span class="badge badge-outline" id="section-count" style="display:none">0</span>
+          </div>
+          <div class="library-playlists grid" id="library-playlists"></div>
+          <div class="list" id="library"></div>
+          <div class="empty" id="library-empty">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>
+            </div>
+            <h3 id="lib-empty-title">Библиотека пуста</h3>
+            <p id="lib-empty-sub">Импортируй треки из Spotify — их ID сохранятся в библиотеке</p>
+          </div>
+        </div>
+        <div id="view-favorites" style="display:none">
+          <div class="section-head">
+            <h2 id="favorites-title" data-home-i18n="favorites_title">Избранное</h2>
+            <span class="badge badge-outline" id="favorites-count" hidden>0</span>
+          </div>
+          <div class="list" id="favorites-list" style="display:none"></div>
+          <div class="empty" id="favorites-empty">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+            </div>
+            <h3 data-home-i18n="favorites_title">Избранное</h3>
+            <p data-home-i18n="favorites_empty">Здесь будут треки, которые ты сохранишь.</p>
+          </div>
+        </div>
+        <div id="view-queue" style="display:none">
+          <div class="section-head">
+            <h2 data-home-i18n="queue_title">Очередь</h2>
+            <span class="badge badge-outline" id="queue-count" hidden>0</span>
+          </div>
+          <div class="queue-current" id="queue-current" hidden></div>
+          <div class="list" id="queue-list"></div>
+          <div class="empty" id="queue-empty">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m17 14 4 4-4 4"/></svg>
+            </div>
+            <h3 data-home-i18n="queue_title">Очередь</h3>
+            <p data-home-i18n="queue_empty">Добавляй треки из поиска — они появятся здесь.</p>
+          </div>
+        </div>
+        <div id="view-history" style="display:none">
+          <div class="section-head">
+            <h2 data-home-i18n="history_title">История</h2>
+            <span class="badge badge-outline" id="history-count" hidden>0</span>
+          </div>
+          <div class="list" id="history-list"></div>
+          <div class="empty" id="history-empty">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5m4-1v5l3 2"/></svg>
+            </div>
+            <h3 data-home-i18n="history_title">История</h3>
+            <p data-home-i18n="history_empty">Здесь появятся недавно прослушанные треки.</p>
+          </div>
+        </div>
+        <div id="view-settings" class="settings-overlay" hidden aria-hidden="true">
+          <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title">
+            <header class="settings-dialog-head">
+              <div class="settings-heading">
+                <svg class="settings-heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 2.7 4 0 .7 2.6a7.7 7.7 0 0 1 1.8 1l2.5-.8 2 3.5-2 1.8a7.7 7.7 0 0 1 0 2.2l2 1.8-2 3.5-2.5-.8a7.7 7.7 0 0 1-1.8 1l-.7 2.6h-4l-.7-2.6a7.7 7.7 0 0 1-1.8-1l-2.5.8-2-3.5 2-1.8a7.7 7.7 0 0 1 0-2.2l-2-1.8 2-3.5 2.5.8a7.7 7.7 0 0 1 1.8-1z"/><circle cx="12" cy="12" r="3"/></svg>
+                <h1 id="settings-dialog-title" data-settings-i18n="settings_title">Настройки</h1>
+              </div>
+              <button class="btn btn-ghost btn-icon settings-close" id="settings-close" aria-label="Закрыть настройки" title="Закрыть настройки">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </header>
+          <div class="settings-layout">
+            <nav class="settings-nav" aria-label="Settings sections">
+              <button class="settings-nav-item active" data-settings-tab="interface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span data-settings-i18n="settings_interface">Интерфейс</span></button>
+              <button class="settings-nav-item" data-settings-tab="collection"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span data-settings-i18n="settings_collection">Импорт и экспорт</span></button>
+              <button class="settings-nav-item" data-settings-tab="theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span data-settings-i18n="settings_theme">Тема</span></button>
+              <button class="settings-nav-item" data-settings-tab="storage"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg><span data-settings-i18n="settings_storage">Хранилище</span></button>
+              <button class="settings-nav-item" data-settings-tab="playback"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg><span data-settings-i18n="settings_playback">Воспроизведение</span></button>
+              <button class="settings-nav-item" data-settings-tab="advanced"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10m4 0h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span data-settings-i18n="settings_advanced">Дополнительно</span></button>
+              <button class="settings-nav-item" data-settings-tab="about"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 11v5m0-8h.01"/></svg><span data-settings-i18n="settings_about">Об приложении</span></button>
+            </nav>
+            <div class="settings-panel">
+              <section class="settings-section active" data-settings-panel="interface">
+                <h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg><span data-settings-i18n="settings_interface">Интерфейс</span></h2>
+                <p class="settings-description" data-settings-i18n="settings_language_description">Выбери язык интерфейса Vilife.</p>
+                <div class="settings-choice-row">
+                  <button class="settings-choice" data-language-choice="ru"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20m-10-10a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg>Русский</button>
+                  <button class="settings-choice" data-language-choice="en"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20m-10-10a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg>English</button>
+                </div>
+              </section>
+              <section class="settings-section" data-settings-panel="collection">
+                <h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span data-settings-i18n="settings_collection">Импорт и экспорт</span></h2>
+                <p class="settings-description" data-settings-i18n="settings_collection_description">Добавляй треки из Spotify и сохраняй копию своей библиотеки.</p>
+                <div class="settings-actions">
+                  <button class="btn btn-outline" id="settings-import"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg><span data-settings-i18n="settings_import">Импортировать из Spotify</span></button>
+                  <button class="btn btn-outline" id="settings-export" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5 5 5 5-5m-5 5V3"/></svg><span data-settings-i18n="settings_export">Экспортировать библиотеку</span></button>
+                </div>
+              </section>
+              <section class="settings-section" data-settings-panel="theme">
+                <h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span data-settings-i18n="settings_theme">Тема</span></h2>
+                <p class="settings-description" data-settings-i18n="settings_theme_description">Выбери оформление приложения.</p>
+                <div class="settings-choice-row theme-mode-grid">
+                  <button class="settings-choice" data-theme-choice="system"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/></svg><span data-settings-i18n="settings_theme_system">Как в Windows</span></button>
+                  <button class="settings-choice" data-theme-choice="light"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span data-settings-i18n="settings_theme_light">Светлая</span></button>
+                  <button class="settings-choice" data-theme-choice="dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/></svg><span data-settings-i18n="settings_theme_dark">Тёмная</span></button>
+                </div>
+                <div class="theme-accent-section">
+                  <h3 data-settings-i18n="settings_accent_title">Акцентный цвет</h3>
+                  <p class="settings-description" data-settings-i18n="settings_accent_description">Выбери цвет для выделения элементов интерфейса.</p>
+                  <div class="theme-accent-grid" role="group" data-settings-accent-group="settings_accent_title">
+                    <button class="theme-accent-choice" type="button" data-theme-accent-choice="default" data-settings-accent-label="settings_accent_default" aria-pressed="false"><span class="theme-accent-swatch theme-accent-default"></span><span data-settings-i18n="settings_accent_default">По умолчанию</span></button>
+                    <button class="theme-accent-choice" type="button" data-theme-accent-choice="blue" data-settings-accent-label="settings_accent_blue" aria-pressed="false"><span class="theme-accent-swatch" style="--swatch-color: 217 91% 60%"></span><span data-settings-i18n="settings_accent_blue">Синий</span></button>
+                    <button class="theme-accent-choice" type="button" data-theme-accent-choice="violet" data-settings-accent-label="settings_accent_violet" aria-pressed="false"><span class="theme-accent-swatch" style="--swatch-color: 262 83% 58%"></span><span data-settings-i18n="settings_accent_violet">Фиолетовый</span></button>
+                    <button class="theme-accent-choice" type="button" data-theme-accent-choice="pink" data-settings-accent-label="settings_accent_pink" aria-pressed="false"><span class="theme-accent-swatch" style="--swatch-color: 330 81% 56%"></span><span data-settings-i18n="settings_accent_pink">Розовый</span></button>
+                    <button class="theme-accent-choice" type="button" data-theme-accent-choice="green" data-settings-accent-label="settings_accent_green" aria-pressed="false"><span class="theme-accent-swatch" style="--swatch-color: 150 65% 40%"></span><span data-settings-i18n="settings_accent_green">Зелёный</span></button>
+                    <button class="theme-accent-choice" type="button" data-theme-accent-choice="orange" data-settings-accent-label="settings_accent_orange" aria-pressed="false"><span class="theme-accent-swatch" style="--swatch-color: 25 95% 53%"></span><span data-settings-i18n="settings_accent_orange">Оранжевый</span></button>
+                  </div>
+                </div>
+              </section>
+              <section class="settings-section" data-settings-panel="storage">
+                <h2><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg><span data-settings-i18n="settings_storage">Хранилище</span></h2>
+                <p class="settings-description" data-settings-i18n="settings_storage_description">Треки и настройки хранятся локально в этом приложении.</p>
+                <div class="settings-stats">
+                  <div class="settings-stat"><span class="settings-stat-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span data-settings-i18n="settings_saved_tracks">Треки в библиотеке</span></span><strong id="settings-track-count">0</strong></div>
+                  <div class="settings-stat"><span class="settings-stat-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18M3 12h18M3 19h18"/><circle cx="7" cy="5" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="19" r="2"/></svg><span data-settings-i18n="settings_saved_playlists">Плейлисты</span></span><strong id="settings-playlist-count">0</strong></div>
+                  <div class="settings-stat"><span class="settings-stat-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5 5 5 5-5m-5 5V3"/></svg><span data-settings-i18n="settings_storage_used">Занято настройками и данными</span></span><strong id="settings-storage-size">0 KB</strong></div>
+                </div>
+                <div class="settings-actions">
+                  <button class="btn btn-outline" id="settings-open-storage"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/><path d="M3 10h18"/></svg><span data-settings-i18n="settings_open_storage">Открыть расположение</span></button>
+                  <button class="btn btn-outline btn-danger" id="settings-clear-library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18m-2 0-.9 14H5.9L5 6m4 0V4h6v2m-5 4v6m4-6v6"/></svg><span data-settings-i18n="settings_clear_library">Очистить библиотеку</span></button>
+                </div>
+              </section>
+              <section class="settings-section" data-settings-panel="playback">
+                <h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg><span data-settings-i18n="settings_playback">Воспроизведение</span></h2>
+                <p class="settings-description" data-settings-i18n="settings_playback_description">Управляй громкостью и поведением плеера.</p>
+                <label class="settings-row settings-range-row" for="settings-volume">
+                  <span class="settings-row-copy"><span class="settings-row-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg><strong data-settings-i18n="settings_volume">Громкость</strong></span><small data-settings-i18n="settings_volume_description">Настрой уровень звука плеера.</small></span>
+                  <span class="settings-range-control"><input id="settings-volume" type="range" class="slider settings-volume" min="0" max="1" step="0.01" value="0.8"><output id="settings-volume-value" for="settings-volume">80%</output></span>
+                </label>
+                <label class="settings-row" for="settings-crossfade">
+                  <span class="settings-row-copy"><span class="settings-row-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3c5 0 5 10 10 10h3"/><path d="m17 14 3 3-3 3M4 17h3c2 0 3-1 4-3m3-4c1-2 2-3 4-3h2"/><path d="m17 4 3 3-3 3"/></svg><strong data-settings-i18n="settings_crossfade">Плавный переход между треками</strong></span><small data-settings-i18n="settings_crossfade_description">Смешивать конец текущего трека с началом следующего.</small></span>
+                  <input id="settings-crossfade" type="checkbox" class="settings-switch" checked>
+                </label>
+                <label class="settings-row" for="settings-autoplay">
+                  <span class="settings-row-copy"><span class="settings-row-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg><strong data-settings-i18n="settings_autoplay">Следующий трек автоматически</strong></span><small data-settings-i18n="settings_autoplay_description">Продолжать очередь после завершения трека</small></span>
+                  <input id="settings-autoplay" type="checkbox" class="settings-switch" checked>
+                </label>
+                <label class="settings-row" for="settings-sleep-timer">
+                  <span class="settings-row-copy"><span class="settings-row-title"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><strong data-settings-i18n="settings_sleep_timer">Таймер сна</strong></span><small data-settings-i18n="settings_sleep_timer_description">Остановить воспроизведение через выбранное время.</small></span>
+                  <select id="settings-sleep-timer" class="settings-select">
+                    <option value="0" data-settings-i18n="settings_timer_off">Выключен</option>
+                    <option value="15">15 минут</option>
+                    <option value="30">30 минут</option>
+                    <option value="45">45 минут</option>
+                    <option value="60">1 час</option>
+                    <option value="90">1,5 часа</option>
+                  </select>
+                </label>
+                <p id="settings-sleep-status" class="settings-inline-status" aria-live="polite"></p>
+              </section>
+              <section class="settings-section" data-settings-panel="advanced">
+                <h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10m4 0h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span data-settings-i18n="settings_advanced">Дополнительно</span></h2>
+                <p class="settings-description" data-settings-i18n="settings_advanced_description">Дополнительные параметры интерфейса.</p>
+                <label class="settings-row" for="settings-youtube-clips">
+                  <span class="settings-row-copy"><span class="settings-row-title"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="4"/><path d="m10 9 5 3-5 3z"/></svg><strong data-settings-i18n="settings_youtube_clips">Видео-клипы на волне</strong></span><small data-settings-i18n="settings_youtube_clips_description">Найти клип по названию трека. Нужен YouTube API key в VILIFE_YOUTUBE_API_KEY.</small></span>
+                  <input id="settings-youtube-clips" type="checkbox" class="settings-switch">
+                </label>
+                <label class="settings-row settings-range-row" for="settings-ambient-opacity">
+                  <span class="settings-row-copy"><span class="settings-row-title"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><strong data-settings-i18n="settings_ambient_transparency">Прозрачность заднего фона</strong></span><small data-settings-i18n="settings_ambient_transparency_description">Настрой прозрачность размытой обложки играющего трека.</small></span>
+                  <span class="settings-range-control"><input id="settings-background-transparency" type="range" class="slider settings-volume" min="0" max="100" step="1" value="38"><output id="settings-background-transparency-value" for="settings-background-transparency">38%</output></span>
+                </label>
+                <label class="settings-row" for="settings-reduced-motion">
+                  <span class="settings-row-copy"><span class="settings-row-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-3 8h7l-6 12 1-9H5z"/></svg><strong data-settings-i18n="settings_reduced_motion">Уменьшить анимации</strong></span><small data-settings-i18n="settings_reduced_motion_description">Сделать переходы короче и спокойнее</small></span>
+                  <input id="settings-reduced-motion" type="checkbox" class="settings-switch">
+                </label>
+              </section>
+              <section class="settings-section" data-settings-panel="about">
+                <div class="about-hero">
+                  <div class="about-orbit about-orbit-one" aria-hidden="true"></div>
+                  <div class="about-orbit about-orbit-two" aria-hidden="true"></div>
+                  <div class="about-orbit about-orbit-three" aria-hidden="true"></div>
+                  <div class="about-mark" role="img" aria-label="Vilife"></div>
+                </div>
+                <h3 class="about-title">Vilife</h3>
+                <p class="about-intro" data-settings-i18n="settings_about_description">Музыка, которую ты находишь, и коллекция, которую собираешь сам.</p>
+                <div class="about-details">
+                  <div class="about-detail">
+                    <span class="about-detail-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 6 4 14M12 6v14M8 8v12M4 4v16"/></svg></span>
+                    <span class="about-detail-copy">
+                      <strong data-settings-i18n="settings_about_collection">Твоя коллекция</strong>
+                      <small><span id="about-track-count">0</span> <span data-settings-i18n="settings_about_tracks">треков</span><span class="about-detail-separator">·</span><span id="about-playlist-count">0</span> <span data-settings-i18n="settings_about_playlists">плейлистов</span></small>
+                    </span>
+                    <span class="about-detail-tag" data-settings-i18n="settings_about_local">Локально</span>
+                  </div>
+                  <div class="about-detail">
+                    <span class="about-detail-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span>
+                    <span class="about-detail-copy">
+                      <strong data-settings-i18n="settings_about_discover">Поиск и воспроизведение</strong>
+                      <small data-settings-i18n="settings_about_discover_description">Треки, альбомы, плейлисты и текст песни.</small>
+                    </span>
+                    <span class="about-detail-tag">Vilife</span>
+                  </div>
+                  <button class="about-detail about-link" id="settings-website" type="button">
+                    <span class="about-detail-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20m-10-10a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg></span>
+                    <span class="about-detail-copy"><strong data-settings-i18n="settings_website">Сайт Vilife</strong><small>villife.hs.vc</small></span>
+                    <span class="about-detail-tag" aria-hidden="true">↗</span>
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+          </section>
+        </div>
+        <div id="playlist-detail" class="playlist-detail" style="display:none">
+          <div class="detail-heading">
+            <button class="btn btn-ghost btn-icon" id="detail-back" aria-label="Back">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M20 12H9"/></svg>
+            </button>
+            <div class="detail-art" id="detail-art"></div>
+            <div class="detail-meta">
+              <div class="detail-kicker" id="detail-kicker"></div>
+              <div class="detail-title-wrap" id="detail-title-wrap" role="button" tabindex="0">
+                <h2 id="detail-title"></h2>
+                <input class="detail-title-input" id="detail-title-input" type="text" maxlength="100" aria-label="Rename playlist">
+              </div>
+              <div class="detail-sub" id="detail-sub"></div>
+            </div>
+            <button class="btn btn-default detail-play" id="detail-play">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <span data-i18n="play_all">Play all</span>
+            </button>
+          </div>
+          <div class="section-head"><h2 data-i18n="section_tracks">Tracks</h2></div>
+          <div class="list" id="playlist-detail-list"></div>
+        </div>
+        <div id="artist-detail" class="playlist-detail" style="display:none">
+          <div class="detail-heading">
+            <button class="btn btn-ghost btn-icon" id="artist-back" aria-label="Back">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M20 12H9"/></svg>
+            </button>
+            <div class="detail-art artist-art" id="artist-art"></div>
+            <div class="detail-meta">
+              <div class="detail-kicker" id="artist-kicker"></div>
+              <div class="detail-title-wrap" role="heading"><h2 id="artist-title"></h2></div>
+              <div class="detail-sub" id="artist-sub"></div>
+            </div>
+            <button class="btn btn-default detail-play" id="artist-play">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <span data-i18n="play_all">Play all</span>
+            </button>
+          </div>
+          <div class="section-head"><h2 data-i18n="section_tracks">Tracks</h2></div>
+          <div class="list" id="artist-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="player" class="off">
+  <div class="player-inner">
+    <div class="pl-now">
+      <div class="pl-art" id="pl-art"></div>
+      <div class="pl-meta">
+        <div class="pl-title" id="pl-title">—</div>
+        <div class="pl-sub">
+          <span class="pl-artist" id="pl-artist"></span>
+          <button class="id-chip" id="pl-id" style="display:none"></button>
+        </div>
+      </div>
+    </div>
+    <div class="pl-center">
+      <div class="pl-controls">
+        <button class="btn btn-ghost btn-icon playback-mode-button" id="pl-shuffle" type="button" aria-label="Перемешать" aria-pressed="false" title="Перемешать">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 4 4-4 4"/><path d="M4 17h2.5a5 5 0 0 0 4-2l3-4a5 5 0 0 1 4-2H20"/><path d="m16 13 4 4-4 4"/><path d="M4 7h2.5a5 5 0 0 1 4 2"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon" id="pl-prev" title="Prev">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14l-11-7z"/></svg>
+        </button>
+        <button class="pl-play" id="pl-play">
+          <svg id="pl-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon" id="pl-next" title="Next">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-icon playback-mode-button" id="pl-repeat" type="button" aria-label="Повтор выключен" aria-pressed="false" title="Повтор выключен">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>
+          <span class="repeat-one-badge" aria-hidden="true">1</span>
+        </button>
+      </div>
+      <div class="pl-progress">
+        <span class="pl-time" id="pl-cur">0:00</span>
+        <div class="bar" id="pl-bar" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar-track"><div class="bar-fill" id="pl-fill"></div></div></div>
+        <span class="pl-time r" id="pl-dur">0:00</span>
+      </div>
+    </div>
+    <div class="pl-right">
+      <button class="btn btn-ghost btn-icon" id="pl-open-now-playing" title="Текст песни" aria-label="Открыть текст песни" aria-expanded="false" aria-controls="now-playing-view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-icon" id="mini-player-toggle" type="button" title="Мини-плеер" aria-label="Мини-плеер">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-icon" id="pl-volume-toggle" title="Громкость" aria-label="Громкость" aria-expanded="false" aria-controls="pl-volume-popover">
+        <svg class="i-vol-trigger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        <svg class="i-mute-trigger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z" fill="currentColor"/><path d="m4 4 16 16"/></svg>
+      </button>
+      <div class="pl-volume-popover" id="pl-volume-popover" hidden>
+        <button class="btn btn-ghost btn-icon" id="pl-mute" title="Включить или выключить звук" aria-label="Включить или выключить звук">
+          <svg class="i-vol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          <svg class="i-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z" fill="currentColor"/><path d="m4 4 16 16"/></svg>
+        </button>
+        <input type="range" class="slider vol" id="pl-vol" min="0" max="1" step="0.01" value="0.8" aria-label="Громкость">
+        <span class="pl-volume-value" id="pl-volume-value">80%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mini-player" class="mini-player" hidden aria-live="polite">
+  <div class="mini-player-shell">
+    <button class="mini-player-back" id="mini-player-back" type="button" aria-label="Вернуться в обычный плеер">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M20 12H9"/></svg>
+    </button>
+    <div class="mini-player-art" id="mini-player-art"></div>
+    <div class="mini-player-meta">
+      <strong id="mini-player-title">—</strong>
+      <span id="mini-player-artist"></span>
+    </div>
+    <div class="mini-player-controls">
+      <button class="btn btn-ghost btn-icon" id="mini-player-prev" type="button" aria-label="Предыдущий трек">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14l-11-7z"/></svg>
+      </button>
+      <button class="mini-player-play" id="mini-player-play" type="button" aria-label="Воспроизвести">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-icon" id="mini-player-next" type="button" aria-label="Следующий трек">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<section id="now-playing-view" class="now-playing-view" hidden aria-label="Текст песни">
+  <button class="now-playing-close btn btn-ghost btn-icon" id="now-playing-close" aria-label="Закрыть текст песни" title="Закрыть">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+  </button>
+  <div class="now-playing-layout">
+    <div class="now-playing-track">
+      <div class="now-playing-art" id="now-playing-art"></div>
+      <h1 id="now-playing-title"></h1>
+      <div class="now-playing-artist" id="now-playing-artist"></div>
+    </div>
+    <div class="now-playing-lyrics-panel">
+      <div class="lyrics-heading" id="lyrics-heading">Текст песни</div>
+      <div class="lyrics-content" id="lyrics-content" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<div class="overlay off" id="import-overlay">
+  <div class="dialog card">
+    <div class="dialog-head">
+      <div>
+        <h2 id="import-title">Импорт из Spotify</h2>
+      </div>
+      <button class="btn btn-ghost btn-icon" id="import-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="dialog-body">
+      <textarea class="input" id="import-text" spellcheck="false"></textarea>
+    </div>
+    <div class="dialog-foot">
+      <div class="dialog-status" id="import-status"></div>
+      <button class="btn btn-outline" id="import-cancel" data-i18n="cancel">Отмена</button>
+      <button class="btn btn-default" id="import-go" data-i18n="import_go">Импортировать</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="card" role="status" aria-live="polite">
+  <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+  <span class="toast-message"></span>
+</div>
+
+<script src="/js/app.js?v=71" defer></script>
+</body>
+</html>

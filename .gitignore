@@ -1,0 +1,15 @@
+bin/
+obj/
+webview2/
+Velo.exe.WebView2/
+*.exe
+*.dll
+*.exe.config
+*.pdb
+*.log
+*.tmp
+*.user
+*.suo
+.vs/
+lib/
+norm*.nlp
