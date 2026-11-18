@@ -281,7 +281,7 @@ function syncVolumeUi() {
   sliders.forEach(slider => {
     if (!slider) return;
     slider.value = String(current);
-    slider.style.setProperty("--value", String(percent));
+    slider.style.setProperty("--value", percent + "%");
   });
   const percentText = $("settings-volume-value");
   if (percentText) percentText.value = percent + "%";
@@ -499,6 +499,7 @@ function seekAudio(time) {
    ? Math.min(100, Math.max(0, savedAmbientTransparency))
    : 38;
  $("settings-background-transparency").value = String(ambientTransparency);
+ $("settings-background-transparency").style.setProperty("--value", Math.round(ambientTransparency) + "%");
  $("settings-background-transparency-value").value = Math.round(ambientTransparency) + "%";
  document.documentElement.style.setProperty("--ambient-artwork-opacity", String(1 - ambientTransparency / 100));
 document.querySelector(".main").appendChild($("player"));
@@ -2950,8 +2951,8 @@ $("settings-volume").addEventListener("input", e => {
   setPlaybackVolume(parseFloat(e.target.value));
   $("settings-volume-value").value = Math.round(audio.volume * 100) + "%";
   $("pl-vol").value = String(audio.volume);
-  $("settings-volume").style.setProperty("--value", String(audio.volume * 100));
-  $("pl-vol").style.setProperty("--value", String(audio.volume * 100));
+  $("settings-volume").style.setProperty("--value", Math.round(audio.volume * 100) + "%");
+  $("pl-vol").style.setProperty("--value", Math.round(audio.volume * 100) + "%");
   localStorage.setItem("velo_volume", String(audio.volume));
   setPlaybackMuted(false);
   updateMuteIcon();
@@ -2979,6 +2980,7 @@ $("settings-sleep-timer").addEventListener("change", e => {
 $("settings-background-transparency").addEventListener("input", e => {
   const transparency = Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0));
   $("settings-background-transparency-value").value = transparency + "%";
+  $("settings-background-transparency").style.setProperty("--value", transparency + "%");
   document.documentElement.style.setProperty("--ambient-artwork-opacity", String(1 - transparency / 100));
   localStorage.setItem("velo_ambient_transparency", String(transparency));
 });
