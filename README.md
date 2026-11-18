@@ -14,9 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Windows-1687d9?style=flat-square" alt="Windows">
-  <img src="https://img.shields.io/badge/Platform-macOS-999999?style=flat-square" alt="macOS">
-  <img src="https://img.shields.io/badge/Platform-Linux-e95420?style=flat-square" alt="Linux">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-1687d9?style=flat-square" alt="Windows, macOS, Linux">
   <img src="https://img.shields.io/badge/Interface-EN%20%7C%20RU-6956a5?style=flat-square" alt="EN and RU">
   <img src="https://img.shields.io/badge/Status-In%20development-e39a31?style=flat-square" alt="In development">
 </p>
