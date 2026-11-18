@@ -1,0 +1,89 @@
+{
+  "name": "villife",
+  "productName": "Villife",
+  "version": "0.1.1",
+  "description": "A quiet music player for Windows, macOS and Linux",
+  "main": "main.js",
+  "author": "Villife",
+  "license": "MIT",
+  "homepage": "https://github.com/whatawhere/villife",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whatawhere/villife.git"
+  },
+  "bugs": {
+    "url": "https://github.com/whatawhere/villife/issues"
+  },
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.villife.player",
+    "productName": "Villife",
+    "copyright": "Villife",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "server.js",
+      "services.js",
+      "preload.js",
+      "web/**/*",
+      "villife.ico",
+      "build/icon.png",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.music",
+      "icon": "build/icon.png",
+      "darkModeSupport": true
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "AudioVideo",
+      "icon": "build/icon.png",
+      "maintainer": "Villife"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
