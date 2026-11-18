@@ -22,12 +22,7 @@ const homeText = {
     track_not_interested_saved: "Учту: этот трек больше не будет попадать в волну",
     track_interested_restored: "Трек снова будет попадать в волну",
     wave_like: "В избранное", wave_unlike: "Убрать из избранного",
-    wave_shuffle: "Перемешать", wave_next: "Следующий трек", wave_play: "Воспроизвести", wave_pause: "Пауза",
-    youtube_fullscreen: "Открыть клип на весь экран", youtube_fullscreen_exit: "Выйти из полноэкранного режима",
-    youtube_playback_unavailable: "Этот ролик не воспроизводится во встроенном плеере. Открой его на YouTube или установи AV1 Video Extension в Windows.",
-    youtube_open: "Открыть на YouTube",
-    youtube_key_required: "Для поиска клипов задай VILLIFE_YOUTUBE_API_KEY и перезапусти Villife.",
-    youtube_search_failed: "Не удалось подобрать клип для этого трека."
+    wave_shuffle: "Перемешать", wave_next: "Следующий трек", wave_play: "Воспроизвести", wave_pause: "Пауза"
   },
   en: {
     for_you: "For you", for_you_based: "A mix from your favorites",
@@ -52,12 +47,7 @@ const homeText = {
     track_not_interested_saved: "Got it. This track won't appear in your wave again.",
     track_interested_restored: "This track can appear in your wave again.",
     wave_like: "Add to favorites", wave_unlike: "Remove from favorites",
-    wave_shuffle: "Shuffle", wave_next: "Next track", wave_play: "Play", wave_pause: "Pause",
-    youtube_fullscreen: "Open clip fullscreen", youtube_fullscreen_exit: "Exit fullscreen",
-    youtube_playback_unavailable: "This video can't play in the embedded player. Open it on YouTube or install the AV1 Video Extension on Windows.",
-    youtube_open: "Open on YouTube",
-    youtube_key_required: "Set VILLIFE_YOUTUBE_API_KEY and restart Villife to search for clips.",
-    youtube_search_failed: "Could not find a matching video for this track."
+    wave_shuffle: "Shuffle", wave_next: "Next track", wave_play: "Play", wave_pause: "Pause"
   }
 };
 const ht = key => (homeText[lang] && homeText[lang][key]) || homeText.ru[key] || key;
@@ -154,18 +144,6 @@ let crossfadePrevious = null;
 const lyricsCache = Object.create(null);
 let ambientImage = "b";
 let ambientArtwork = "";
-let youtubeLookupRequestId = 0;
-let youtubeLookupUnavailable = false;
-let activeYoutubeTrackId = "";
-const youtubeClipCache = Object.create(null);
-let youtubeIframeApiPromise = null;
-let youtubePlayer = null;
-let youtubePlaybackGeneration = 0;
-let youtubeClipTrack = null;
-let youtubeClipCandidates = [];
-let youtubeClipCandidateIndex = -1;
-let youtubeClipMode = "ambient";
-let youtubePlaybackFailed = false;
 
 const $ = id => document.getElementById(id);
 const storedVolumeValue = localStorage.getItem("velo_volume");
@@ -221,8 +199,6 @@ const settingsText = {
     settings_reduced_motion_description: "Сделать переходы короче и спокойнее",
     settings_ambient_transparency: "Прозрачность заднего фона",
     settings_ambient_transparency_description: "Настрой прозрачность размытой обложки играющего трека.",
-    settings_youtube_clips: "Видео-клипы на волне",
-    settings_youtube_clips_description: "Автоматически подбирать клипы и запрашивать до 4K, если ролик поддерживает. Нужен API key в VILLIFE_YOUTUBE_API_KEY.",
     settings_about_eyebrow: "ТВОЯ МУЗЫКА — В ОДНОМ МЕСТЕ",
     settings_app_subtitle: "Музыкальный плеер для Windows",
     settings_about_description: "Музыка, которую ты находишь, и коллекция, которую собираешь сам.",
@@ -262,8 +238,6 @@ const settingsText = {
     settings_reduced_motion_description: "Use shorter, calmer transitions",
     settings_ambient_transparency: "Background transparency",
     settings_ambient_transparency_description: "Adjust how transparent the blurred artwork looks while a track plays.",
-    settings_youtube_clips: "YouTube video backgrounds",
-    settings_youtube_clips_description: "Automatically match clips and request up to 4K when available. Requires an API key in VILLIFE_YOUTUBE_API_KEY.",
     settings_about_eyebrow: "YOUR MUSIC, ALL IN ONE PLACE",
     settings_app_subtitle: "Music player for Windows",
     settings_about_description: "Music you discover, and a collection you make your own.",
@@ -740,9 +714,6 @@ function applyI18n() {
   $("wave-next").setAttribute("aria-label", ht("wave_next"));
   $("wave-play").setAttribute("aria-label", ht("wave_play"));
   applyPlaybackModeLabels();
-  $("youtube-fullscreen-close").title = ht("youtube_fullscreen_exit");
-  $("youtube-fullscreen-close").setAttribute("aria-label", ht("youtube_fullscreen_exit"));
-  $("youtube-fallback-open").textContent = ht("youtube_open");
   if (view === "wave" && qIndex >= 0 && queue[qIndex]) renderWave(queue[qIndex]);
   document.querySelectorAll("[data-language-choice]").forEach(button => {
     button.classList.toggle("selected", button.dataset.languageChoice === (lang || "ru"));
@@ -861,7 +832,6 @@ function showView(next) {
     openSettings();
     return;
   }
-  if (next !== view) stopWaveYoutubeClip();
   if (next === "wave" && !$("now-playing-view").hidden) setNowPlayingOpen(false);
   closeSettings(false);
   view = next;
@@ -940,314 +910,6 @@ function openWave() {
     preloadNextTrack();
   } else playAt(waveTracks, 0, "wave");
   toast(ht("wave_playing"), "info", 2600);
-}
-
-function stopWaveYoutubeClip() {
-  closeYoutubeFullscreen(false);
-  youtubePlaybackGeneration++;
-  if (youtubePlayer) {
-    youtubePlayer.destroy();
-    youtubePlayer = null;
-  }
-  youtubeLookupRequestId++;
-  activeYoutubeTrackId = "";
-  youtubeClipTrack = null;
-  youtubeClipCandidates = [];
-  youtubeClipCandidateIndex = -1;
-  youtubePlaybackFailed = false;
-  $("youtube-fallback").hidden = true;
-  $("ambient-video-poster").hidden = true;
-  $("wave-video-poster").hidden = true;
-  $("ambient-video-layer").classList.remove("is-playing");
-  $("wave-video-layer").classList.remove("is-playing");
-  clearYoutubePlayerFrame("ambient-video-frame");
-  $("ambient-video-layer").hidden = true;
-  clearYoutubePlayerFrame("wave-video-frame");
-  $("wave-video-layer").hidden = true;
-  clearYoutubePlayerFrame("youtube-fullscreen-frame");
-}
-
-function showYoutubeClip(track, videoIds) {
-  youtubeClipTrack = track;
-  youtubeClipCandidates = videoIds;
-  youtubeClipCandidateIndex = 0;
-  youtubePlaybackFailed = false;
-  youtubeClipMode = view === "wave" ? "wave" : "ambient";
-  playYoutubeClipCandidate(0, youtubeClipMode);
-}
-
-function setYoutubePoster(mode, candidate) {
-  const poster = $(mode === "wave" ? "wave-video-poster" : "ambient-video-poster");
-  const otherPoster = $(mode === "wave" ? "ambient-video-poster" : "wave-video-poster");
-  otherPoster.hidden = true;
-  const layer = $(mode === "wave" ? "wave-video-layer" : "ambient-video-layer");
-  layer.classList.remove("is-playing");
-  const thumbnail = candidate && typeof candidate === "object" ? candidate.thumbnail : "";
-  const videoId = typeof candidate === "string" ? candidate : candidate && candidate.id;
-  const imageUrl = thumbnail || (videoId ? "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg" : "");
-  poster.hidden = !imageUrl;
-  if (imageUrl) poster.src = imageUrl;
-}
-
-function ensureYoutubeIframeApi() {
-  if (window.YT && window.YT.Player) return Promise.resolve();
-  if (youtubeIframeApiPromise) return youtubeIframeApiPromise;
-  youtubeIframeApiPromise = new Promise((resolve, reject) => {
-    const previousReady = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof previousReady === "function") previousReady();
-      resolve();
-    };
-    const script = document.createElement("script");
-    script.src = "https://www.youtube.com/iframe_api";
-    script.async = true;
-    script.onerror = () => reject(new Error("Could not load the YouTube player API."));
-    document.head.appendChild(script);
-  });
-  return youtubeIframeApiPromise;
-}
-
-function youtubeFrameContainer(mode) {
-  if (mode === "fullscreen") return $("youtube-fullscreen");
-  return $(mode === "wave" ? "wave-video-layer" : "ambient-video-layer");
-}
-
-function clearYoutubePlayerFrame(frameId) {
-  const frame = $(frameId);
-  if (frame) frame.src = "about:blank";
-}
-
-function ensureYoutubePlayerFrame(mode) {
-  const frameId = mode === "fullscreen"
-    ? "youtube-fullscreen-frame"
-    : mode === "wave" ? "wave-video-frame" : "ambient-video-frame";
-  const container = youtubeFrameContainer(mode);
-  let frame = $(frameId);
-  if (!frame) {
-    frame = document.createElement("iframe");
-    frame.id = frameId;
-    container.appendChild(frame);
-  }
-  frame.title = (youtubeClipTrack && youtubeClipTrack.title || "") + " — YouTube";
-  frame.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
-  frame.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-  return frame;
-}
-
-async function playYoutubeClipCandidate(index, mode) {
-  youtubeClipMode = mode;
-  youtubeClipCandidateIndex = index;
-  const candidate = youtubeClipCandidates[index];
-  if (!candidate) {
-    if (youtubePlayer) {
-      youtubePlayer.destroy();
-      youtubePlayer = null;
-    }
-    if (youtubeClipCandidates.length)
-      youtubeClipCandidateIndex = youtubeClipCandidates.length - 1;
-    showYoutubePlaybackFallback(mode);
-    return;
-  }
-  const videoId = typeof candidate === "string" ? candidate : candidate.id;
-  if (mode !== "fullscreen") setYoutubePoster(mode, candidate);
-
-  const generation = ++youtubePlaybackGeneration;
-  try {
-    await ensureYoutubeIframeApi();
-    if (generation !== youtubePlaybackGeneration) return;
-    if (youtubePlayer) {
-      youtubePlayer.destroy();
-      youtubePlayer = null;
-    }
-    $("youtube-fullscreen").hidden = mode !== "fullscreen";
-    $("ambient-video-layer").hidden = mode !== "ambient";
-    $("wave-video-layer").hidden = mode !== "wave";
-    $("ambient-video-layer").classList.remove("is-playing");
-    $("wave-video-layer").classList.remove("is-playing");
-    const controls = mode === "fullscreen";
-    const frame = ensureYoutubePlayerFrame(mode);
-    youtubePlayer = new window.YT.Player(frame, {
-      videoId: videoId,
-      host: "https://www.youtube-nocookie.com",
-      playerVars: {
-        autoplay: 1,
-        controls: controls ? 1 : 0,
-        enablejsapi: 1,
-        loop: 1,
-        mute: 1,
-        origin: location.origin,
-        playlist: videoId,
-        playsinline: 1,
-        rel: 0,
-        vq: "hd2160"
-      },
-      events: {
-        onReady: event => {
-          if (generation !== youtubePlaybackGeneration) return;
-          $("youtube-fallback").hidden = true;
-          event.target.mute();
-          event.target.playVideo();
-        },
-        onStateChange: event => {
-          if (generation !== youtubePlaybackGeneration ||
-              event.data !== window.YT.PlayerState.PLAYING) return;
-          youtubePlaybackFailed = false;
-          if (mode === "wave") {
-            $("wave-video-poster").hidden = true;
-            $("wave-video-layer").classList.add("is-playing");
-          }
-          if (mode === "ambient") {
-            $("ambient-video-poster").hidden = true;
-            $("ambient-video-layer").classList.add("is-playing");
-          }
-        },
-        onError: event => {
-          if (generation !== youtubePlaybackGeneration) return;
-          if (mode === "wave") $("wave-video-layer").classList.remove("is-playing");
-          if (mode === "ambient") $("ambient-video-layer").classList.remove("is-playing");
-          playYoutubeClipCandidate(index + 1, mode);
-        }
-      }
-    });
-  } catch (error) {
-    if (generation !== youtubePlaybackGeneration) return;
-    console.error("Could not start the YouTube player.", error);
-    showYoutubePlaybackFallback(mode);
-  }
-}
-
-function showYoutubePlaybackFallback(mode) {
-  youtubePlaybackFailed = true;
-  $("youtube-fullscreen").hidden = mode !== "fullscreen";
-  $("ambient-video-layer").hidden = true;
-  $("wave-video-layer").hidden = true;
-  $("ambient-video-layer").classList.remove("is-playing");
-  $("wave-video-layer").classList.remove("is-playing");
-  setYoutubePoster(mode === "fullscreen" ? view === "wave" ? "wave" : "ambient" : mode,
-    youtubeClipCandidates[youtubeClipCandidateIndex]);
-  if (mode !== "fullscreen") return;
-  clearYoutubePlayerFrame("youtube-fullscreen-frame");
-  $("youtube-fallback").hidden = false;
-  const candidate = youtubeClipCandidates[youtubeClipCandidateIndex];
-  const videoId = typeof candidate === "string" ? candidate : candidate && candidate.id;
-  const thumbnail = candidate && typeof candidate === "object" ? candidate.thumbnail : "";
-  $("youtube-fallback-title").textContent = candidate && candidate.title ||
-    (youtubeClipTrack && youtubeClipTrack.title) || "";
-  $("youtube-fallback-thumbnail").src = thumbnail ||
-    (videoId ? "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg" : "");
-}
-
-function openYoutubeClipExternally() {
-  const candidate = youtubeClipCandidates[youtubeClipCandidateIndex];
-  const videoId = typeof candidate === "string" ? candidate : candidate && candidate.id;
-  if (!/^[A-Za-z0-9_-]{11}$/.test(videoId || "")) return;
-  if (window.chrome && window.chrome.webview) {
-    window.chrome.webview.postMessage("villife-youtube:" + videoId);
-    return;
-  }
-  window.open("https://www.youtube.com/watch?v=" + videoId, "_blank", "noopener");
-}
-
-function openYoutubeFullscreen() {
-  if (youtubeClipCandidateIndex < 0 || !youtubeClipCandidates.length) return;
-  if (youtubePlaybackFailed) {
-    showYoutubePlaybackFallback("fullscreen");
-    return;
-  }
-  youtubePlaybackGeneration++;
-  if (youtubePlayer) {
-    youtubePlayer.destroy();
-    youtubePlayer = null;
-  }
-  clearYoutubePlayerFrame("ambient-video-frame");
-  clearYoutubePlayerFrame("wave-video-frame");
-  $("ambient-video-layer").hidden = true;
-  $("wave-video-layer").hidden = true;
-  playYoutubeClipCandidate(youtubeClipCandidateIndex, "fullscreen");
-}
-
-function closeYoutubeFullscreen(resume) {
-  const overlay = $("youtube-fullscreen");
-  if (overlay.hidden) return;
-  overlay.hidden = true;
-  youtubePlaybackGeneration++;
-  if (youtubePlayer) {
-    youtubePlayer.destroy();
-    youtubePlayer = null;
-  }
-  if (resume && !youtubePlaybackFailed && qIndex >= 0 && queue[qIndex] && !audio.paused &&
-      youtubeClipCandidates[youtubeClipCandidateIndex]) {
-    playYoutubeClipCandidate(youtubeClipCandidateIndex, view === "wave" ? "wave" : "ambient");
-  } else {
-    clearYoutubePlayerFrame("youtube-fullscreen-frame");
-    $("youtube-fallback").hidden = true;
-  }
-}
-
-function youtubeTextTokens(value) {
-  return String(value || "").toLocaleLowerCase()
-    .replace(/[^\w\u00c0-\u024f\u0400-\u04ff]+/g, " ")
-    .split(/\s+/)
-    .filter(token => token.length > 1);
-}
-
-function scoreYoutubeMatch(track, candidate) {
-  const wantedTitle = youtubeTextTokens(track.title);
-  const wantedArtist = youtubeTextTokens(track.artist);
-  const candidateWords = new Set(youtubeTextTokens(candidate.title));
-  if (!wantedTitle.length || !candidateWords.size) return 0;
-  const titleScore = wantedTitle.filter(word => candidateWords.has(word)).length / wantedTitle.length;
-  const artistScore = wantedArtist.length
-    ? wantedArtist.filter(word => candidateWords.has(word)).length / wantedArtist.length
-    : 0;
-  return titleScore * 0.7 + artistScore * 0.3;
-}
-
-async function loadYoutubeClip(track) {
-  if (!track || audio.paused) {
-    stopWaveYoutubeClip();
-    return;
-  }
-  const trackKey = track.id || (track.title + "|" + track.artist);
-  if (activeYoutubeTrackId === trackKey) return;
-  stopWaveYoutubeClip();
-  const requestId = youtubeLookupRequestId;
-  activeYoutubeTrackId = trackKey;
-  const cachedVideoId = youtubeClipCache[trackKey];
-  if (cachedVideoId) {
-    showYoutubeClip(track, cachedVideoId);
-    return;
-  }
-
-  try {
-    const query = encodeURIComponent((track.title || "") + " " + (track.artist || "") + " official music video");
-    const data = await getJson("/api/youtube/search?q=" + query);
-    if (requestId !== youtubeLookupRequestId || audio.paused) return;
-    const videos = Array.isArray(data.videos) ? data.videos : [];
-    const matches = videos
-      .map(video => ({ video: video, score: scoreYoutubeMatch(track, video) }))
-      .filter(item => item.score >= 0.3 && /^[A-Za-z0-9_-]{11}$/.test(item.video.id || ""))
-      .sort((first, second) => second.score - first.score)
-      .map(item => item.video)
-      .filter((video, index, list) => list.findIndex(item => item.id === video.id) === index);
-    if (!matches.length) {
-      activeYoutubeTrackId = "";
-      toast(ht("youtube_search_failed"));
-      return;
-    }
-    youtubeClipCache[trackKey] = matches;
-    showYoutubeClip(track, matches);
-  } catch (error) {
-    if (requestId !== youtubeLookupRequestId) return;
-    activeYoutubeTrackId = "";
-    console.error("Could not search YouTube for a matching clip.", track.id, error);
-    if (String(error.message).toLowerCase().indexOf("not configured") >= 0) {
-      if (!youtubeLookupUnavailable) toast(ht("youtube_key_required"), "error", 5200);
-      youtubeLookupUnavailable = true;
-      return;
-    }
-    toast(ht("youtube_search_failed"));
-  }
 }
 
 function renderWave(track) {
@@ -2358,7 +2020,6 @@ function renderPlayer() {
   if (qIndex < 0 || !queue[qIndex]) {
     syncTrayStatus(null);
     pl.classList.add("off");
-    stopWaveYoutubeClip();
     if (!$("mini-player").hidden) toggleMiniPlayer(false);
     updateMediaMetadata(null);
     updateDiscordPresence();
@@ -2368,7 +2029,6 @@ function renderPlayer() {
   pl.classList.remove("off");
   const tr = queue[qIndex];
   syncTrayStatus(tr);
-  if (audio.paused) stopWaveYoutubeClip();
   if (view === "wave") renderWave(tr);
   $("mini-player-art").innerHTML = artHtml(tr);
   $("mini-player-title").textContent = tr.title || "—";
@@ -3209,19 +2869,12 @@ $("wave-prev").addEventListener("click", previousTrack);
 $("wave-next").addEventListener("click", () => step(1));
 $("pl-shuffle").addEventListener("click", toggleShuffle);
 $("pl-repeat").addEventListener("click", cycleRepeatMode);
-$("youtube-fullscreen-close").addEventListener("click", () => closeYoutubeFullscreen(true));
-$("youtube-fallback-open").addEventListener("click", openYoutubeClipExternally);
 
 $("settings-close").addEventListener("click", () => closeSettings(true));
 $("view-settings").addEventListener("click", event => {
   if (event.target === $("view-settings")) closeSettings(true);
 });
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !$("youtube-fullscreen").hidden) {
-    event.preventDefault();
-    closeYoutubeFullscreen(true);
-    return;
-  }
   if (event.key === "Escape" && !$("view-settings").hidden) closeSettings(true);
   if (!$("view-settings").hidden || !$("import-overlay").classList.contains("off")) return;
   const target = event.target;

@@ -70,57 +70,6 @@ button, input, textarea, select { font-family: inherit; }
 #ambient-background img.active {
   opacity: var(--ambient-artwork-opacity, 0.62);
 }
-.youtube-video-poster {
-  position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; filter: blur(56px) saturate(1.35) brightness(0.7);
-  opacity: var(--ambient-artwork-opacity, 0.62); transform: scale(1.16);
-  transition: opacity 0.6s ease;
-}
-.youtube-video-poster[hidden] { display: none; }
-.ambient-video-layer { position: absolute; z-index: 2; inset: 0; overflow: hidden; opacity: 0; transition: opacity 0.8s ease; }
-.ambient-video-layer.is-playing { opacity: var(--ambient-artwork-opacity, 0.62); }
-.ambient-video-layer[hidden] { display: none; }
-.ambient-video-layer iframe { display: block; width: 100%; height: 100%; border: 0; transform: scale(1.16); filter: blur(56px) saturate(1.35) brightness(0.7); pointer-events: none; }
-.youtube-fullscreen-button {
-  position: fixed; z-index: 130; top: 0.75rem; right: 9.25rem;
-  display: grid; width: 2.5rem; height: 2.5rem; place-items: center;
-  border: 1px solid rgb(255 255 255 / 0.16); border-radius: 50%;
-  background: rgb(20 20 24 / 0.58); color: #fff; cursor: pointer;
-  backdrop-filter: blur(12px); transition: background 0.18s ease, transform 0.18s ease;
-}
-.youtube-fullscreen-button[hidden] { display: none; }
-.youtube-fullscreen-button:hover { background: rgb(255 255 255 / 0.2); transform: scale(1.06); }
-.youtube-fullscreen-button svg { width: 1.15rem; height: 1.15rem; }
-.youtube-fullscreen {
-  position: fixed; z-index: 10000; inset: 0; display: grid; place-items: center;
-  overflow: hidden; background: #000;
-}
-.youtube-fullscreen[hidden] { display: none; }
-.youtube-fullscreen iframe { display: block; width: 100%; height: 100%; border: 0; background: #000; }
-.youtube-fallback {
-  display: grid; width: min(58rem, calc(100vw - 3rem)); grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.8fr);
-  align-items: center; gap: 2rem; padding: 1.25rem; border: 1px solid rgb(255 255 255 / 0.14);
-  border-radius: 1.25rem; background: rgb(24 24 28 / 0.92); color: #fff;
-  box-shadow: 0 24px 80px rgb(0 0 0 / 0.45);
-}
-.youtube-fallback[hidden] { display: none; }
-.youtube-fallback img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 0.75rem; background: #101013; }
-.youtube-fallback-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 0.85rem; }
-.youtube-fallback-copy strong { font-size: 1.15rem; line-height: 1.35; }
-.youtube-fallback-copy span { color: rgb(255 255 255 / 0.72); }
-.youtube-fallback-copy .btn { margin-top: 0.25rem; }
-.youtube-fullscreen-close {
-  position: absolute; z-index: 1; top: 1rem; right: 1rem;
-  display: grid; width: 2.75rem; height: 2.75rem; place-items: center;
-  border: 1px solid rgb(255 255 255 / 0.2); border-radius: 50%;
-  background: rgb(20 20 24 / 0.66); color: #fff; cursor: pointer;
-  backdrop-filter: blur(12px); transition: background 0.18s ease, transform 0.18s ease;
-}
-.youtube-fullscreen-close:hover { background: rgb(255 255 255 / 0.22); transform: scale(1.06); }
-.youtube-fullscreen-close svg { width: 1.25rem; height: 1.25rem; }
-@media (max-width: 700px) {
-  .youtube-fallback { grid-template-columns: 1fr; gap: 1rem; }
-}
 #ambient-background.has-artwork img { animation: ambientDrift 30s ease-in-out infinite alternate; }
 #ambient-background.playing-track img { animation-duration: 22s; }
 #ambient-background img:nth-child(2) { animation-delay: -11s; }
@@ -791,11 +740,6 @@ html.reduced-motion *, html.reduced-motion *::before, html.reduced-motion *::aft
 .wave-stage { position: relative; display: grid; width: 100%; height: 100%; min-height: 0; overflow: hidden; place-items: center; isolation: isolate; }
 .wave-backdrop { position: absolute; z-index: 0; inset: -12%; overflow: hidden; background: #101013; }
 .wave-backdrop > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(100px) saturate(1.35) brightness(0.68); opacity: 0.82; transform: scale(1.2); animation: waveBackdropDrift 28s ease-in-out infinite alternate; }
-.wave-backdrop > .youtube-video-poster { z-index: 1; opacity: 0.7; }
-.wave-video-layer { position: absolute; z-index: 2; inset: 0; overflow: hidden; opacity: 0; transition: opacity 0.8s ease; }
-.wave-video-layer.is-playing { opacity: 0.58; }
-.wave-video-layer[hidden] { display: none; }
-.wave-video-layer iframe { display: block; width: 100%; height: 100%; border: 0; transform: scale(1.1); filter: saturate(1.15) brightness(0.68); pointer-events: none; }
 .wave-stage::after { position: absolute; z-index: 1; inset: 0; content: ""; background: linear-gradient(90deg, rgb(8 8 10 / 0.54), rgb(8 8 10 / 0.12) 50%, rgb(8 8 10 / 0.42)), linear-gradient(180deg, rgb(8 8 10 / 0.08), transparent 42%, rgb(8 8 10 / 0.48)); }
 .wave-content { position: relative; z-index: 2; display: flex; width: min(100%, 60rem); flex-direction: column; align-items: center; padding: 3.5rem 2rem 6.5rem; text-align: center; animation: waveContentEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .wave-content h1 { width: 100%; max-width: 58rem; max-height: 3.2em; overflow: hidden; color: #fff; font-size: clamp(3.2rem, 10vw, 8rem); font-weight: 850; letter-spacing: -0.075em; line-height: 0.98; text-overflow: ellipsis; text-wrap: balance; text-shadow: 0 6px 48px rgb(0 0 0 / 0.32); }

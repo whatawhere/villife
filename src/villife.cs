@@ -552,36 +552,6 @@ namespace Villife
                             }
                         }
                     }
-                    else if (path == "/api/youtube/search")
-                    {
-                        var term = GetParam(query, "q");
-                        if (term.Length == 0 || term.Length > 240)
-                        {
-                            status = 400;
-                            body = JsonError("a track title and artist are required");
-                            mime = "application/json; charset=utf-8";
-                        }
-                        else if (String.IsNullOrWhiteSpace(GetYouTubeApiKey()))
-                        {
-                            status = 503;
-                            body = JsonError("YouTube Data API key is not configured.");
-                            mime = "application/json; charset=utf-8";
-                        }
-                        else
-                        {
-                            try
-                            {
-                                body = Encoding.UTF8.GetBytes(SearchYouTubeVideos(term));
-                                mime = "application/json; charset=utf-8";
-                            }
-                            catch (Exception e)
-                            {
-                                status = 502;
-                                body = JsonError(e.Message);
-                                mime = "application/json; charset=utf-8";
-                            }
-                        }
-                    }
                     else if (path == "/api/oembed")
                     {
                         var target = GetParam(query, "url");
@@ -1704,79 +1674,6 @@ namespace Villife
             return ser.Serialize(outData);
         }
 
-        static string SearchYouTubeVideos(string term)
-        {
-            var apiKey = GetYouTubeApiKey();
-            if (String.IsNullOrWhiteSpace(apiKey))
-                throw new InvalidOperationException("YouTube Data API key is not configured.");
-
-            var url = "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&videoSyndicated=true" +
-                "&safeSearch=moderate&maxResults=10&q=" + Uri.EscapeDataString(term);
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "GET";
-            request.UserAgent = "Villife/1.0";
-            request.Accept = "application/json";
-            request.Headers["X-Goog-Api-Key"] = apiKey;
-            request.Timeout = 15000;
-            request.ReadWriteTimeout = 15000;
-
-            var serializer = new JavaScriptSerializer();
-            var output = new Dictionary<string, object>();
-            var videos = new List<Dictionary<string, object>>();
-            using (var response = (HttpWebResponse)request.GetResponse())
-            using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
-            {
-                var data = serializer.DeserializeObject(reader.ReadToEnd()) as Dictionary<string, object>;
-                var items = data != null && data.ContainsKey("items") ? data["items"] as object[] : null;
-                if (items != null)
-                {
-                    foreach (var rawItem in items)
-                    {
-                        var item = rawItem as Dictionary<string, object>;
-                        var idData = item != null && item.ContainsKey("id") ? item["id"] as Dictionary<string, object> : null;
-                        var snippet = item != null && item.ContainsKey("snippet") ? item["snippet"] as Dictionary<string, object> : null;
-                        var videoId = idData != null && idData.ContainsKey("videoId") ? Convert.ToString(idData["videoId"]) : "";
-                        if (!Regex.IsMatch(videoId, @"^[A-Za-z0-9_-]{11}$")) continue;
-
-                        var thumbnails = snippet != null && snippet.ContainsKey("thumbnails")
-                            ? snippet["thumbnails"] as Dictionary<string, object>
-                            : null;
-                        object thumbnail = null;
-                        if (thumbnails != null)
-                        {
-                            foreach (var size in new[] { "maxres", "standard", "high", "medium", "default" })
-                            {
-                                var image = thumbnails.ContainsKey(size) ? thumbnails[size] as Dictionary<string, object> : null;
-                                if (image != null && image.ContainsKey("url"))
-                                {
-                                    thumbnail = image["url"];
-                                    break;
-                                }
-                            }
-                        }
-
-                        videos.Add(new Dictionary<string, object>
-                        {
-                            { "id", videoId },
-                            { "title", snippet != null && snippet.ContainsKey("title") ? snippet["title"] : "" },
-                            { "thumbnail", thumbnail ?? "" }
-                        });
-                    }
-                }
-            }
-
-            output["videos"] = videos;
-            return serializer.Serialize(output);
-        }
-
-        static string GetYouTubeApiKey()
-        {
-            var apiKey = Environment.GetEnvironmentVariable("VILLIFE_YOUTUBE_API_KEY");
-            return String.IsNullOrWhiteSpace(apiKey)
-                ? Environment.GetEnvironmentVariable("VILIFE_YOUTUBE_API_KEY")
-                : apiKey;
-        }
-
         public static void MigrateLegacyProfile(string target)
         {
             try
@@ -1888,14 +1785,6 @@ namespace Villife
                     if (DiscordRpcClient.IsPresenceMessage(message))
                     {
                         discordRpc.Update(message);
-                        return;
-                    }
-                    const string youtubePrefix = "villife-youtube:";
-                    if (message != null && message.StartsWith(youtubePrefix, StringComparison.Ordinal))
-                    {
-                        var videoId = message.Substring(youtubePrefix.Length);
-                        if (Regex.IsMatch(videoId, @"^[A-Za-z0-9_-]{11}$"))
-                            OpenYouTubeVideo(videoId);
                         return;
                     }
                     const string windowPrefix = "villife-window:";
@@ -2392,22 +2281,6 @@ namespace Villife
             catch (Exception error)
             {
                 Trace.TraceError("Could not open the Villife website: " + error);
-            }
-        }
-
-        static void OpenYouTubeVideo(string videoId)
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "https://www.youtube.com/watch?v=" + videoId,
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception error)
-            {
-                Trace.TraceError("Could not open the YouTube video: " + error);
             }
         }
 
