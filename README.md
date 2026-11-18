@@ -1,144 +1,84 @@
-<p align="center">
-  <img src="villife.ico" alt="Villife app icon" width="88">
+﻿<p align="center">
+  <img src="villife.ico" alt="Villife" width="88">
 </p>
 
 <h1 align="center">Villife</h1>
 
 <p align="center">
-  <strong>Find your sound. Make it yours.</strong><br>
-  A Windows music player for discovering tracks, building a library, and staying in control of what plays next.
+  A music player for Windows. SoundCloud search, a local library, queue and playback history, English and Russian interface.
 </p>
 
 <p align="center">
-  <a href="https://villife.hs.vc/"><img src="https://img.shields.io/badge/Visit%20Villife-website-24252a?style=for-the-badge" alt="Visit the Villife website"></a>
+  <a href="https://villife.hs.vc/"><img src="https://img.shields.io/badge/Visit%20Villife-website-24252a?style=for-the-badge" alt="Website"></a>
+  <a href="https://boosty.to/whata/donate"><img src="https://img.shields.io/badge/Boosty-Donate-F15A2C?style=for-the-badge&amp;logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSLQoNCO0KDCu9Cg0ZXQoOKEll8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIKCSB2aWV3Qm94PSIwIDAgMjM1LjYgMjkyLjIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDIzNS42IDI5Mi4yOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI%2BCjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI%2BCgkuc3Qwe2ZpbGw6dXJsKCNTVkdJRF8xXyk7fQo8L3N0eWxlPgo8ZyBpZD0iYl8xXyI%2BCgk8bGluZWFyR3JhZGllbnQgaWQ9IlNWR0lEXzFfIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjE0NS4wNzc3IiB5MT0iNzYuMTQ4IiB4Mj0iODAuNTg2OCIgeTI9IjI5Ni4wNzg1Ij4KCQk8c3RvcCAgb2Zmc2V0PSIwIiBzdHlsZT0ic3RvcC1jb2xvcjojRUY3ODI5Ii8%2BCgkJPHN0b3AgIG9mZnNldD0iNS4xODk1MzhlLTAyIiBzdHlsZT0ic3RvcC1jb2xvcjojRjA3NTI5Ii8%2BCgkJPHN0b3AgIG9mZnNldD0iMC4zNTUxIiBzdHlsZT0ic3RvcC1jb2xvcjojRjA2NzJCIi8%2BCgkJPHN0b3AgIG9mZnNldD0iMC42NjczIiBzdHlsZT0ic3RvcC1jb2xvcjojRjE1RTJDIi8%2BCgkJPHN0b3AgIG9mZnNldD0iMSIgc3R5bGU9InN0b3AtY29sb3I6I0YxNUEyQyIvPgoJPC9saW5lYXJHcmFkaWVudD4KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00NC4zLDE2NC41TDc2LjksNTEuNkgxMjdsLTEwLjEsMzVjLTAuMSwwLjItMC4yLDAuNC0wLjMsMC42TDkwLDE3OS42aDI0LjhjLTEwLjQsMjUuOS0xOC41LDQ2LjItMjQuMyw2MC45CgkJYy00NS44LTAuNS01OC42LTMzLjMtNDcuNC03Mi4xIE05MC43LDI0MC42bDYwLjQtODYuOWgtMjUuNmwyMi4zLTU1LjdjMzguMiw0LDU2LjIsMzQuMSw0NS42LDcwLjUKCQljLTExLjMsMzkuMS01Ny4xLDcyLjEtMTAxLjcsNzIuMUM5MS4zLDI0MC42LDkxLDI0MC42LDkwLjcsMjQwLjZ6Ii8%2BCjwvZz4KPC9zdmc%2BCg%3D%3D" alt="Donate on Boosty"></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Windows-1687d9?style=flat-square" alt="Windows">
-  <img src="https://img.shields.io/badge/Interface-English%20%2F%20Russian-6956a5?style=flat-square" alt="English and Russian interface">
-  <img src="https://img.shields.io/badge/Host-C%23%20%2B%20WebView2-326ce5?style=flat-square" alt="C sharp and WebView2">
-  <img src="https://img.shields.io/badge/Project-In%20development-e39a31?style=flat-square" alt="In development">
-</p>
-
-<p align="center">
-  <a href="#discover">Discover</a> &nbsp;·&nbsp;
-  <a href="#make-it-yours">Make it yours</a> &nbsp;·&nbsp;
-  <a href="#windows-integration">Windows integration</a> &nbsp;·&nbsp;
-  <a href="#install">Install</a> &nbsp;·&nbsp;
-  <a href="#build-from-source">Build</a> &nbsp;·&nbsp;
-  <a href="#faq">FAQ</a>
+  <img src="https://img.shields.io/badge/platform-windows-1687d9?style=flat-square" alt="Windows">
+  <img src="https://img.shields.io/badge/interface-EN%20%7C%20RU-6956a5?style=flat-square" alt="EN and RU">
+  <img src="https://img.shields.io/badge/status-in%20development-e39a31?style=flat-square" alt="In development">
 </p>
 
 ---
 
-## What is Villife?
+## What it does
 
-Villife brings music discovery and your personal collection together in a focused desktop player. Search for tracks, albums, and playlists, save the ones you want to keep, and move between your queue, listening history, and recommendations.
+Search SoundCloud for tracks, albums and playlists, save them to your library or Favorites, queue them up. Shuffle, repeat, sleep timer and crossfade are there as well.
 
-The app is built as a lightweight Windows host with a web-based interface. Your library and preferences are stored locally in the WebView2 profile.
+Spotify is used only to import metadata for tracks and playlists — there is no Spotify stream. Villife looks for a matching track on other sources, and sometimes there is none.
 
-## Discover
+Lyrics come from LRCLIB. YouTube video backgrounds are optional and need your own YouTube Data API key, everything else works without it.
 
-- Search SoundCloud for tracks, albums, and playlists.
-- Import public Spotify track and playlist metadata, then look for a matching playable track.
-- Explore artist pages and find lyrics through LRCLIB.
-- Keep listening with a queue, playback history, shuffle, and repeat.
-- Add tracks from playlists to Favorites without leaving the playlist.
-
-> **Spotify playback:** Spotify provides public track metadata, not a full playable stream. Villife resolves imported tracks against available audio sources, so a match may not always be available.
-
-## Make it yours
-
-- Keep Favorites separate from your library.
-- Import and export your library as JSON.
-- Choose a light or dark theme and adjust interface preferences.
-- Keep your volume and playback settings between sessions.
-- Use keyboard shortcuts, a sleep timer, and optional crossfade.
-- Browse in English or Russian.
-
-Optional YouTube music-video backgrounds are also available. Video search needs a YouTube Data API key; the rest of the player does not.
-
-## Windows integration
-
-Villife is designed to feel at home on Windows:
-
-- **Media Session** exposes track information and playback controls to Windows.
-- **System tray** provides Previous, Play/Pause, Next, and Quit controls.
-- **Discord Rich Presence** can show the current track in the desktop Discord client.
-- **WebView2** hosts the interface inside the native app window.
+On the Windows side: media keys through Media Session, tray controls (previous, play/pause, next, quit), Discord Rich Presence when the Discord desktop client is running.
 
 ## Install
 
-Visit the [Villife website](https://villife.hs.vc/) for project information and available downloads.
+Grab `VillifeSetup.exe` from the [releases page](https://github.com/whatawhere/villife/releases/latest), or take the zip and extract the whole folder — `src` and `villife.ico` have to stay next to `Villife.exe`.
 
-When using a packaged build, extract the complete folder and launch `Villife.exe`. Keep the `src` and `webview2` folders and the WebView2 support files alongside it. Microsoft Edge WebView2 Runtime is required.
+The first run downloads the browser engine, so you need internet once. After that the library and settings live locally in the WebView2 profile, nothing gets sent anywhere.
 
-## Build from source
+## Build
 
-### Requirements
-
-- Windows
-- MSBuild from Visual Studio or Visual Studio Build Tools
-- .NET Framework 4.6.2 Developer Pack
-- Microsoft Edge WebView2 Runtime
-- WebView2 assemblies in the root `webview2` folder
-
-Build from the project directory:
+You need Windows, MSBuild (Visual Studio or the Build Tools), the .NET Framework 4.6.2 Developer Pack, and the WebView2 assemblies in the `webview2` folder at the project root — that folder is not in git.
 
 ```powershell
 msbuild .\src\Villife.csproj /t:Build /p:Configuration=Release
 ```
 
-The project writes `Villife.exe` to the root folder. The app expects the `src` and `webview2` folders and `villife.ico` to remain available beside the executable.
+You get `Villife.exe` in the project root.
 
-### Project layout
+## Layout
 
 ```text
 .
 ├── src/
-│   ├── Villife.csproj       Windows desktop project
-│   ├── villife.cs          App window, local server, and service endpoints
-│   ├── Discord.cs          Discord Rich Presence
-│   ├── index.html          Interface markup
-│   ├── css/app.css         Interface styles
-│   └── js/app.js           Player and interface behavior
-├── index.html              Villife website
-├── villife.css             Website styles
-├── villife.js              Website language and interactions
-├── webview2/               WebView2 assemblies
-├── villife.ico              App icon
+│   ├── Villife.csproj       Windows project
+│   ├── villife.cs           window, local server, provider calls
+│   ├── discord.cs           Discord Rich Presence
+│   ├── index.html           interface markup
+│   ├── css/app.css          styles
+│   └── js/app.js            player logic
+├── desktop/                 Electron shell for macOS and Linux builds
+├── .github/workflows/       release pipeline
+├── installer.iss            Inno Setup script
+├── villife.ico              icon
 └── README.md
 ```
 
-## Privacy and services
+## About the data
 
-Your library, Favorites, history, and settings are kept in the local WebView2 profile. Villife contacts the relevant providers when you use their features: SoundCloud for music discovery and streams, Spotify for public metadata, LRCLIB for lyrics, and optionally YouTube for video search. Discord Rich Presence communicates with the local desktop Discord client.
+Library, favorites, history and settings stay in the local WebView2 profile. The only network calls are the ones you'd expect: SoundCloud for search and streams, Spotify for public metadata, LRCLIB for lyrics, YouTube for video search if you turned it on, and Discord presence to the local client.
 
-## FAQ
+## Questions
 
-<details>
-  <summary>Do I need a Spotify account?</summary>
-  <p>Villife uses public Spotify metadata for importing tracks and playlists. It does not provide full playback from Spotify itself.</p>
-</details>
+**Do I need a Spotify account?** No. Public metadata is used for imports, playback has nothing to do with Spotify.
 
-<details>
-  <summary>Why don't YouTube clips appear?</summary>
-  <p>Clip search is optional and requires a YouTube Data API key. Music search and playback work independently of this feature.</p>
-</details>
+**Why are there no YouTube clips?** They are optional and need an API key. Search and playback work without them.
 
-<details>
-  <summary>Where is my library stored?</summary>
-  <p>In the local WebView2 profile used by Villife. Use the app's library export option to make a portable JSON copy.</p>
-</details>
-
-<details>
-  <summary>Can I build Villife without Visual Studio?</summary>
-  <p>Yes, if MSBuild and the required .NET Framework targeting pack are installed. Run the build command above from PowerShell.</p>
-</details>
+**Where is my library?** In the local WebView2 profile. There is a JSON export if you want a portable copy.
 
 ---
 
 <p align="center">
-  <strong>Villife — find your sound.</strong><br>
   <a href="https://villife.hs.vc/">villife.hs.vc</a>
 </p>
