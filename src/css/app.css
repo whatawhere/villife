@@ -71,7 +71,6 @@ button, input, textarea, select { font-family: inherit; }
   opacity: var(--ambient-artwork-opacity, 0.62);
 }
 #ambient-background.has-artwork img { animation: ambientDrift 30s ease-in-out infinite alternate; }
-#ambient-background.playing-track img { animation-duration: 22s; }
 #ambient-background img:nth-child(2) { animation-delay: -11s; }
 @keyframes ambientDrift {
   0% { transform: scale(1.16) translate3d(-6%, -4%, 0); filter: blur(72px) saturate(1.55) hue-rotate(-8deg); }
@@ -583,6 +582,9 @@ body.sidebar-resizing .sidebar { transition: none; }
 .about-link { width: 100%; border: 0; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; transition: background 0.16s ease; }
 .about-link:hover { background: hsl(var(--accent) / 0.58); }
 html.reduced-motion *, html.reduced-motion *::before, html.reduced-motion *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+html.reduced-motion .settings-switch, html.reduced-motion .settings-switch::before { transition-duration: 0.2s !important; }
+html.reduced-motion #ambient-background img { animation-duration: 30s !important; animation-play-state: paused !important; }
+html.reduced-motion .wave-backdrop > img { animation-duration: 28s !important; animation-play-state: paused !important; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1rem; }
 .playlist-rail { position: relative; isolation: isolate; }
@@ -950,6 +952,9 @@ input[type="range"].slider::-moz-range-thumb { width: 1rem; height: 1rem; border
 @keyframes settingsDialogExit { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(8px) scale(0.99); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+  .settings-switch, .settings-switch::before { transition-duration: 0.2s !important; }
+  #ambient-background img { animation-duration: 30s !important; animation-play-state: paused !important; }
+  .wave-backdrop > img { animation-duration: 28s !important; animation-play-state: paused !important; }
 }
 
 #toast {

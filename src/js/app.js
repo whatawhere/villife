@@ -2015,9 +2015,6 @@ function syncTrayStatus(track) {
 
 function renderPlayer() {
   const pl = $("player");
-  const isPlaying = qIndex >= 0 && !audio.paused;
-  $("app").classList.toggle("playing-track", isPlaying);
-  $("ambient-background").classList.toggle("playing-track", isPlaying);
   if (qIndex < 0 || !queue[qIndex]) {
     syncTrayStatus(null);
     pl.classList.add("off");
