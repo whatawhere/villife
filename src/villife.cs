@@ -1739,6 +1739,13 @@ namespace Villife
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool DestroyIcon(IntPtr handle);
 
+        [DllImport("user32.dll")]
+        static extern bool AnimateWindow(IntPtr hwnd, int time, int flags);
+
+        const int AwBlend = 0x00080000;
+        const int AwHide = 0x00010000;
+        bool closingWithFade;
+
         public MainForm(int port)
         {
             discordRpc = new DiscordRpcClient();
@@ -2322,15 +2329,35 @@ namespace Villife
             if (message.Msg == WmNcHitTest && WindowState == FormWindowState.Normal)
             {
                 base.WndProc(ref message);
+                var hit = (int)message.Result;
+                if (hit != HtClient && hit != 0) return;
                 var point = PointToClient(Cursor.Position);
                 if (point.Y < CaptionHeight && point.X < ClientSize.Width - WindowControlsWidth)
                     message.Result = (IntPtr)HtCaption;
-                else
-                    message.Result = (IntPtr)HtClient;
                 return;
             }
 
             base.WndProc(ref message);
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var cp = base.CreateParams;
+                cp.Style |= 0x00040000 | 0x00020000 | 0x00010000;
+                return cp;
+            }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing && !closingWithFade)
+            {
+                closingWithFade = true;
+                AnimateWindow(Handle, 200, AwBlend | AwHide);
+            }
+            base.OnFormClosing(e);
         }
 
         protected override void OnHandleCreated(EventArgs e)
