@@ -27,7 +27,7 @@ Search SoundCloud for tracks, albums and playlists, save them to your library or
 
 Spotify is used only to import metadata for tracks and playlists — there is no Spotify stream. Villife looks for a matching track on other sources, and sometimes there is none.
 
-Lyrics come from LRCLIB. YouTube video backgrounds are optional and need your own YouTube Data API key, everything else works without it.
+YouTube video backgrounds are optional and need your own YouTube Data API key, everything else works without it.
 
 On the Windows side: media keys through Media Session, tray controls (previous, play/pause, next, quit), Discord Rich Presence when the Discord desktop client is running.
 
@@ -71,7 +71,7 @@ You get `Villife.exe` in the project root.
 
 ## About the data
 
-Library, favorites, history and settings stay in the local WebView2 profile. The only network calls are the ones you'd expect: SoundCloud for search and streams, Spotify for public metadata, LRCLIB for lyrics, YouTube for video search if you turned it on, and Discord presence to the local client.
+Library, favorites, history and settings stay in the local WebView2 profile. The only network calls are the ones you'd expect: SoundCloud for search and streams, Spotify for public metadata, YouTube for video search if you turned it on, and Discord presence to the local client.
 
 ## Questions
 
