@@ -27,8 +27,6 @@ Search for tracks, albums and playlists, save them to your library or Favorites,
 
 Spotify is used only to import metadata for tracks and playlists — there is no Spotify stream. Villife looks for a matching track on other sources, and sometimes there is none.
 
-YouTube video backgrounds are optional and need your own YouTube Data API key, everything else works without it.
-
 On the Windows side: media keys through Media Session, tray controls (previous, play/pause, next, quit), Discord Rich Presence when the Discord desktop client is running.
 
 ## Install
@@ -71,13 +69,11 @@ You get `Villife.exe` in the project root.
 
 ## About the data
 
-Library, favorites, history and settings stay in the local WebView2 profile. The only network calls are the ones you'd expect: search and audio streams, Spotify for public metadata, YouTube for video search if you turned it on, and Discord presence to the local client.
+Library, favorites, history and settings stay in the local WebView2 profile. The only network calls are the ones you'd expect: search and audio streams, Spotify for public metadata, and Discord presence to the local client.
 
 ## Questions
 
 **Do I need a Spotify account?** No. Public metadata is used for imports, playback has nothing to do with Spotify.
-
-**Why are there no YouTube clips?** They are optional and need an API key. Search and playback work without them.
 
 **Where is my library?** In the local WebView2 profile. There is a JSON export if you want a portable copy.
 
