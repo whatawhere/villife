@@ -5,7 +5,7 @@
 <h1 align="center">Villife</h1>
 
 <p align="center">
-  A music player for Windows, macOS and Linux. SoundCloud search, a local library, queue and playback history, English and Russian interface.
+  A music player for Windows, macOS and Linux. Online search, a local library, queue and playback history, English and Russian interface.
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 ## What it does
 
-Search SoundCloud for tracks, albums and playlists, save them to your library or Favorites, queue them up. Shuffle, repeat, sleep timer and crossfade are there as well.
+Search for tracks, albums and playlists, save them to your library or Favorites, queue them up. Shuffle, repeat, sleep timer and crossfade are there as well.
 
 Spotify is used only to import metadata for tracks and playlists — there is no Spotify stream. Villife looks for a matching track on other sources, and sometimes there is none.
 
@@ -71,7 +71,7 @@ You get `Villife.exe` in the project root.
 
 ## About the data
 
-Library, favorites, history and settings stay in the local WebView2 profile. The only network calls are the ones you'd expect: SoundCloud for search and streams, Spotify for public metadata, YouTube for video search if you turned it on, and Discord presence to the local client.
+Library, favorites, history and settings stay in the local WebView2 profile. The only network calls are the ones you'd expect: search and audio streams, Spotify for public metadata, YouTube for video search if you turned it on, and Discord presence to the local client.
 
 ## Questions
 
