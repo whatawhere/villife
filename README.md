@@ -5,7 +5,7 @@
 <h1 align="center">Villife</h1>
 
 <p align="center">
-  A music player for Windows. SoundCloud search, a local library, queue and playback history, English and Russian interface.
+  A music player for Windows, macOS and Linux. SoundCloud search, a local library, queue and playback history, English and Russian interface.
 </p>
 
 <p align="center">
@@ -14,9 +14,11 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-windows-1687d9?style=flat-square" alt="Windows">
-  <img src="https://img.shields.io/badge/interface-EN%20%7C%20RU-6956a5?style=flat-square" alt="EN and RU">
-  <img src="https://img.shields.io/badge/status-in%20development-e39a31?style=flat-square" alt="In development">
+  <img src="https://img.shields.io/badge/Platform-Windows-1687d9?style=flat-square" alt="Windows">
+  <img src="https://img.shields.io/badge/Platform-macOS-999999?style=flat-square" alt="macOS">
+  <img src="https://img.shields.io/badge/Platform-Linux-e95420?style=flat-square" alt="Linux">
+  <img src="https://img.shields.io/badge/Interface-EN%20%7C%20RU-6956a5?style=flat-square" alt="EN and RU">
+  <img src="https://img.shields.io/badge/Status-In%20development-e39a31?style=flat-square" alt="In development">
 </p>
 
 ---
@@ -33,9 +35,13 @@ On the Windows side: media keys through Media Session, tray controls (previous, 
 
 ## Install
 
-Grab `VillifeSetup.exe` from the [releases page](https://github.com/whatawhere/villife/releases/latest), or take the zip and extract the whole folder — `src` and `villife.ico` have to stay next to `Villife.exe`.
+**Windows** — `VillifeSetup.exe` from the [releases page](https://github.com/whatawhere/villife/releases/latest), or the zip: extract the whole folder, `src` and `villife.ico` have to stay next to `Villife.exe`. The first run downloads the browser engine, so internet is needed once, after that the library and settings live locally in the WebView2 profile.
 
-The first run downloads the browser engine, so you need internet once. After that the library and settings live locally in the WebView2 profile, nothing gets sent anywhere.
+**macOS** — `Villife-macOS-arm64.dmg` or `Villife-macOS-x64.dmg`, zip archives are there too.
+
+**Linux** — `Villife-linux-x64.AppImage` or `Villife-linux-amd64.deb`.
+
+macOS and Linux builds run the same interface through an Electron shell.
 
 ## Build
 
