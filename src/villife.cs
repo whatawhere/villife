@@ -1309,6 +1309,7 @@ namespace Villife
             track["duration"] = duration / 1000;
             track["preview"] = "";
             track["stream"] = "/api/stream?id=" + Uri.EscapeDataString("sc:" + id);
+            track["url"] = data.ContainsKey("permalink_url") && data["permalink_url"] != null ? Convert.ToString(data["permalink_url"]) : "";
             track["source"] = "soundcloud";
             return track;
         }
@@ -1398,6 +1399,7 @@ namespace Villife
             track["duration"] = data.ContainsKey("duration") ? Convert.ToInt64(data["duration"]) / 1000 : 0;
             track["preview"] = preview ?? "";
             track["stream"] = "";
+            track["url"] = "https://open.spotify.com/track/" + id;
             track["source"] = "spotify";
             return track;
         }
@@ -1719,11 +1721,19 @@ namespace Villife
         string trayArtworkUrl = "";
         string storagePath;
         Rectangle normalBounds;
+        Rectangle lastNormalBounds;
+        bool restoreFixPending;
+        bool restoreFixScheduled;
         Size normalMinimumSize;
         bool normalWasMaximized;
         bool miniWindowActive;
-        Point dragAnchor = Point.Empty;
+        bool nativeDragStarted;
+        bool fullscreenActive;
+        Rectangle fullscreenBounds;
+        bool fullscreenWasMaximized;
+        bool fullscreenWasTopMost;
         const int WmNcHitTest = 0x0084;
+        const int WmNcCalcSize = 0x0083;
         const int WmNcLButtonDown = 0x00A1;
         const int WmGetMinMaxInfo = 0x0024;
         const int DwmwaWindowCornerPreference = 33;
@@ -1731,10 +1741,16 @@ namespace Villife
         const int HtClient = 1;
         const int HtCaption = 2;
         const int CaptionHeight = 42;
-        const int WindowControlsWidth = 160;
+        const int WindowControlsWidth = 255;
 
         [DllImport("dwmapi.dll")]
         static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+        [DllImport("user32.dll")]
+        static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool DestroyIcon(IntPtr handle);
@@ -1798,6 +1814,17 @@ namespace Villife
                     if (message != null && message.StartsWith(windowPrefix, StringComparison.Ordinal))
                     {
                         var command = message.Substring(windowPrefix.Length);
+                        if (command.StartsWith("resize-", StringComparison.Ordinal))
+                        {
+                            if (fullscreenActive) return;
+                            int hitCode;
+                            if (int.TryParse(command.Substring(7), out hitCode) && hitCode >= 10 && hitCode <= 17)
+                            {
+                                ReleaseCapture();
+                                SendMessage(Handle, WmNcLButtonDown, (IntPtr)hitCode, IntPtr.Zero);
+                            }
+                            return;
+                        }
                         switch (command)
                         {
                             case "minimize":
@@ -1809,6 +1836,9 @@ namespace Villife
                             case "close":
                                 Close();
                                 return;
+                            case "fullscreen":
+                                ToggleFullscreen();
+                                return;
                             case "open-storage":
                                 OpenStorageLocation();
                                 return;
@@ -1816,17 +1846,19 @@ namespace Villife
                                 OpenWebsite();
                                 return;
                             case "drag-start":
-                                dragAnchor = new Point(Cursor.Position.X - Left, Cursor.Position.Y - Top);
+                                if (fullscreenActive) return;
+                                nativeDragStarted = false;
                                 return;
                             case "drag-move":
-                                if (dragAnchor == Point.Empty) return;
-                                var pointer = Cursor.Position;
-                                Location = new Point(pointer.X - dragAnchor.X, pointer.Y - dragAnchor.Y);
+                                if (nativeDragStarted) return;
+                                nativeDragStarted = true;
+                                ReleaseCapture();
+                                SendMessage(Handle, WmNcLButtonDown, (IntPtr)HtCaption, IntPtr.Zero);
                                 return;
                             case "drag-end":
-                                dragAnchor = Point.Empty;
                                 return;
                             case "mini-window":
+                                if (fullscreenActive) ToggleFullscreen();
                                 SetMiniWindow(true);
                                 return;
                             case "normal-window":
@@ -2255,6 +2287,30 @@ namespace Villife
             miniWindowActive = false;
         }
 
+        void ToggleFullscreen()
+        {
+            if (fullscreenActive)
+            {
+                fullscreenActive = false;
+                TopMost = fullscreenWasTopMost;
+                if (fullscreenWasMaximized)
+                    WindowState = FormWindowState.Maximized;
+                else
+                    Bounds = fullscreenBounds;
+                return;
+            }
+
+            if (miniWindowActive) SetMiniWindow(false);
+            fullscreenWasMaximized = WindowState == FormWindowState.Maximized;
+            fullscreenWasTopMost = TopMost;
+            fullscreenBounds = Bounds;
+            WindowState = FormWindowState.Normal;
+            Bounds = Screen.FromControl(this).Bounds;
+            TopMost = true;
+            fullscreenActive = true;
+            web.Focus();
+        }
+
         void ExecutePlayerCommand(string command)
         {
             if (web == null || web.CoreWebView2 == null) return;
@@ -2315,6 +2371,11 @@ namespace Villife
 
         protected override void WndProc(ref Message message)
         {
+            if (message.Msg == WmNcCalcSize && message.WParam != IntPtr.Zero)
+            {
+                message.Result = IntPtr.Zero;
+                return;
+            }
             if (message.Msg == WmGetMinMaxInfo)
             {
                 var info = (MINMAXINFO)Marshal.PtrToStructure(message.LParam, typeof(MINMAXINFO));
@@ -2322,11 +2383,12 @@ namespace Villife
                 info.ptMaxPosition = new Point(area.Left, area.Top);
                 info.ptMaxSize = new Point(area.Width, area.Height);
                 info.ptMaxTrackSize = new Point(area.Width, area.Height);
+                info.ptMinTrackSize = new Point(MinimumSize.Width, MinimumSize.Height);
                 Marshal.StructureToPtr(info, message.LParam, true);
                 message.Result = IntPtr.Zero;
                 return;
             }
-            if (message.Msg == WmNcHitTest && WindowState == FormWindowState.Normal)
+            if (message.Msg == WmNcHitTest && WindowState == FormWindowState.Normal && !fullscreenActive)
             {
                 base.WndProc(ref message);
                 var hit = (int)message.Result;
@@ -2345,9 +2407,38 @@ namespace Villife
             get
             {
                 var cp = base.CreateParams;
-                cp.Style |= 0x00040000 | 0x00020000 | 0x00010000;
+                cp.Style |= 0x00CF0000;
                 return cp;
             }
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            if (WindowState == FormWindowState.Minimized)
+            {
+                restoreFixPending = true;
+                return;
+            }
+            if (WindowState == FormWindowState.Maximized)
+            {
+                restoreFixPending = false;
+                return;
+            }
+            if (restoreFixPending)
+            {
+                if (restoreFixScheduled) return;
+                restoreFixScheduled = true;
+                BeginInvoke((MethodInvoker)delegate
+                {
+                    restoreFixScheduled = false;
+                    restoreFixPending = false;
+                    if (WindowState == FormWindowState.Normal && lastNormalBounds.Width > 0 && Bounds != lastNormalBounds)
+                        Bounds = lastNormalBounds;
+                });
+                return;
+            }
+            lastNormalBounds = Bounds;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

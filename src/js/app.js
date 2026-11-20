@@ -22,7 +22,15 @@ const homeText = {
     track_not_interested_saved: "Учту: этот трек больше не будет попадать в волну",
     track_interested_restored: "Трек снова будет попадать в волну",
     wave_like: "В избранное", wave_unlike: "Убрать из избранного",
-    wave_shuffle: "Перемешать", wave_next: "Следующий трек", wave_play: "Воспроизвести", wave_pause: "Пауза"
+    wave_shuffle: "Перемешать", wave_next: "Следующий трек", wave_play: "Воспроизвести", wave_pause: "Пауза",
+    menu_like: "Нравится", menu_dislike: "Не нравится", menu_wave: "Моя волна по треку",
+    menu_play_next: "Играть следующим", menu_queue_end: "Добавить в конец очереди",
+    menu_add_playlist: "Добавить в плейлист", menu_no_playlists: "Нет плейлистов",
+    menu_share: "Поделиться", menu_share_copied: "Ссылка скопирована",
+    menu_artist: "Перейти к исполнителям", menu_about: "О треке",
+    menu_playlist_added: "Трек добавлен в плейлист", menu_playlist_exists: "Трек уже есть в плейлисте",
+    menu_duration: "Длительность", menu_source: "Источник", menu_copy_id: "Скопировать ID",
+    menu_more: "Ещё", win_fullscreen: "Полный экран", win_fullscreen_exit: "Выйти"
   },
   en: {
     for_you: "For you", for_you_based: "A mix from your favorites",
@@ -47,7 +55,15 @@ const homeText = {
     track_not_interested_saved: "Got it. This track won't appear in your wave again.",
     track_interested_restored: "This track can appear in your wave again.",
     wave_like: "Add to favorites", wave_unlike: "Remove from favorites",
-    wave_shuffle: "Shuffle", wave_next: "Next track", wave_play: "Play", wave_pause: "Pause"
+    wave_shuffle: "Shuffle", wave_next: "Next track", wave_play: "Play", wave_pause: "Pause",
+    menu_like: "Like", menu_dislike: "Not interested", menu_wave: "Go to song radio",
+    menu_play_next: "Play next", menu_queue_end: "Add to end of queue",
+    menu_add_playlist: "Add to playlist", menu_no_playlists: "No playlists",
+    menu_share: "Share", menu_share_copied: "Link copied",
+    menu_artist: "Go to artist", menu_about: "About track",
+    menu_playlist_added: "Track added to playlist", menu_playlist_exists: "Track is already in this playlist",
+    menu_duration: "Duration", menu_source: "Source", menu_copy_id: "Copy ID",
+    menu_more: "More", win_fullscreen: "Fullscreen", win_fullscreen_exit: "Exit"
   }
 };
 const ht = key => (homeText[lang] && homeText[lang][key]) || homeText.ru[key] || key;
@@ -93,12 +109,14 @@ let view = "search";
 let results = [];
 let playlists = [];
 let waveTracks = [];
+let waveNextPick = null;
 let playbackSource = "library";
 let lib = loadLibrary();
 let favorites = loadFavorites();
 let notInterestedTracks = loadNotInterestedTracks();
 let savedPlaylists = loadPlaylists();
 let historyTracks = loadHistory();
+let waveFeedback = loadWaveFeedback();
 let queue = [];
 let qIndex = -1;
 let shuffleEnabled = localStorage.getItem("velo_shuffle") === "true";
@@ -379,6 +397,25 @@ function abortPendingCrossfade(error) {
 
 function preloadNextTrack() {
   if (!$("settings-crossfade").checked || crossfadePending || crossfadeActive || qIndex < 0 || !queue.length) return;
+  if (view === "wave" && waveTracks.length) {
+    waveNextPick = wavePick(waveTracks, queue[qIndex]);
+    if (!waveNextPick && queue[qIndex]) {
+      fetchSeedTracks(queue[qIndex]).then(tracks => {
+        tracks.forEach(track => {
+          if (!waveTracks.some(item => sameTrack(item, track))) waveTracks.push(track);
+        });
+        waveNextPick = wavePick(waveTracks, queue[qIndex]) || waveNextPick;
+      });
+    }
+    const src = waveNextPick && trackSrc(waveNextPick);
+    if (!src) return;
+    if (standbyAudio.dataset.src === src) return;
+    standbyAudio.pause();
+    standbyAudio.dataset.src = src;
+    standbyAudio.src = src;
+    standbyAudio.load();
+    return;
+  }
   for (let attempt = 0; attempt < queue.length; attempt++) {
     const index = (qIndex + attempt + 1) % queue.length;
     const nextTrack = queue[index];
@@ -405,6 +442,7 @@ async function beginCrossfade(list, index, duration = 4) {
   const incomingTrack = list[index];
   const incomingSrc = trackSrc(incomingTrack);
   crossfadePrevious = { queue: queue, index: qIndex };
+  if (queue[qIndex]) recordWaveCompletion(queue[qIndex]);
   queue = list;
   qIndex = index;
   crossfadePending = true;
@@ -465,14 +503,40 @@ function maybeCrossfadeAtTrackEnd() {
   if (!$("settings-crossfade").checked || !$("settings-autoplay").checked || repeatMode === "one" ||
       crossfadePending || crossfadeActive || audio.paused || audio.ended ||
       !Number.isFinite(audio.duration) || audio.duration - audio.currentTime > 4) return;
-  for (let attempt = 0; attempt < queue.length; attempt++) {
-    const index = (qIndex + attempt + 1) % queue.length;
-    const nextTrack = queue[index];
-    if (!nextTrack || (!trackSrc(nextTrack) && nextTrack.source !== "spotify")) continue;
-    if (index !== qIndex && trackSrc(nextTrack)) {
-      beginCrossfade(queue, index, Math.max(0.1, Math.min(4, audio.duration - audio.currentTime)));
+  if (view === "wave" && waveTracks.length) {
+    const nextTrack = waveNextPick && waveTracks.some(track => sameTrack(track, waveNextPick)) &&
+      !sameTrack(waveNextPick, queue[qIndex]) ? waveNextPick : wavePick(waveTracks, queue[qIndex]);
+    if (!nextTrack || !trackSrc(nextTrack)) return;
+    const index = waveTracks.findIndex(track => sameTrack(track, nextTrack));
+    if (index >= 0 && index !== qIndex) {
+      beginCrossfade(waveTracks, index, Math.max(0.1, Math.min(4, audio.duration - audio.currentTime)));
     }
     return;
+  }
+  const fadeDuration = Math.max(0.1, Math.min(4, audio.duration - audio.currentTime));
+  for (let index = qIndex + 1; index < queue.length; index++) {
+    const nextTrack = queue[index];
+    if (!nextTrack || (!trackSrc(nextTrack) && nextTrack.source !== "spotify")) continue;
+    if (trackSrc(nextTrack)) beginCrossfade(queue, index, fadeDuration);
+    return;
+  }
+  if (repeatMode === "all" && queue.length > 1) {
+    for (let index = 0; index < qIndex; index++) {
+      const nextTrack = queue[index];
+      if (nextTrack && trackSrc(nextTrack)) {
+        beginCrossfade(queue, index, fadeDuration);
+        return;
+      }
+    }
+    return;
+  }
+  const fadePick = wavePick((favorites.length ? favorites : lib).concat(results), queue[qIndex]);
+  if (!fadePick) return;
+  const fadeIndex = queue.findIndex(track => track && sameTrack(track, fadePick));
+  if (fadeIndex > qIndex && trackSrc(queue[fadeIndex])) beginCrossfade(queue, fadeIndex, fadeDuration);
+  else {
+    queue = queue.concat(fadePick);
+    beginCrossfade(queue, queue.length - 1, fadeDuration);
   }
 }
 
@@ -604,6 +668,48 @@ function loadHistory() {
   }
 }
 
+function loadWaveFeedback() {
+  try {
+    const stored = localStorage.getItem("velo_wave_feedback");
+    const data = stored ? JSON.parse(stored) : {};
+    return data && typeof data === "object" && !Array.isArray(data) ? data : {};
+  } catch (error) {
+    console.error("Could not read wave feedback.", error);
+    return {};
+  }
+}
+
+function saveWaveFeedback() {
+  try {
+    localStorage.setItem("velo_wave_feedback", JSON.stringify(waveFeedback));
+  } catch (error) {
+    console.error("Could not save wave feedback.", error);
+  }
+}
+
+function waveFeedbackEntry(track) {
+  const key = waveTrackKey(track);
+  return waveFeedback[key] || { completed: 0, skipped: 0 };
+}
+
+function recordWaveCompletion(track) {
+  if (!track) return;
+  const key = waveTrackKey(track);
+  const entry = waveFeedback[key] || { completed: 0, skipped: 0 };
+  entry.completed = (entry.completed || 0) + 1;
+  waveFeedback[key] = entry;
+  saveWaveFeedback();
+}
+
+function recordWaveSkip(track) {
+  if (!track) return;
+  const key = waveTrackKey(track);
+  const entry = waveFeedback[key] || { completed: 0, skipped: 0 };
+  entry.skipped = (entry.skipped || 0) + 1;
+  waveFeedback[key] = entry;
+  saveWaveFeedback();
+}
+
 function loadNotInterestedTracks() {
   try {
     const stored = localStorage.getItem("velo_not_interested");
@@ -699,6 +805,8 @@ function applyI18n() {
     el.title = label;
   });
   document.querySelectorAll("[data-home-i18n]").forEach(el => { el.textContent = ht(el.dataset.homeI18n); });
+  $("window-fullscreen").querySelector("span").textContent =
+    ht(document.body.classList.contains("fullscreen-on") ? "win_fullscreen_exit" : "win_fullscreen");
   $("settings-close").title = st("settings_close");
   $("settings-close").setAttribute("aria-label", st("settings_close"));
   document.querySelector('[data-view="search"]').setAttribute("aria-label", t("nav_search"));
@@ -859,11 +967,13 @@ function showView(next) {
   updateSection();
 }
 
-function openWave() {
-  if (view === "wave" && qIndex >= 0 && queue[qIndex]) return;
+function openWave(seed) {
+  const seedTrack = seed && typeof seed === "object" && "title" in seed ? seed : null;
+  if (!seedTrack && view === "wave" && qIndex >= 0 && queue[qIndex]) return;
+  waveNextPick = null;
   const lastPlaybackSource = playbackSource;
-  const currentTrack = qIndex >= 0 ? queue[qIndex] : null;
-  const preserveCurrentTrack = !!(currentTrack && !audio.paused && !audio.ended);
+  const currentTrack = seedTrack || (qIndex >= 0 ? queue[qIndex] : null);
+  const preserveCurrentTrack = !seedTrack && !!(currentTrack && !audio.paused && !audio.ended);
   playbackSource = "wave";
   const savedTracks = (favorites.length ? favorites : lib)
     .filter(track => track && (track.source === "spotify" || trackSrc(track)));
@@ -886,7 +996,7 @@ function openWave() {
   if (!waveTracks.length) {
     waveTracks = searchTracks.filter(track => !isNotInterested(track));
   }
-  if (preserveCurrentTrack && !waveTracks.some(track => sameTrack(track, currentTrack)))
+  if ((seedTrack || preserveCurrentTrack) && !waveTracks.some(track => sameTrack(track, currentTrack)))
     waveTracks.unshift(currentTrack);
   showView("wave");
   if (!waveTracks.length) {
@@ -898,12 +1008,20 @@ function openWave() {
     const swapIndex = Math.floor(Math.random() * (index + 1));
     [waveTracks[index], waveTracks[swapIndex]] = [waveTracks[swapIndex], waveTracks[index]];
   }
+  if (currentTrack) {
+    waveTracks.sort((a, b) => waveCompatibility(currentTrack, b) - waveCompatibility(currentTrack, a));
+  }
   let index = waveTracks.findIndex(track => currentTrack && sameTrack(track, currentTrack));
   if (index < 0) index = 0;
   else if (index > 0) waveTracks.unshift(waveTracks.splice(index, 1)[0]);
   const keepCurrentTrack = !!(preserveCurrentTrack &&
     waveTracks.length && sameTrack(waveTracks[0], currentTrack));
   queue = waveTracks;
+  fetchSeedTracks(currentTrack || waveTracks[0]).then(tracks => {
+    tracks.forEach(track => {
+      if (!waveTracks.some(item => sameTrack(item, track))) waveTracks.push(track);
+    });
+  });
   if (keepCurrentTrack) {
     qIndex = 0;
     renderPlayer();
@@ -1025,6 +1143,98 @@ function isFavorite(track) {
 
 function isNotInterested(track) {
   return notInterestedTracks.some(saved => sameTrack(saved, track));
+}
+
+const WAVE_GENRES = [
+  { key: "ambient", words: ["ambient", "эмбиент", "амбиент", "эймбиент", "lofi", "lo-fi", "lo fi", "chillhop", "downtempo", "drone", "атмосфер"] },
+  { key: "electronic", words: ["techno", "house", "trance", "synthwave", "retrowave", "electronic", "электрон", "техно", "хаус", "транс", "edm", "rave", "рейв", "drum and bass", "drum&bass", "драм-н-бейс", "dnb", "днб"] },
+  { key: "hiphop", words: ["hip-hop", "hip hop", "хип-хоп", "хип хоп", "rap", "рэп", "phonk", "фонк", "trap", "трэп"] },
+  { key: "rock", words: ["rock", "рок", "metal", "метал", "punk", "панк", "grunge", "alternative", "альтернатив"] },
+  { key: "pop", words: ["pop", "поп", "k-pop", "kpop", "ки-поп"] },
+  { key: "jazz", words: ["jazz", "джаз", "blues", "блюз"] },
+  { key: "classical", words: ["classical", "классическ", "orchestr", "оркестр", "symphony", "симфон", "piano", "фортепиан", "soundtrack", "саундтрек"] }
+];
+
+function trackGenre(track) {
+  const text = " " + String(track.title || "").toLocaleLowerCase() + " " + String(track.artist || "").toLocaleLowerCase() + " ";
+  for (const genre of WAVE_GENRES) {
+    if (genre.words.some(word => text.includes(" " + word + " "))) return genre.key;
+  }
+  return "";
+}
+
+function waveTrackKey(track) {
+  return track.id || String(track.title || "") + "|" + String(track.artist || "");
+}
+
+function waveCompatibility(current, candidate) {
+  let score = Math.random() * 25;
+  const feedback = waveFeedbackEntry(candidate);
+  score += Math.min(60, (feedback.completed || 0) * 25);
+  score -= Math.min(90, (feedback.skipped || 0) * 45);
+  if (isFavorite(candidate)) score += 50;
+  const recentArtists = historyTracks.slice(0, 5).map(track =>
+    String(track.artist || "").toLocaleLowerCase()).filter(Boolean);
+  const candidateArtist = String(candidate.artist || "").toLocaleLowerCase();
+  if (candidateArtist && recentArtists.filter(name => name === candidateArtist).length >= 2) score -= 70;
+  const hour = new Date().getHours();
+  const candidateGenre = trackGenre(candidate);
+  if (candidateGenre === "ambient" || candidateGenre === "classical") {
+    if (hour >= 23 || hour < 7) score += 30;
+    if (hour >= 11 && hour < 17) score -= 15;
+  }
+  if (candidateGenre === "electronic" || candidateGenre === "hiphop") {
+    if (hour >= 20 || hour < 2) score += 20;
+    if (hour >= 8 && hour < 12) score -= 10;
+  }
+  if (!current) return score;
+  const currentGenre = trackGenre(current);
+  if (currentGenre) {
+    if (candidateGenre === currentGenre) score += 100;
+    else if (!candidateGenre) score += 15;
+  }
+  if (current.artist && candidate.artist &&
+    current.artist.toLocaleLowerCase() === candidate.artist.toLocaleLowerCase()) score += 45;
+  return score;
+}
+
+function wavePick(list, current) {
+  const candidates = list.filter(track => track &&
+    (trackSrc(track) || track.source === "spotify") &&
+    !sameTrack(track, current) && !isNotInterested(track));
+  if (!candidates.length) return null;
+  const recent = new Set(historyTracks.slice(0, 4).map(waveTrackKey));
+  const fresh = candidates.filter(track => !recent.has(waveTrackKey(track)));
+  const pool = fresh.length ? fresh : candidates;
+  const scored = pool.map(track => ({ track: track, score: waveCompatibility(current, track) }));
+  scored.sort((a, b) => b.score - a.score);
+  if (scored.length > 6 && Math.random() < 0.2) {
+    const explore = scored.slice(6, Math.min(18, scored.length));
+    return explore[Math.floor(Math.random() * explore.length)].track;
+  }
+  const top = scored.slice(0, Math.min(6, scored.length));
+  return top[Math.floor(Math.random() * top.length)].track;
+}
+
+let waveSeedPromise = null;
+
+function fetchSeedTracks(current) {
+  if (!current) return Promise.resolve([]);
+  if (waveSeedPromise) return waveSeedPromise;
+  const query = String(current.artist || current.title || "").trim();
+  if (!query) return Promise.resolve([]);
+  waveSeedPromise = getJson("/api/search?q=" + encodeURIComponent(query))
+    .then(data => {
+      const tracks = Array.isArray(data) ? uniqueSearchTracks(data) : [];
+      return tracks.filter(track => track && (trackSrc(track) || track.source === "spotify") &&
+        !isNotInterested(track));
+    })
+    .catch(error => {
+      console.error("Wave seeding failed.", error);
+      return [];
+    })
+    .finally(() => { waveSeedPromise = null; });
+  return waveSeedPromise;
 }
 
 function favoriteIconSvg() {
@@ -1195,6 +1405,7 @@ function renderResults() {
           '<button class="btn btn-ghost btn-icon btn-sm not-interested-control' + (isNotInterested(tr) ? " is-not-interested" : "") + '" data-not-interested="' + i + '" aria-label="' + esc(ht(isNotInterested(tr) ? "track_interested_again" : "track_not_interested")) + '" title="' + esc(ht(isNotInterested(tr) ? "track_interested_again" : "track_not_interested")) + '">' + notInterestedIconSvg() + "</button>" +
           '<button class="btn btn-ghost btn-icon btn-sm queue-add-control" data-queue-add="' + i + '" aria-label="' + esc(ht("queue_add")) + '" title="' + esc(ht("queue_add")) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m17 14 4 4-4 4"/></svg></button>' +
           '<button class="btn btn-ghost btn-icon btn-sm" data-play="' + i + '" aria-label="' + esc(ht("play_track") + " " + tr.title) + '" title="' + esc(ht("play_track")) + '"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>' +
+          trackMoreButton() +
         "</div>" +
       "</div>";
     }).join("");
@@ -1334,6 +1545,7 @@ function renderLibrary() {
       '<div class="row-actions">' +
         '<span class="row-dur">' + fmt(tr.duration) + "</span>" +
         '<button class="btn btn-ghost btn-icon btn-sm favorite-button favorite-control' + (isFavorite(tr) ? " is-liked" : "") + '" data-favorite="' + i + '" aria-label="' + esc(ht(isFavorite(tr) ? "search_favorite_remove" : "search_favorite_add")) + '" title="' + esc(ht(isFavorite(tr) ? "search_favorite_remove" : "search_favorite_add")) + '">' + favoriteIconSvg() + "</button>" +
+        trackMoreButton() +
       "</div>" +
       "</div>";
   }).join("");
@@ -1358,7 +1570,7 @@ function renderFavorites() {
       '<div class="row-info"><div class="row-title">' + esc(track.title || "") + "</div>" +
         '<div class="row-sub"><span class="t">' + artistHtml(track) + "</span></div></div>" +
       '<div class="row-actions"><span class="row-dur">' + fmt(track.duration) + "</span>" +
-        '<button class="btn btn-ghost btn-icon btn-sm favorite-button favorite-control is-liked" data-favorite-remove="' + index + '" aria-label="' + esc(ht("search_favorite_remove")) + '" title="' + esc(ht("search_favorite_remove")) + '">' + favoriteIconSvg() + "</button></div>" +
+        '<button class="btn btn-ghost btn-icon btn-sm favorite-button favorite-control is-liked" data-favorite-remove="' + index + '" aria-label="' + esc(ht("search_favorite_remove")) + '" title="' + esc(ht("search_favorite_remove")) + '">' + favoriteIconSvg() + "</button>" + trackMoreButton() + "</div>" +
     "</div>"
   ).join("");
   updateSection();
@@ -1413,7 +1625,8 @@ function renderQueue() {
       '<span class="row-dur">' + fmt(track.duration) + '</span>' +
       '<div class="row-actions"><button class="btn btn-ghost btn-icon btn-sm" data-queue-remove="' + index +
       '" aria-label="' + esc(ht("queue_remove")) + '" title="' + esc(ht("queue_remove")) +
-      '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg></button></div></div>';
+      '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg></button>' +
+      trackMoreButton() + '</div></div>';
   }).join("");
   empty.style.display = activeTrack || upcoming.length ? "none" : "";
   list.style.display = upcoming.length ? "" : "none";
@@ -1429,7 +1642,8 @@ function renderHistory() {
       '<div class="row-sub">' + artistHtml(track) + '</div></div><span class="row-dur">' + fmt(track.duration) +
       '</span><button class="btn btn-ghost btn-icon btn-sm history-play" data-history-play="' + index +
       '" aria-label="' + esc(ht("play_track")) + '" title="' + esc(ht("play_track")) +
-      '"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></div>'
+      '"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>' +
+      trackMoreButton() + '</div>'
   ).join("");
   list.style.display = historyTracks.length ? "" : "none";
   $("history-empty").style.display = historyTracks.length ? "none" : "";
@@ -1475,8 +1689,8 @@ function renderPlaylistDetail(playlist, tracks) {
       '<div class="row-info"><div class="row-title" title="' + esc(track.title) + '">' + esc(track.title) + "</div>" +
         '<div class="row-sub"><span class="t">' + artistHtml(track) + "</span></div></div>" +
     '<div class="row-actions"><span class="row-dur">' + fmt(track.duration) + "</span>" +
-      '<button class="btn btn-ghost btn-icon btn-sm favorite-button favorite-control' + (isFavorite(track) ? " is-liked" : "") + '" data-detail-favorite="' + i + '" aria-label="' + esc(ht(isFavorite(track) ? "search_favorite_remove" : "search_favorite_add")) + '" title="' + esc(ht(isFavorite(track) ? "search_favorite_remove" : "search_favorite_add")) + '">' + favoriteIconSvg() + "</button></div>" +
-    "</div>"
+      '<button class="btn btn-ghost btn-icon btn-sm favorite-button favorite-control' + (isFavorite(track) ? " is-liked" : "") + '" data-detail-favorite="' + i + '" aria-label="' + esc(ht(isFavorite(track) ? "search_favorite_remove" : "search_favorite_add")) + '" title="' + esc(ht(isFavorite(track) ? "search_favorite_remove" : "search_favorite_add")) + '">' + favoriteIconSvg() + "</button>" +
+      trackMoreButton() + "</div></div>"
   ).join("") : '<div class="detail-empty">' + esc(t("playlist_empty")) + "</div>";
 }
 
@@ -1683,7 +1897,8 @@ function renderArtistList() {
       '<div class="row-art">' + artHtml(track) + "</div>" +
       '<div class="row-info"><div class="row-title" title="' + esc(track.title) + '">' + esc(track.title) + "</div>" +
         '<div class="row-sub"><span class="t">' + artistHtml(track) + "</span></div></div>" +
-      '<div class="row-actions"><span class="row-dur">' + fmt(track.duration) + "</span></div>" +
+      '<div class="row-actions"><span class="row-dur">' + fmt(track.duration) + "</span>" +
+        trackMoreButton() + "</div>" +
     "</div>"
   ).join("") : '<div class="detail-empty">' + esc(t("playlist_empty")) + "</div>";
 }
@@ -1860,6 +2075,7 @@ async function startTrack(list, index, requestId) {
   }
   queue = list;
   qIndex = index;
+  fillQueue(4);
   loadTrack(tr);
   audio.play().catch(handlePlaybackError);
   renderPlayer();
@@ -1867,10 +2083,57 @@ async function startTrack(list, index, requestId) {
   preloadNextTrack();
 }
 
+function fillQueue(count) {
+  if (view === "wave" && waveTracks.length) return 0;
+  if (qIndex < 0 || !queue.length) return 0;
+  if (queue === favorites || queue === lib || queue === results || queue === waveTracks ||
+      queue === activePlaylistTracks || queue === activeArtistTracks) queue = queue.slice();
+  const upcoming = queue.length - qIndex - 1;
+  if (upcoming >= count) return 0;
+  const seen = new Set();
+  const collect = tracks => tracks.filter(track => {
+    if (!track || !(trackSrc(track) || track.source === "spotify")) return false;
+    if (queue.some(item => sameTrack(item, track)) || isNotInterested(track)) return false;
+    const key = waveTrackKey(track);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const playlistTracks = savedPlaylists.reduce((all, playlist) =>
+    all.concat(Array.isArray(playlist.tracks) ? playlist.tracks : []), []);
+  const others = collect(lib.concat(results, playlistTracks).filter(track => track && !isFavorite(track)));
+  const liked = collect(favorites);
+  const history = collect(historyTracks);
+  const pool = others.length ? others.concat(liked)
+    : liked.length ? liked.concat(history)
+      : history;
+  if (!pool.length) return 0;
+  let anchor = queue[qIndex];
+  let added = 0;
+  const target = count - upcoming;
+  while (added < target && pool.length) {
+    const pick = wavePick(pool, anchor);
+    if (!pick) break;
+    queue.push(pick);
+    anchor = pick;
+    const at = pool.findIndex(track => sameTrack(track, pick));
+    if (at >= 0) pool.splice(at, 1);
+    added++;
+  }
+  if (added && view === "queue") renderQueue();
+  return added;
+}
+
 function step(d, automatic) {
-  const activeQueue = view === "wave" && waveTracks.length ? waveTracks : queue;
+  const inWave = view === "wave" && waveTracks.length > 0;
+  if (!inWave && d >= 0) fillQueue(4);
+  const activeQueue = inWave ? waveTracks : queue;
   if (!activeQueue.length) return;
-  if (view === "wave" && activeQueue !== queue) queue = activeQueue;
+  if (inWave && activeQueue !== queue) queue = activeQueue;
+  if (d > 0 && !automatic && qIndex >= 0 && activeQueue[qIndex] &&
+      Number.isFinite(audio.currentTime) && audio.currentTime < 10) {
+    recordWaveSkip(activeQueue[qIndex]);
+  }
   if (d < 0) {
     let previousIndex = qIndex - 1;
     if (previousIndex < 0 && repeatMode === "all") previousIndex = activeQueue.length - 1;
@@ -1884,7 +2147,28 @@ function step(d, automatic) {
     return;
   }
   let nextIndex = -1;
-  if (shuffleEnabled && activeQueue.length > 1) {
+  if (inWave) {
+    const current = activeQueue[qIndex];
+    let picked = null;
+    if (waveNextPick && activeQueue.some(track => sameTrack(track, waveNextPick)) &&
+      !sameTrack(waveNextPick, current) && trackSrc(waveNextPick)) {
+      picked = waveNextPick;
+    } else {
+      picked = wavePick(activeQueue, current);
+    }
+    waveNextPick = null;
+    if (picked) nextIndex = activeQueue.findIndex(track => sameTrack(track, picked));
+    if (nextIndex < 0) {
+      const pool = (favorites.length ? favorites : lib).concat(results)
+        .filter(track => !activeQueue.some(item => sameTrack(item, track)));
+      const fresh = wavePick(pool, current);
+      if (fresh) {
+        waveTracks.push(fresh);
+        queue = waveTracks;
+        nextIndex = waveTracks.length - 1;
+      }
+    }
+  } else if (shuffleEnabled && activeQueue.length > 1) {
     const candidates = activeQueue
       .map((track, index) => ({ track: track, index: index }))
       .filter(item => item.index !== qIndex && (trackSrc(item.track) || item.track.source === "spotify"));
@@ -1899,29 +2183,48 @@ function step(d, automatic) {
   } else if (repeatMode === "all" && activeQueue.length) {
     nextIndex = activeQueue.findIndex(track => trackSrc(track) || track.source === "spotify");
   }
-  if (nextIndex < 0) {
-    if (view === "wave" && waveTracks.length > 1 && repeatMode !== "one") {
-      const recentIds = new Set(historyTracks.slice(0, 5).map(track => track.id || track.title + "|" + track.artist));
-      const candidates = (favorites.length ? favorites : lib)
-        .filter(track => track && !isNotInterested(track) && (trackSrc(track) || track.source === "spotify"));
-      const freshTracks = candidates.filter(track => !recentIds.has(track.id || track.title + "|" + track.artist));
-      const pool = freshTracks.length ? freshTracks : candidates;
-      const nextTrack = pool.find(track => !queue.some(queued => sameTrack(queued, track))) ||
-        pool.find(track => !sameTrack(track, queue[qIndex]));
-      if (nextTrack) {
-        waveTracks = [nextTrack];
-        queue = waveTracks;
-        playAt(queue, 0, "wave");
-      }
+  if (nextIndex < 0 || (nextIndex === qIndex && !automatic)) {
+    const playlistTracks = savedPlaylists.reduce((all, playlist) =>
+      all.concat(Array.isArray(playlist.tracks) ? playlist.tracks : []), []);
+    const pool = favorites.concat(lib, results, historyTracks, playlistTracks)
+      .filter(track => track && (trackSrc(track) || track.source === "spotify") &&
+        !sameTrack(track, activeQueue[qIndex]) && !isNotInterested(track));
+    const fresh = wavePick(pool, activeQueue[qIndex]);
+    if (fresh) {
+      queue = activeQueue.concat(fresh);
+      nextIndex = queue.length - 1;
     }
+  }
+  if (nextIndex < 0 || (nextIndex === qIndex && !automatic)) {
+    const current = activeQueue[qIndex];
+    const alternatives = activeQueue.map((track, index) => ({ track: track, index: index }))
+      .filter(item => item.index !== qIndex && item.track &&
+        (trackSrc(item.track) || item.track.source === "spotify"));
+    if (alternatives.length) {
+      const scored = alternatives.map(item =>
+        ({ item: item, score: waveCompatibility(current, item.track) }));
+      scored.sort((a, b) => b.score - a.score);
+      nextIndex = scored[Math.floor(Math.random() * Math.min(3, scored.length))].item.index;
+    }
+  }
+  if (nextIndex < 0 || (nextIndex === qIndex && !automatic)) {
+    const current = activeQueue[qIndex];
+    const anchorQueue = activeQueue;
+    fetchSeedTracks(current).then(tracks => {
+      const fresh = tracks.filter(track => !anchorQueue.some(item => sameTrack(item, track)));
+      const pick = wavePick(fresh, current);
+      if (!pick) return;
+      queue = anchorQueue.concat(pick);
+      playAt(queue, queue.length - 1);
+    });
     return;
   }
-  const track = activeQueue[nextIndex];
+  const track = (nextIndex < activeQueue.length ? activeQueue : queue)[nextIndex];
   if ($("settings-crossfade").checked && !audio.paused && !audio.ended && trackSrc(track) && nextIndex !== qIndex) {
-    beginCrossfade(activeQueue, nextIndex, 0.35);
+    beginCrossfade(nextIndex < activeQueue.length ? activeQueue : queue, nextIndex, 0.35);
     return;
   }
-  playAt(activeQueue, nextIndex);
+  playAt(nextIndex < activeQueue.length ? activeQueue : queue, nextIndex);
 }
 
 function previousTrack() {
@@ -2090,8 +2393,11 @@ function renderNowPlayingTrack(track) {
   $("now-playing-artist").innerHTML = artistHtml(track);
   $("pl-open-now-playing").title = lang === "en" ? "Lyrics" : "Текст песни";
   updateLyricsToggleLabel();
-  $("now-playing-close").title = lang === "en" ? "Close" : "Закрыть";
-  $("now-playing-close").setAttribute("aria-label", lang === "en" ? "Close lyrics" : "Закрыть текст песни");
+  const leaving = document.body.classList.contains("fullscreen-on");
+  $("now-playing-close").title = lang === "en" ? (leaving ? "Exit" : "Close") : (leaving ? "Выйти" : "Закрыть");
+  $("now-playing-close").setAttribute("aria-label", lang === "en"
+    ? (leaving ? "Exit fullscreen" : "Close lyrics")
+    : (leaving ? "Выйти из полного экрана" : "Закрыть текст песни"));
 }
 
 function lyricsMessage(message, loading) {
@@ -2334,7 +2640,14 @@ function updateActiveLyric(forceScroll) {
   if (index === activeLyricIndex && !forceScroll) return;
   activeLyricIndex = index;
   const lines = $("lyrics-content").querySelectorAll(".lyrics-line");
-  lines.forEach((line, i) => line.classList.toggle("active", i === index));
+  lines.forEach((line, i) => {
+    line.classList.toggle("active", i === index);
+    line.classList.toggle("is-past", index >= 0 && i < index);
+    const ahead = i - index - 1;
+    const fade = index < 0 || ahead < 0 ? "" : String(Math.max(0, 0.72 - ahead * 0.14).toFixed(2));
+    line.style.opacity = fade;
+    line.style.pointerEvents = fade !== "" && parseFloat(fade) < 0.15 ? "none" : "";
+  });
   if (index >= 0) followActiveLyric();
 }
 
@@ -2814,12 +3127,43 @@ document.querySelectorAll(".lang-card").forEach(card => {
 });
 
 let dragState = null;
+const edgeZone = 6;
+const edgeAt = event => {
+  const l = event.clientX <= edgeZone;
+  const r = event.clientX >= window.innerWidth - edgeZone;
+  const t = event.clientY <= edgeZone;
+  const b = event.clientY >= window.innerHeight - edgeZone;
+  if (t && l) return { code: 13, cursor: "nwse-resize" };
+  if (t && r) return { code: 14, cursor: "nesw-resize" };
+  if (b && l) return { code: 16, cursor: "nesw-resize" };
+  if (b && r) return { code: 17, cursor: "nwse-resize" };
+  if (t) return { code: 12, cursor: "ns-resize" };
+  if (b) return { code: 15, cursor: "ns-resize" };
+  if (l) return { code: 10, cursor: "ew-resize" };
+  if (r) return { code: 11, cursor: "ew-resize" };
+  return null;
+};
+const edgeBlocked = event => event.target.closest("button, a, input, textarea, select, .window-actions");
+document.addEventListener("pointerdown", event => {
+  if (event.button !== 0) return;
+  const edge = edgeAt(event);
+  if (edge && !edgeBlocked(event)) {
+    sendWindowCommand("resize-" + edge.code);
+    event.preventDefault();
+  }
+}, true);
+document.addEventListener("pointermove", event => {
+  if (dragState) return;
+  const edge = edgeAt(event);
+  document.body.style.cursor = edge && !edgeBlocked(event) ? edge.cursor : "";
+}, true);
 const suppressClick = event => {
   event.stopPropagation();
   event.preventDefault();
 };
 const dragStartBlocked = event => {
   if (event.button !== 0) return true;
+  if (edgeAt(event)) return true;
   if (event.clientY > 46) return true;
   if (event.target.closest(".window-actions")) return true;
   if (event.target.closest("input, textarea, select")) return true;
@@ -2833,6 +3177,7 @@ document.addEventListener("pointerdown", event => {
 document.addEventListener("pointermove", event => {
   if (!dragState) return;
   if (Math.abs(event.clientX - dragState.x) > 3 || Math.abs(event.clientY - dragState.y) > 3) dragState.moved = true;
+  if (!dragState.moved) return;
   sendWindowCommand("drag-move");
 }, true);
 document.addEventListener("pointerup", () => {
@@ -2846,6 +3191,36 @@ document.addEventListener("pointerup", () => {
 $("window-minimize").addEventListener("click", () => sendWindowCommand("minimize"));
 $("window-maximize").addEventListener("click", () => sendWindowCommand("maximize"));
 $("window-close").addEventListener("click", () => sendWindowCommand("close"));
+$("window-fullscreen").addEventListener("click", toggleFullscreenMode);
+
+let fullscreenPanelWasOpen = false;
+
+function toggleFullscreenMode() {
+  const on = !document.body.classList.contains("fullscreen-on");
+  if (on && document.body.classList.contains("mini-player")) toggleMiniPlayer(false);
+  document.body.classList.toggle("fullscreen-on", on);
+  sendWindowCommand("fullscreen");
+  $("window-fullscreen").querySelector("span").textContent = ht(on ? "win_fullscreen_exit" : "win_fullscreen");
+  if (on) enterFullscreenPlayer();
+  else leaveFullscreenPlayer();
+}
+
+function enterFullscreenPlayer() {
+  if (!$("view-settings").hidden) closeSettings(true);
+  if (qIndex < 0 || !queue[qIndex]) return;
+  fullscreenPanelWasOpen = $("pl-open-now-playing").getAttribute("aria-expanded") === "true";
+  renderNowPlayingTrack(queue[qIndex]);
+  setNowPlayingOpen(true);
+  if (activeLyricsTrackId !== queue[qIndex].id) loadTrackLyrics(queue[qIndex]);
+  updateActiveLyric(true);
+  updateProgress();
+}
+
+function leaveFullscreenPlayer() {
+  const keepOpen = fullscreenPanelWasOpen;
+  fullscreenPanelWasOpen = false;
+  if (!keepOpen) setNowPlayingOpen(false);
+}
 $("mini-player-toggle").addEventListener("click", () => toggleMiniPlayer());
 $("mini-player-back").addEventListener("click", () => toggleMiniPlayer(false));
 $("mini-player-play").addEventListener("click", togglePlay);
@@ -2855,8 +3230,8 @@ $("mini-player-next").addEventListener("click", () => step(1));
 document.querySelectorAll(".nav-item[data-view]").forEach(item => {
   item.addEventListener("click", () => showView(item.dataset.view));
 });
-$("brand-wave").addEventListener("click", openWave);
-$("for-you-card").addEventListener("click", openWave);
+$("brand-wave").addEventListener("click", () => openWave());
+$("for-you-card").addEventListener("click", () => openWave());
 $("wave-back").addEventListener("click", () => showView("search"));
 $("wave-find-music").addEventListener("click", () => {
   showView("search");
@@ -2873,6 +3248,11 @@ $("view-settings").addEventListener("click", event => {
   if (event.target === $("view-settings")) closeSettings(true);
 });
 document.addEventListener("keydown", event => {
+  if (event.key === "F11") {
+    event.preventDefault();
+    toggleFullscreenMode();
+    return;
+  }
   if (event.key === "Escape" && !$("view-settings").hidden) closeSettings(true);
   if (!$("view-settings").hidden || !$("import-overlay").classList.contains("off")) return;
   const target = event.target;
@@ -3449,6 +3829,7 @@ function setNowPlayingOpen(isOpen) {
   nowPlayingOpenFrame = 0;
 
   toggle.setAttribute("aria-expanded", String(isOpen));
+  document.body.classList.toggle("np-open", isOpen);
   updateLyricsToggleLabel();
 
   if (isOpen) {
@@ -3496,7 +3877,10 @@ function openNowPlaying() {
   if (activeLyricsTrackId !== queue[qIndex].id) loadTrackLyrics(queue[qIndex]);
   updateActiveLyric(true);
 }
-$("now-playing-close").addEventListener("click", () => setNowPlayingOpen(false));
+$("now-playing-close").addEventListener("click", () => {
+  if (document.body.classList.contains("fullscreen-on")) toggleFullscreenMode();
+  else setNowPlayingOpen(false);
+});
 
 function previewSeekToPointer(e) {
   if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
@@ -3554,6 +3938,16 @@ $("pl-bar").addEventListener("keydown", e => {
   updateProgress();
 });
 
+$("np-bar").addEventListener("pointerdown", e => {
+  if (e.button !== 0 || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+  e.preventDefault();
+  const r = $("np-bar").getBoundingClientRect();
+  const progress = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+  seekAudio(progress * audio.duration);
+  updateProgress();
+  $("pl-cur").textContent = fmt(audio.currentTime);
+});
+
 $("pl-vol").addEventListener("input", e => {
   setPlaybackVolume(parseFloat(e.target.value));
   $("settings-volume").value = String(audio.volume);
@@ -3599,6 +3993,10 @@ document.addEventListener("pointerdown", e => {
 });
 
 document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && document.body.classList.contains("fullscreen-on") && $("view-settings").hidden) {
+    toggleFullscreenMode();
+    return;
+  }
   if (e.key === "Escape" && !$("now-playing-view").hidden) {
     setNowPlayingOpen(false);
     return;
@@ -3624,6 +4022,11 @@ function updateProgress() {
   const percent = duration ? current / duration * 100 : 0;
   $("wave-progress-fill").style.width = percent + "%";
   $("pl-fill").style.width = percent + "%";
+  if (document.body.classList.contains("fullscreen-on")) {
+    $("np-fill").style.width = percent + "%";
+    $("np-cur").textContent = fmt(current);
+    $("np-dur").textContent = fmt(duration);
+  }
   $("pl-bar").setAttribute("aria-valuemax", String(duration));
   $("pl-bar").setAttribute("aria-valuenow", String(current));
   $("pl-bar").setAttribute("aria-valuetext", fmt(current) + " / " + fmt(duration));
@@ -3682,9 +4085,273 @@ function bindAudioEvents(element) {
     if (mediaSession) mediaSession.playbackState = "paused";
     updateActiveLyric(true);
     updateDiscordPresence();
+    if (qIndex >= 0 && queue[qIndex]) recordWaveCompletion(queue[qIndex]);
     if (repeatMode !== "off" || $("settings-autoplay").checked) step(1, true);
   }));
 }
+
+const trackMenuEl = $("track-menu");
+let menuTrack = null;
+
+const menuIcons = {
+  like: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21l7.78-7.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></svg>',
+  dislike: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21l7.78-7.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/><path d="m4.5 4.5 15 15"/></svg>',
+  wave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4"/><path d="M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>',
+  next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="m7.5 11.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>',
+  queue: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h11M4 11h11M4 16h6"/><path d="M18.5 13.5v6M15.5 16.5h6"/></svg>',
+  playlist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 16.5V6l9-1.8v5.3"/><circle cx="6.5" cy="16.5" r="2.5"/><path d="M17.5 14.5v5M15 17h5"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="m8 8 4-4 4 4"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></svg>',
+  artist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="2.6"/><path d="M6.9 18.3a6 6 0 0 1 10.2 0"/></svg>',
+  about: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16.5v-5M12 8h.01"/></svg>',
+  caret: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>'
+};
+
+const moreIconSvg = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="19" cy="12" r="1.75"/></svg>';
+
+function trackMoreButton() {
+  return '<button type="button" class="btn btn-ghost btn-icon btn-sm row-more" data-track-more aria-label="' +
+    esc(ht("menu_more")) + '" title="' + esc(ht("menu_more")) + '">' + moreIconSvg + "</button>";
+}
+
+function trackFromMenuTarget(target) {
+  if (!target || !target.closest) return null;
+  const sources = [
+    ["[data-i]", results],
+    ["[data-lib]", lib],
+    ["[data-favorite-track]", favorites],
+    ["[data-queue-track]", queue],
+    ["[data-history-track]", historyTracks],
+    ["[data-detail-track]", activePlaylistTracks],
+    ["[data-artist-track]", activeArtistTracks]
+  ];
+  for (const [selector, list] of sources) {
+    const row = target.closest(selector);
+    if (!row) continue;
+    const index = parseInt(row.getAttribute(selector.slice(1, -1)), 10);
+    if (Number.isInteger(index) && list[index]) return list[index];
+  }
+  return null;
+}
+
+function menuButton(action, label, icon, active, caret) {
+  return '<button type="button" class="track-menu-item' + (active ? " is-active" : "") +
+    '" data-menu="' + action + '" role="menuitem">' + icon + "<span>" + esc(label) + "</span>" +
+    (caret ? '<span class="track-menu-caret">' + menuIcons.caret + "</span>" : "") + "</button>";
+}
+
+function menuSeparator() {
+  return '<div class="track-menu-sep" role="separator"></div>';
+}
+
+function closeTrackMenu() {
+  trackMenuEl.hidden = true;
+  trackMenuEl.innerHTML = "";
+  menuTrack = null;
+}
+
+function positionTrackMenu(x, y) {
+  trackMenuEl.hidden = false;
+  trackMenuEl.style.left = "0px";
+  trackMenuEl.style.top = "0px";
+  const rect = trackMenuEl.getBoundingClientRect();
+  let left = x;
+  let top = y;
+  if (left + rect.width > window.innerWidth - 8) left = Math.max(8, x - rect.width);
+  if (top + rect.height > window.innerHeight - 8) top = Math.max(8, y - rect.height);
+  trackMenuEl.style.left = Math.max(8, left) + "px";
+  trackMenuEl.style.top = Math.max(8, top) + "px";
+  const group = trackMenuEl.querySelector(".track-menu-group");
+  if (group && left + rect.width + 230 > window.innerWidth) group.classList.add("sub-left");
+}
+
+function openTrackMenu(x, y, track) {
+  menuTrack = track;
+  const liked = isFavorite(track);
+  const disliked = isNotInterested(track);
+  const playlistItems = savedPlaylists.length
+    ? savedPlaylists.map((playlist, index) =>
+        '<button type="button" class="track-menu-item" data-menu-playlist="' + index + '" role="menuitem"><span>' +
+        esc(playlist.title || t("playlist")) + "</span></button>").join("")
+    : '<button type="button" class="track-menu-item" disabled role="menuitem"><span>' +
+      esc(ht("menu_no_playlists")) + "</span></button>";
+  trackMenuEl.innerHTML =
+    menuButton("like", liked ? ht("search_favorite_remove") : ht("menu_like"), menuIcons.like, liked) +
+    menuButton("dislike", disliked ? ht("track_interested_again") : ht("menu_dislike"), menuIcons.dislike, disliked) +
+    menuSeparator() +
+    menuButton("wave", ht("menu_wave"), menuIcons.wave) +
+    menuButton("next", ht("menu_play_next"), menuIcons.next) +
+    menuButton("end", ht("menu_queue_end"), menuIcons.queue) +
+    menuSeparator() +
+    '<div class="track-menu-group">' +
+      menuButton("playlist", ht("menu_add_playlist"), menuIcons.playlist, false, true) +
+      '<div class="track-menu-sub" role="menu">' + playlistItems + "</div>" +
+    "</div>" +
+    menuButton("share", ht("menu_share"), menuIcons.share) +
+    menuButton("artist", ht("menu_artist"), menuIcons.artist) +
+    menuButton("about", ht("menu_about"), menuIcons.about);
+  positionTrackMenu(x, y);
+}
+
+function playNextInQueue(track) {
+  if (!track) return;
+  const existing = queue.findIndex((queued, index) => index > qIndex && sameTrack(queued, track));
+  if (existing >= 0) queue.splice(existing, 1);
+  if (qIndex >= 0) queue.splice(qIndex + 1, 0, track);
+  else queue.push(track);
+  if (view === "queue") renderQueue();
+  updateSection();
+  toast(ht("queue_added"));
+}
+
+function addToQueueEnd(track) {
+  if (!track) return;
+  if (queue.some((queued, index) => index > qIndex && sameTrack(queued, track))) return;
+  queue.push(track);
+  if (view === "queue") renderQueue();
+  updateSection();
+  toast(ht("queue_added"));
+}
+
+function addTrackToPlaylist(playlist, track) {
+  if (!playlist || !track) return;
+  if (!Array.isArray(playlist.tracks)) playlist.tracks = [];
+  if (playlist.tracks.some(item => sameTrack(item, track))) {
+    toast(ht("menu_playlist_exists"));
+    return;
+  }
+  playlist.tracks.push(track);
+  savePlaylists();
+  toast(ht("menu_playlist_added"));
+  if (activePlaylist && samePlaylistIdentity(activePlaylist, playlist)) {
+    activePlaylistTracks = playlist.tracks;
+    renderPlaylistDetail(activePlaylist, activePlaylistTracks);
+  }
+}
+
+function trackShareLink(track) {
+  if (track.url) return track.url;
+  if (track.source === "spotify" && track.id)
+    return "https://open.spotify.com/track/" + String(track.id).replace(/^spotify:/, "");
+  return "";
+}
+
+function shareTrack(track) {
+  const link = trackShareLink(track);
+  if (!link) return;
+  navigator.clipboard.writeText(link)
+    .then(() => toast(ht("menu_share_copied")))
+    .catch(() => {});
+}
+
+function openTrackArtist(track) {
+  if (!track) return;
+  const names = Array.isArray(track.artistNames) && track.artistNames.length
+    ? track.artistNames
+    : String(track.artist || "").split(",").map(name => name.trim()).filter(Boolean);
+  if (track.artistId && track.source !== "spotify") {
+    openArtist("/api/artist?id=" + encodeURIComponent(track.artistId));
+    return;
+  }
+  if (names[0]) {
+    openArtist("/api/artist?name=" + encodeURIComponent(names[0]));
+    return;
+  }
+  toast(t("artist_error"));
+}
+
+function openTrackInfo(track) {
+  if (!track) return;
+  $("track-info-heading").textContent = ht("menu_about");
+  $("track-info-sub").textContent = (track.title || "") + (track.artist ? " — " + track.artist : "");
+  $("track-info-duration-label").textContent = ht("menu_duration");
+  $("track-info-duration").textContent = fmt(track.duration);
+  $("track-info-source-label").textContent = ht("menu_source");
+  $("track-info-source").textContent = track.source === "spotify" ? "Spotify" : "SoundCloud";
+  $("track-info-id").textContent = track.id || "";
+  $("track-info-copy").textContent = ht("menu_copy_id");
+  $("track-info-overlay").classList.remove("off");
+  $("track-info-close").focus();
+}
+
+function closeTrackInfo() {
+  $("track-info-overlay").classList.add("off");
+}
+
+document.addEventListener("contextmenu", event => {
+  if (event.target.closest && event.target.closest("#track-menu")) {
+    event.preventDefault();
+    return;
+  }
+  const track = trackFromMenuTarget(event.target);
+  if (!track) {
+    closeTrackMenu();
+    return;
+  }
+  event.preventDefault();
+  openTrackMenu(event.clientX, event.clientY, track);
+});
+
+document.addEventListener("click", event => {
+  const more = event.target.closest && event.target.closest("[data-track-more]");
+  if (!more) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const track = trackFromMenuTarget(more);
+  if (!track) return;
+  const rect = more.getBoundingClientRect();
+  openTrackMenu(rect.right, rect.bottom, track);
+}, true);
+
+trackMenuEl.addEventListener("click", event => {
+  const playlistButton = event.target.closest("[data-menu-playlist]");
+  if (playlistButton) {
+    const playlist = savedPlaylists[parseInt(playlistButton.dataset.menuPlaylist, 10)];
+    const track = menuTrack;
+    closeTrackMenu();
+    addTrackToPlaylist(playlist, track);
+    return;
+  }
+  const button = event.target.closest("[data-menu]");
+  if (!button || !button.dataset.menu || !menuTrack) return;
+  const action = button.dataset.menu;
+  if (action === "playlist") {
+    button.parentElement.classList.toggle("is-open");
+    return;
+  }
+  const track = menuTrack;
+  closeTrackMenu();
+  if (action === "like") toggleFavorite(track);
+  else if (action === "dislike") toggleNotInterested(track);
+  else if (action === "wave") openWave(track);
+  else if (action === "next") playNextInQueue(track);
+  else if (action === "end") addToQueueEnd(track);
+  else if (action === "share") shareTrack(track);
+  else if (action === "artist") openTrackArtist(track);
+  else if (action === "about") openTrackInfo(track);
+});
+
+document.addEventListener("pointerdown", event => {
+  if (!trackMenuEl.hidden && !event.target.closest("#track-menu")) closeTrackMenu();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !trackMenuEl.hidden) closeTrackMenu();
+});
+window.addEventListener("blur", closeTrackMenu);
+document.addEventListener("scroll", () => {
+  if (!trackMenuEl.hidden) closeTrackMenu();
+}, true);
+
+$("track-info-close").addEventListener("click", closeTrackInfo);
+$("track-info-overlay").addEventListener("click", event => {
+  if (event.target === $("track-info-overlay")) closeTrackInfo();
+});
+$("track-info-copy").addEventListener("click", () => {
+  const id = $("track-info-id").textContent;
+  if (id) navigator.clipboard.writeText(id).then(() => toast(t("copied"))).catch(() => {});
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !$("track-info-overlay").classList.contains("off")) closeTrackInfo();
+});
 
 bindAudioEvents(audio);
 bindAudioEvents(standbyAudio);
