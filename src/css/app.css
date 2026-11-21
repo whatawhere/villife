@@ -2221,6 +2221,35 @@ body.fullscreen-on.np-open .search-wrap {
   box-shadow: none;
 }
 .settings-overlay .settings-choice-row:not(.theme-mode-grid) .settings-choice.selected svg { color: currentColor; }
+.settings-overlay .language-choice-row {
+  position: relative;
+  isolation: isolate;
+}
+.settings-overlay .language-choice-row::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0.25rem;
+  width: calc(50% - 0.25rem);
+  border-radius: 999px;
+  background: hsl(var(--foreground));
+  transform: translateX(0);
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.settings-overlay .language-choice-row[data-lang="en"]::before {
+  transform: translateX(100%);
+}
+.settings-overlay .language-choice-row .settings-choice {
+  flex: 1 0 0;
+  position: relative;
+  z-index: 1;
+}
+.settings-overlay .language-choice-row .settings-choice.selected {
+  background: transparent;
+  color: hsl(var(--background));
+}
 .settings-overlay .theme-mode-grid {
   display: flex;
   width: fit-content;

@@ -884,6 +884,8 @@ function applyI18n() {
   document.querySelectorAll("[data-language-choice]").forEach(button => {
     button.classList.toggle("selected", button.dataset.languageChoice === (lang || "ru"));
   });
+  const languageRow = document.querySelector(".language-choice-row");
+  if (languageRow) languageRow.dataset.lang = lang || "ru";
   $("detail-back").title = t("back");
   $("detail-back").setAttribute("aria-label", t("back"));
   $("artist-back").title = t("back");
