@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Villife</title>
 <link rel="icon" type="image/x-icon" href="/villife.ico">
-<link rel="stylesheet" href="/css/app.css?v=90">
+<link rel="stylesheet" href="/css/app.css?v=118">
 </head>
 <body>
 
@@ -121,6 +121,12 @@
               <span class="for-you-card-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
             </button>
           </section>
+          <section class="discover-recent" id="discover-recent" hidden>
+            <div class="section-head">
+              <h2 data-home-i18n="discover_recent">Недавно слушали</h2>
+            </div>
+            <div class="discover-recent-grid" id="discover-recent-list"></div>
+          </section>
           <div class="search-section" id="playlists-section" style="display:none">
             <div class="section-head">
               <h2 data-i18n="section_playlists">Альбомы и плейлисты</h2>
@@ -203,17 +209,49 @@
           </div>
         </div>
         <div id="view-favorites" style="display:none">
-          <div class="section-head">
-            <h2 id="favorites-title" data-home-i18n="favorites_title">Избранное</h2>
-            <span class="badge badge-outline" id="favorites-count" hidden>0</span>
+          <div class="favorites-hero">
+            <h1 id="favorites-title" data-home-i18n="favorites_title">Избранные</h1>
+            <p data-home-i18n="favorites_subtitle">Треки, к которым хочется возвращаться.</p>
           </div>
-          <div class="list" id="favorites-list" style="display:none"></div>
+          <button type="button" class="favorites-liked" id="favorites-play-all" hidden>
+            <span class="favorites-liked-art" id="favorites-cover-art"></span>
+            <span class="favorites-liked-copy">
+              <strong data-home-i18n="favorites_liked">Мне нравится</strong>
+              <small id="favorites-featured-count"></small>
+            </span>
+            <svg class="favorites-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+          </button>
+          <div class="list favorites-columns" id="favorites-list"></div>
+          <section class="search-section" id="favorites-artists-section" hidden>
+            <button class="favorites-section-head" type="button" data-favorites-toggle aria-expanded="true" aria-controls="favorites-artists-content">
+              <span data-home-i18n="favorites_artists_title">Исполнители</span>
+              <svg class="favorites-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+            <div class="favorites-section-content" id="favorites-artists-content">
+              <div class="favorites-artists" id="favorites-artists"></div>
+            </div>
+          </section>
+          <section class="search-section" id="favorites-playlists-section" hidden>
+            <button class="favorites-section-head" type="button" data-favorites-toggle aria-expanded="true" aria-controls="favorites-playlists-content">
+              <span data-home-i18n="favorites_playlists_title">Мои плейлисты</span>
+              <svg class="favorites-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+            <div class="favorites-section-content" id="favorites-playlists-content">
+              <div class="favorites-tabs" role="tablist">
+                <button type="button" class="favorites-tab is-active" data-favorites-tab="saved" role="tab" aria-selected="true" data-home-i18n="favorites_tab_saved">Вы собрали</button>
+                <button type="button" class="favorites-tab" data-favorites-tab="liked" role="tab" aria-selected="false" data-home-i18n="favorites_tab_liked">Вам понравилось</button>
+              </div>
+              <div class="grid" id="favorites-playlists"></div>
+              <div class="favorites-playlists-empty" id="favorites-playlists-empty" hidden data-home-i18n="favorites_playlists_empty">Не добавлено</div>
+            </div>
+          </section>
           <div class="empty" id="favorites-empty">
             <div class="empty-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
             </div>
-            <h3 data-home-i18n="favorites_title">Избранное</h3>
+            <h3 data-home-i18n="favorites_empty_title">Избранное</h3>
             <p data-home-i18n="favorites_empty">Здесь будут треки, которые ты сохранишь.</p>
+            <button class="btn btn-default" id="favorites-find" type="button" data-home-i18n="wave_find_music">Найти музыку</button>
           </div>
         </div>
         <div id="view-queue" style="display:none">
@@ -250,7 +288,10 @@
             <header class="settings-dialog-head">
               <div class="settings-heading">
                 <svg class="settings-heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 2.7 4 0 .7 2.6a7.7 7.7 0 0 1 1.8 1l2.5-.8 2 3.5-2 1.8a7.7 7.7 0 0 1 0 2.2l2 1.8-2 3.5-2.5-.8a7.7 7.7 0 0 1-1.8 1l-.7 2.6h-4l-.7-2.6a7.7 7.7 0 0 1-1.8-1l-2.5.8-2-3.5 2-1.8a7.7 7.7 0 0 1 0-2.2l-2-1.8 2-3.5 2.5.8a7.7 7.7 0 0 1 1.8-1z"/><circle cx="12" cy="12" r="3"/></svg>
-                <h1 id="settings-dialog-title" data-settings-i18n="settings_title">Настройки</h1>
+                <div class="settings-heading-copy">
+                  <span class="settings-heading-brand">VILLIFE</span>
+                  <h1 id="settings-dialog-title" data-settings-i18n="settings_title">Настройки</h1>
+                </div>
               </div>
               <button class="btn btn-ghost btn-icon settings-close" id="settings-close" aria-label="Закрыть настройки" title="Закрыть настройки">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -258,6 +299,12 @@
             </header>
           <div class="settings-layout">
             <nav class="settings-nav" aria-label="Settings sections">
+              <label class="settings-search" for="settings-search-input">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+                <input id="settings-search-input" type="search" autocomplete="off" data-settings-placeholder="settings_search_placeholder" aria-label="Поиск в настройках" placeholder="Поиск в настройках">
+              </label>
+              <div class="settings-nav-list">
+                <span class="settings-nav-label" data-settings-i18n="settings_group_general">Параметры</span>
               <button class="settings-nav-item active" data-settings-tab="interface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span data-settings-i18n="settings_interface">Интерфейс</span></button>
               <button class="settings-nav-item" data-settings-tab="collection"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span data-settings-i18n="settings_collection">Импорт и экспорт</span></button>
               <button class="settings-nav-item" data-settings-tab="theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span data-settings-i18n="settings_theme">Тема</span></button>
@@ -265,11 +312,17 @@
               <button class="settings-nav-item" data-settings-tab="playback"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg><span data-settings-i18n="settings_playback">Воспроизведение</span></button>
               <button class="settings-nav-item" data-settings-tab="advanced"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10m4 0h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span data-settings-i18n="settings_advanced">Дополнительно</span></button>
               <button class="settings-nav-item" data-settings-tab="about"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 11v5m0-8h.01"/></svg><span data-settings-i18n="settings_about">Об приложении</span></button>
+              </div>
             </nav>
             <div class="settings-panel">
+              <div class="settings-no-results" id="settings-search-empty" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+                <h2 data-settings-i18n="settings_search_empty_title">Ничего не найдено</h2>
+                <p data-settings-i18n="settings_search_empty_description">Попробуй другой запрос</p>
+              </div>
               <section class="settings-section active" data-settings-panel="interface">
                 <h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg><span data-settings-i18n="settings_interface">Интерфейс</span></h2>
-                <p class="settings-description" data-settings-i18n="settings_language_description">Выбери язык интерфейса Villife.</p>
+                <p class="settings-description" data-settings-i18n="settings_interface_description">Выбери язык и настрой вид приложения.</p>
                 <div class="settings-choice-row">
                   <button class="settings-choice" data-language-choice="ru"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20m-10-10a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg>Русский</button>
                   <button class="settings-choice" data-language-choice="en"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20m-10-10a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg>English</button>
@@ -503,7 +556,7 @@
 <div id="mini-player" class="mini-player" hidden aria-live="polite">
   <div class="mini-player-shell">
     <button class="mini-player-back" id="mini-player-back" type="button" aria-label="Вернуться в обычный плеер">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M20 12H9"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
     </button>
     <div class="mini-player-art" id="mini-player-art"></div>
     <div class="mini-player-meta">
@@ -597,6 +650,21 @@
   <span class="toast-message"></span>
 </div>
 
-<script src="/js/app.js?v=72" defer></script>
+<div id="confirm-overlay" class="confirm-overlay" hidden aria-hidden="true">
+  <section class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message" tabindex="-1">
+    <div class="confirm-dialog-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16m-2 0-.9 13H6.9L6 7m3 0V4h6v3m-5 4v5m4-5v5"/></svg>
+    </div>
+    <span class="confirm-dialog-brand">VILLIFE</span>
+    <h2 id="confirm-dialog-title" data-settings-i18n="settings_clear_title">Очистить библиотеку?</h2>
+    <p id="confirm-dialog-message"></p>
+    <div class="confirm-dialog-actions">
+      <button class="confirm-dialog-button confirm-dialog-cancel" id="confirm-cancel" type="button" data-settings-i18n="settings_clear_cancel">Отмена</button>
+      <button class="confirm-dialog-button confirm-dialog-accept" id="confirm-accept" type="button" data-settings-i18n="settings_clear_action">Очистить</button>
+    </div>
+  </section>
+</div>
+
+<script src="/js/app.js?v=85" defer></script>
 </body>
 </html>

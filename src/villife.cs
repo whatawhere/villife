@@ -1730,7 +1730,6 @@ namespace Villife
         bool nativeDragStarted;
         bool fullscreenActive;
         Rectangle fullscreenBounds;
-        bool fullscreenWasMaximized;
         bool fullscreenWasTopMost;
         const int WmNcHitTest = 0x0084;
         const int WmNcCalcSize = 0x0083;
@@ -2293,17 +2292,15 @@ namespace Villife
             {
                 fullscreenActive = false;
                 TopMost = fullscreenWasTopMost;
-                if (fullscreenWasMaximized)
-                    WindowState = FormWindowState.Maximized;
-                else
-                    Bounds = fullscreenBounds;
+                WindowState = FormWindowState.Normal;
+                Bounds = fullscreenBounds;
                 return;
             }
 
             if (miniWindowActive) SetMiniWindow(false);
-            fullscreenWasMaximized = WindowState == FormWindowState.Maximized;
+            var wasMaximized = WindowState == FormWindowState.Maximized;
             fullscreenWasTopMost = TopMost;
-            fullscreenBounds = Bounds;
+            fullscreenBounds = wasMaximized && lastNormalBounds.Width > 0 ? lastNormalBounds : Bounds;
             WindowState = FormWindowState.Normal;
             Bounds = Screen.FromControl(this).Bounds;
             TopMost = true;

@@ -1,66 +1,76 @@
 const homeText = {
   ru: {
     for_you: "Для тебя", for_you_based: "Подборка из избранных треков",
-    favorites_title: "Избранное", favorites_empty: "Здесь будут треки, которые ты сохранишь.",
-    queue_title: "Очередь", queue_empty: "Добавляй треки из поиска — они появятся здесь.",
-    history_title: "История", history_empty: "Здесь появятся недавно прослушанные треки.",
+    discover_recent: "Недавно слушали", search_home_title: "Найди музыку", search_home_subtitle: "Начни вводить название трека или исполнителя.",
+    favorites_title: "Коллекция", favorites_empty_title: "Пока ничего нет", favorites_subtitle: "Всё, что хочется оставить рядом.", favorites_accent: "",
+    favorites_liked: "Мне нравится", favorites_kicker: "Твоя музыка", favorites_artists_title: "Исполнители",
+    favorites_playlists_title: "Плейлисты", favorites_tab_saved: "Созданные",
+    favorites_tab_liked: "Сохранённые", favorites_playlists_empty: "Не добавлено",
+    favorites_empty: "Отмечай сердцем треки, к которым захочется вернуться.",
+    queue_title: "Очередь", queue_empty: "Добавь треки из поиска — они появятся здесь.",
+    history_title: "История", history_empty: "Здесь собраны треки, которые ты недавно слушал.",
     queue_current: "Сейчас играет", queue_added: "Добавлено в очередь", queue_removed: "Удалено из очереди",
     queue_add: "Добавить в очередь", queue_remove: "Убрать из очереди",
     play_track: "Воспроизвести трек",
     playlist_saved: "Плейлист сохранён в библиотеке", playlist_removed: "Плейлист удалён из библиотеки",
     playlist_save: "Сохранить в библиотеку", playlist_unsave: "Удалить из библиотеки",
-    playlist_save_error: "Не удалось сохранить плейлист: отсутствует его идентификатор.",
+    playlist_save_error: "Не удалось сохранить плейлист. Попробуй ещё раз.",
     shuffle_label: "Перемешивание", repeat_off: "Повтор выключен", repeat_all: "Повтор очереди", repeat_one: "Повтор трека",
-    wave_back: "Назад", wave_prev: "Предыдущий трек", wave_empty_title: "Сначала добавь музыку в библиотеку",
-    wave_empty_description: "Сохрани любимые треки — и Villife соберёт для тебя персональную волну.",
-    wave_empty_filtered_title: "Пока больше нечего предложить",
-    wave_empty_filtered_description: "Попробуй найти новую музыку или измени список «Неинтересно».",
+    wave_back: "Назад", wave_prev: "Предыдущий трек", wave_empty_title: "С чего начнём?",
+    wave_empty_description: "Добавь в избранное несколько треков — и мы подберём музыку в том же настроении.",
+    wave_empty_filtered_title: "Пока новых треков нет",
+    wave_empty_filtered_description: "Загляни в поиск или верни треки в список рекомендаций.",
     wave_find_music: "Найти музыку", wave_playing: "Играет для тебя",
-    favorite_added: "Трек добавлен в избранное", favorite_removed: "Трек удалён из избранного",
-    search_favorite_add: "Добавить в избранное", search_favorite_remove: "Убрать из избранного",
+    favorite_added: "Добавлено в избранное", favorite_removed: "Убрано из избранного",
+    search_favorite_add: "В избранное", search_favorite_remove: "Убрать из избранного",
     track_not_interested: "Неинтересно", track_interested_again: "Вернуть в подборку",
-    track_not_interested_saved: "Учту: этот трек больше не будет попадать в волну",
-    track_interested_restored: "Трек снова будет попадать в волну",
+    track_not_interested_saved: "Понял. Больше не будем предлагать этот трек.",
+    track_interested_restored: "Вернули трек в рекомендации.",
     wave_like: "В избранное", wave_unlike: "Убрать из избранного",
     wave_shuffle: "Перемешать", wave_next: "Следующий трек", wave_play: "Воспроизвести", wave_pause: "Пауза",
-    menu_like: "Нравится", menu_dislike: "Не нравится", menu_wave: "Моя волна по треку",
-    menu_play_next: "Играть следующим", menu_queue_end: "Добавить в конец очереди",
+    menu_like: "Нравится", menu_dislike: "Неинтересно", menu_wave: "Слушать похожее",
+    menu_play_next: "Включить следующим", menu_queue_end: "Добавить в очередь",
     menu_add_playlist: "Добавить в плейлист", menu_no_playlists: "Нет плейлистов",
     menu_share: "Поделиться", menu_share_copied: "Ссылка скопирована",
-    menu_artist: "Перейти к исполнителям", menu_about: "О треке",
+    menu_artist: "Открыть исполнителя", menu_about: "О треке",
     menu_playlist_added: "Трек добавлен в плейлист", menu_playlist_exists: "Трек уже есть в плейлисте",
     menu_duration: "Длительность", menu_source: "Источник", menu_copy_id: "Скопировать ID",
     menu_more: "Ещё", win_fullscreen: "Полный экран", win_fullscreen_exit: "Выйти"
   },
   en: {
     for_you: "For you", for_you_based: "A mix from your favorites",
-    favorites_title: "Favorites", favorites_empty: "Tracks you save will appear here.",
-    queue_title: "Queue", queue_empty: "Add tracks from Search and they will show up here.",
-    history_title: "History", history_empty: "Recently played tracks will appear here.",
+    discover_recent: "Recently played", search_home_title: "Find music", search_home_subtitle: "Start typing a track or artist.",
+    favorites_title: "Collection", favorites_empty_title: "Nothing here yet", favorites_subtitle: "The music you want to keep close.", favorites_accent: "",
+    favorites_liked: "Liked songs", favorites_kicker: "Your music", favorites_artists_title: "Artists",
+    favorites_playlists_title: "Playlists", favorites_tab_saved: "Created",
+    favorites_tab_liked: "Saved", favorites_playlists_empty: "Nothing added",
+    favorites_empty: "Tap the heart on tracks you want to come back to.",
+    queue_title: "Queue", queue_empty: "Add tracks from Search and they will appear here.",
+    history_title: "History", history_empty: "Tracks you play will show up here.",
     queue_current: "Now playing", queue_added: "Added to queue", queue_removed: "Removed from queue",
     queue_add: "Add to queue", queue_remove: "Remove from queue",
     play_track: "Play track",
     playlist_saved: "Playlist saved to library", playlist_removed: "Playlist removed from library",
     playlist_save: "Save to library", playlist_unsave: "Remove from library",
-    playlist_save_error: "Could not save this playlist because its ID is missing.",
+    playlist_save_error: "Could not save this playlist.",
     shuffle_label: "Shuffle", repeat_off: "Repeat off", repeat_all: "Repeat queue", repeat_one: "Repeat track",
-    wave_back: "Back", wave_prev: "Previous track", wave_empty_title: "Add some music to your library first",
-    wave_empty_description: "Save favorite tracks and Villife will make a personal wave for you.",
-    wave_empty_filtered_title: "Nothing else to recommend right now",
-    wave_empty_filtered_description: "Find new music or update your “Not interested” list.",
+    wave_back: "Back", wave_prev: "Previous track", wave_empty_title: "Where should we start?",
+    wave_empty_description: "Like a few tracks and we’ll find more music with the same feel.",
+    wave_empty_filtered_title: "No new tracks for now",
+    wave_empty_filtered_description: "Explore Search or bring tracks back to your recommendations.",
     wave_find_music: "Find music", wave_playing: "Playing for you",
-    favorite_added: "Track added to favorites", favorite_removed: "Track removed from favorites",
+    favorite_added: "Added to favorites", favorite_removed: "Removed from favorites",
     search_favorite_add: "Add to favorites", search_favorite_remove: "Remove from favorites",
     track_not_interested: "Not interested", track_interested_again: "Recommend this track",
     track_not_interested_saved: "Got it. This track won't appear in your wave again.",
     track_interested_restored: "This track can appear in your wave again.",
     wave_like: "Add to favorites", wave_unlike: "Remove from favorites",
     wave_shuffle: "Shuffle", wave_next: "Next track", wave_play: "Play", wave_pause: "Pause",
-    menu_like: "Like", menu_dislike: "Not interested", menu_wave: "Go to song radio",
-    menu_play_next: "Play next", menu_queue_end: "Add to end of queue",
+    menu_like: "Like", menu_dislike: "Not interested", menu_wave: "Find similar music",
+    menu_play_next: "Play next", menu_queue_end: "Add to queue",
     menu_add_playlist: "Add to playlist", menu_no_playlists: "No playlists",
     menu_share: "Share", menu_share_copied: "Link copied",
-    menu_artist: "Go to artist", menu_about: "About track",
+    menu_artist: "Open artist", menu_about: "About track",
     menu_playlist_added: "Track added to playlist", menu_playlist_exists: "Track is already in this playlist",
     menu_duration: "Duration", menu_source: "Source", menu_copy_id: "Copy ID",
     menu_more: "More", win_fullscreen: "Fullscreen", win_fullscreen_exit: "Exit"
@@ -80,7 +90,7 @@ const dict = (() => {
       "Импортируй треки и плейлисты из Spotify — они сохранятся в библиотеке", "Выбери язык интерфейса", "ID скопирован",
       "Spotify-ссылки не найдены", "Импортировано", "Не удалось найти трек", "Обработка", "Слушать",
       "Изменить название плейлиста", "треков", "Загружаем треки…", "Назад", "Перемотка",
-      "Не удалось запустить воспроизведение", "Не найдено точное полное аудио для этого трека",
+      "Не удалось запустить воспроизведение", "Не удалось найти полную версию этого трека",
       "Не удалось выполнить поиск", "Проверь подключение к интернету и попробуй ещё раз", "нет превью", "треков", "играет",
       "Исполнитель", "подписчиков", "Не удалось открыть исполнителя"
     ],
@@ -113,6 +123,7 @@ let waveNextPick = null;
 let playbackSource = "library";
 let lib = loadLibrary();
 let favorites = loadFavorites();
+let favoritesPlaylistTab = "saved";
 let notInterestedTracks = loadNotInterestedTracks();
 let savedPlaylists = loadPlaylists();
 let historyTracks = loadHistory();
@@ -189,8 +200,8 @@ const themeAccentColors = {
 };
 const settingsText = {
   ru: {
-    settings_title: "Настройки", settings_close: "Закрыть настройки",     settings_description: "Настройки Villife", settings_interface: "Интерфейс",
-    settings_collection: "Импорт и экспорт", settings_collection_description: "Добавляй треки из Spotify и сохраняй копию своей библиотеки.",
+    settings_title: "Настройки", settings_close: "Закрыть настройки", settings_sections_label: "Разделы настроек", settings_search_placeholder: "Поиск в настройках", settings_search_empty_title: "Ничего не найдено", settings_search_empty_description: "Попробуй другой запрос", settings_group_general: "Параметры", settings_interface_description: "Выбери язык и настрой вид приложения.", settings_description: "Настройки Villife", settings_interface: "Интерфейс",
+    settings_collection: "Импорт и экспорт", settings_collection_description: "Перенеси плейлисты из Spotify и сохрани копию библиотеки.",
     settings_theme: "Тема", settings_storage: "Хранилище", settings_playback: "Воспроизведение",
     settings_advanced: "Дополнительно", settings_about: "Об приложении", settings_language_description: "Выбери язык интерфейса Villife.",
     settings_theme_description: "Выбери оформление приложения.", settings_theme_system: "Как в Windows",
@@ -205,9 +216,9 @@ const settingsText = {
     settings_clear_library: "Очистить библиотеку", settings_playback_description: "Управляй громкостью и поведением плеера.",
     settings_volume: "Громкость", settings_volume_description: "Настрой уровень звука плеера.",
     settings_crossfade: "Плавный переход между треками",
-    settings_crossfade_description: "Смешивать конец текущего трека с началом следующего.",
+    settings_crossfade_description: "Плавно соединять конец одного трека с началом следующего.",
     settings_autoplay: "Следующий трек автоматически",
-    settings_autoplay_description: "Продолжать очередь после завершения трека",
+    settings_autoplay_description: "Включать следующий трек, когда закончится текущий.",
     settings_sleep_timer: "Таймер сна",
     settings_sleep_timer_description: "Остановить воспроизведение через выбранное время.",
     settings_timer_off: "Выключен",
@@ -217,18 +228,19 @@ const settingsText = {
     settings_reduced_motion_description: "Сделать переходы короче и спокойнее",
     settings_ambient_transparency: "Прозрачность заднего фона",
     settings_ambient_transparency_description: "Настрой прозрачность размытой обложки играющего трека.",
-    settings_about_eyebrow: "ТВОЯ МУЗЫКА — В ОДНОМ МЕСТЕ",
+    settings_about_eyebrow: "VILLIFE · ПЛЕЕР ДЛЯ WINDOWS",
     settings_app_subtitle: "Музыкальный плеер для Windows",
-    settings_about_description: "Музыка, которую ты находишь, и коллекция, которую собираешь сам.",
+    settings_about_description: "Треки, плейлисты, текст песен и воспроизведение.",
     settings_about_collection: "Твоя коллекция", settings_about_tracks: "треков",
     settings_about_playlists: "плейлистов", settings_about_local: "Локально",
     settings_about_discover: "Поиск и воспроизведение",
     settings_about_discover_description: "Треки, альбомы, плейлисты и текст песни.",
+    settings_clear_title: "Очистить библиотеку?", settings_clear_cancel: "Отмена", settings_clear_action: "Очистить",
     settings_clear_confirm: "Очистить библиотеку и сохранённые плейлисты? Избранное останется. Это действие нельзя отменить.",
     settings_export_error: "Не удалось экспортировать библиотеку"
   },
   en: {
-    settings_title: "Settings", settings_close: "Close settings", settings_description: "Villife settings", settings_interface: "Interface",
+    settings_title: "Settings", settings_close: "Close settings", settings_sections_label: "Settings sections", settings_search_placeholder: "Search settings", settings_search_empty_title: "No settings found", settings_search_empty_description: "Try a different search", settings_group_general: "Settings", settings_interface_description: "Choose a language and adjust how the app looks.", settings_description: "Villife settings", settings_interface: "Interface",
     settings_collection: "Import & export", settings_collection_description: "Import tracks from Spotify and keep a backup of your library.",
     settings_theme: "Theme", settings_storage: "Storage", settings_playback: "Playback",
     settings_advanced: "Advanced", settings_about: "About", settings_language_description: "Choose the Villife interface language.",
@@ -256,13 +268,14 @@ const settingsText = {
     settings_reduced_motion_description: "Use shorter, calmer transitions",
     settings_ambient_transparency: "Background transparency",
     settings_ambient_transparency_description: "Adjust how transparent the blurred artwork looks while a track plays.",
-    settings_about_eyebrow: "YOUR MUSIC, ALL IN ONE PLACE",
+    settings_about_eyebrow: "VILLIFE · PLAYER FOR WINDOWS",
     settings_app_subtitle: "Music player for Windows",
-    settings_about_description: "Music you discover, and a collection you make your own.",
+    settings_about_description: "Tracks, playlists, lyrics, and playback.",
     settings_about_collection: "Your collection", settings_about_tracks: "tracks",
     settings_about_playlists: "playlists", settings_about_local: "On this device",
     settings_about_discover: "Search and playback",
     settings_about_discover_description: "Tracks, albums, playlists, and lyrics.",
+    settings_clear_title: "Clear your library?", settings_clear_cancel: "Cancel", settings_clear_action: "Clear library",
     settings_clear_confirm: "Clear the library and saved playlists? Favorites will remain. This cannot be undone.",
     settings_export_error: "Could not export the library"
   }
@@ -739,6 +752,16 @@ function fmt(sec) {
   return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
 }
 
+function trackCountText(value) {
+  const count = Math.max(0, Math.floor(Number(value) || 0));
+  if (lang === "en") return count + " " + (count === 1 ? "track" : "tracks");
+  const lastTwo = count % 100;
+  const last = count % 10;
+  const word = lastTwo >= 11 && lastTwo <= 14 ? "треков" :
+    last === 1 ? "трек" : last >= 2 && last <= 4 ? "трека" : "треков";
+  return count + " " + word;
+}
+
 function shortId(id) {
   if (!id) return "";
   const parts = id.split(":");
@@ -769,6 +792,35 @@ function toast(msg, type = "success", duration = 1800) {
   }, duration);
 }
 
+let confirmResolver = null;
+let confirmReturnFocus = null;
+
+function closeAppConfirm(confirmed) {
+  const overlay = $("confirm-overlay");
+  if (overlay.hidden) return;
+  overlay.hidden = true;
+  overlay.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("confirm-dialog-open");
+  const resolve = confirmResolver;
+  const returnFocus = confirmReturnFocus;
+  confirmResolver = null;
+  confirmReturnFocus = null;
+  if (returnFocus && returnFocus.isConnected) returnFocus.focus({ preventScroll: true });
+  if (resolve) resolve(confirmed);
+}
+
+function openAppConfirm(message) {
+  const overlay = $("confirm-overlay");
+  if (confirmResolver) closeAppConfirm(false);
+  confirmReturnFocus = document.activeElement;
+  $("confirm-dialog-message").textContent = message;
+  overlay.hidden = false;
+  overlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("confirm-dialog-open");
+  requestAnimationFrame(() => $("confirm-cancel").focus({ preventScroll: true }));
+  return new Promise(resolve => { confirmResolver = resolve; });
+}
+
 function applyTheme() {
   const saved = localStorage.getItem("velo_theme");
   const dark = saved === "dark" || (saved !== "light" && saved !== "system") ||
@@ -796,6 +848,11 @@ function applyI18n() {
   $("import-title").textContent = t("import_title");
   $("welcome-sub").textContent = t("welcome_sub");
   document.querySelectorAll("[data-settings-i18n]").forEach(el => { el.textContent = st(el.dataset.settingsI18n); });
+  document.querySelectorAll("[data-settings-placeholder]").forEach(el => {
+    el.placeholder = st(el.dataset.settingsPlaceholder);
+    el.setAttribute("aria-label", st(el.dataset.settingsPlaceholder));
+  });
+  document.querySelector(".settings-nav").setAttribute("aria-label", st("settings_sections_label"));
   document.querySelectorAll("[data-settings-accent-group]").forEach(el => {
     el.setAttribute("aria-label", st(el.dataset.settingsAccentGroup));
   });
@@ -834,6 +891,7 @@ function applyI18n() {
   $("pl-bar").setAttribute("aria-label", t("seek"));
   updateSleepTimerStatus();
   updateSection();
+  updateSettingsSearch();
   applyTheme();
 }
 
@@ -848,9 +906,6 @@ function updateSection() {
   }
   if (view === "favorites") {
     $("favorites-title").textContent = ht("favorites_title");
-    const badge = $("favorites-count");
-    badge.hidden = !favorites.length;
-    badge.textContent = String(favorites.length);
     return;
   }
   if (view === "queue") {
@@ -961,6 +1016,10 @@ function showView(next) {
     renderLibrary();
     refreshSpotifyLibraryTracks();
   }
+  if (next === "search") {
+    renderForYouHome();
+    renderRecentHome();
+  }
   if (next === "favorites") renderFavorites();
   if (next === "queue") renderQueue();
   if (next === "history") renderHistory();
@@ -1042,7 +1101,7 @@ function renderWave(track) {
     return;
   }
 
-  $("wave-heading").textContent = ht("for_you");
+  $("wave-heading").textContent = track.artist || ht("for_you");
   $("wave-title").textContent = track.title || "";
   $("wave-track-artist").textContent = track.artist || "";
   $("wave-track-art").innerHTML = artHtml(track);
@@ -1100,10 +1159,32 @@ function artHtml(track) {
       .filter((src, index, sources) => sources.indexOf(src) === index)
       .slice(0, 4);
     if (artwork.length > 1)
-      return '<div class="playlist-art-grid">' + artwork.map(src => '<img src="' + esc(src) + '" alt="" loading="lazy">').join("") + "</div>";
+      return '<div class="playlist-art-grid">' + artwork.map(src => '<img src="' + esc(src) + '" alt="" loading="lazy" draggable="false">').join("") + "</div>";
   }
-  if (track.artwork) return '<img src="' + esc(track.artwork) + '" alt="" loading="lazy">';
+  if (track.artwork) return '<img src="' + esc(track.artwork) + '" alt="" loading="lazy" draggable="false">';
   return '<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>';
+}
+
+let artworkPointerDown = false;
+document.addEventListener("pointerdown", event => {
+  artworkPointerDown = event.target instanceof Element && !!event.target.closest(
+    ".row-art, .tile-art, .detail-art, .wave-track-art, .player-art, .mini-player-art, .now-playing-art, .for-you-card-art, .discover-recent-art, .favorites-liked-art, .favorites-cover-mosaic, .favorite-artist-art, #search-art"
+  );
+}, true);
+document.addEventListener("pointerup", () => { artworkPointerDown = false; }, true);
+document.addEventListener("pointercancel", () => { artworkPointerDown = false; }, true);
+document.addEventListener("dragstart", event => {
+  if (artworkPointerDown || event.target instanceof HTMLImageElement) event.preventDefault();
+}, true);
+
+function favoriteArtworkHtml(tracks) {
+  const artwork = tracks.map(track => track && track.artwork).filter(Boolean)
+    .filter((src, index, sources) => sources.indexOf(src) === index).slice(0, 4);
+  const heart = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-8.5-5.4-8.5-11A4.7 4.7 0 0 1 12 7.2 4.7 4.7 0 0 1 20.5 10c0 5.6-8.5 11-8.5 11Z"/></svg>';
+  if (!artwork.length) return '<span class="favorites-cover-fallback">' + heart + "</span>";
+  return '<span class="favorites-cover-mosaic count-' + artwork.length + '">' +
+    artwork.map(src => '<img src="' + esc(src) + '" alt="" loading="lazy" draggable="false">').join("") +
+    '</span><span class="favorites-cover-mark" aria-hidden="true">' + heart + "</span>";
 }
 
 function artistHtml(entity) {
@@ -1302,10 +1383,10 @@ function toggleFavorite(track) {
   const index = favorites.findIndex(saved => sameTrack(saved, track));
   if (index >= 0) {
     favorites.splice(index, 1);
-    toast(ht("favorite_removed"));
+    toast(ht("favorite_removed"), "info", 2600);
   } else {
     favorites.unshift(track);
-    toast(ht("favorite_added"));
+    toast(ht("favorite_added"), "info", 2600);
   }
   saveFavorites();
   renderForYouHome();
@@ -1353,6 +1434,19 @@ function renderForYouHome() {
   $("for-you-card").setAttribute("aria-label", ht("for_you") + ": " + (track.title || ""));
 }
 
+function renderRecentHome() {
+  const visible = !lastQuery.trim();
+  const recent = historyTracks.slice(0, 6);
+  $("discover-recent").hidden = !visible || !recent.length;
+  $("discover-recent-list").innerHTML = recent.map((track, index) =>
+    '<button type="button" class="discover-recent-track" data-discover-history="' + index + '">' +
+      '<span class="discover-recent-art">' + artHtml(track) + '</span>' +
+      '<span class="discover-recent-copy"><strong>' + esc(track.title || "") + '</strong><small>' + esc(track.artist || "") + '</small></span>' +
+      '<span class="discover-recent-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>' +
+    '</button>'
+  ).join("");
+}
+
 function isPlaying(track) {
   return qIndex >= 0 && queue[qIndex] && sameTrack(queue[qIndex], track);
 }
@@ -1365,9 +1459,7 @@ function renderResults() {
   const playlistSection = $("playlists-section");
   const tracksSection = $("tracks-section");
   renderForYouHome();
-  const hasForYou = !lastQuery.trim() &&
-    (favorites.some(track => track && !isNotInterested(track)) ||
-      lib.some(track => track && !isNotInterested(track)));
+  renderRecentHome();
   setSearchArtwork(results[0] || null);
   sk.style.display = "none";
   playlistSection.style.display = playlists.length ? "" : "none";
@@ -1413,9 +1505,12 @@ function renderResults() {
     box.style.display = "none";
     box.innerHTML = "";
   }
-  empty.style.display = !results.length && !playlists.length && !hasForYou ? "" : "none";
-  $("empty-title").textContent = searchError ? t("search_error") : t("empty_results");
-  $("empty-sub").textContent = searchError ? t("search_error_sub") : t("empty_results_sub");
+  const hasForYou = favorites.some(track => track && !isNotInterested(track)) ||
+    lib.some(track => track && !isNotInterested(track));
+  const hasHomeContent = !lastQuery.trim() && (hasForYou || historyTracks.length > 0);
+  empty.style.display = !results.length && !playlists.length && (!hasHomeContent || !!lastQuery.trim()) ? "" : "none";
+  $("empty-title").textContent = searchError ? t("search_error") : lastQuery.trim() ? t("empty_results") : ht("search_home_title");
+  $("empty-sub").textContent = searchError ? t("search_error_sub") : lastQuery.trim() ? t("empty_results_sub") : ht("search_home_subtitle");
   updateSection();
 }
 
@@ -1520,7 +1615,7 @@ function renderLibrary() {
         '<button type="button" class="saved-playlist-edit" data-rename-playlist="' + i + '" aria-label="' + esc(t("rename_playlist")) + '" title="' + esc(t("rename_playlist")) + '">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>' +
         "</button></div>" +
-      '<div class="tile-sub">' + (playlist.artist ? artistHtml(playlist) : "Spotify") + " · " + trackCount + " " + t("track_count_label") + "</div>" +
+      '<div class="tile-sub">' + (playlist.artist ? artistHtml(playlist) : "Spotify") + " · " + trackCountText(trackCount) + "</div>" +
     "</div>";
   }).join("");
   if (!lib.length && !savedPlaylists.length) {
@@ -1533,7 +1628,7 @@ function renderLibrary() {
   box.style.display = lib.length ? "" : "none";
   box.innerHTML = lib.map((tr, i) => {
     const playing = isPlaying(tr);
-    return '<div class="row library-track-row' + (playing ? " playing" : "") + '" data-lib="' + i + '" draggable="true" style="animation-delay:' + Math.min(i * 0.025, 0.4) + 's">' +
+    return '<div class="row library-track-row' + (playing ? " playing" : "") + '" data-lib="' + i + '" style="animation-delay:' + Math.min(i * 0.025, 0.4) + 's">' +
       '<div class="row-art">' + artHtml(tr) + "</div>" +
       '<div class="row-info">' +
         '<div class="row-title">' + esc(tr.title) + "</div>" +
@@ -1552,27 +1647,108 @@ function renderLibrary() {
   updateSection();
 }
 
+function favoriteArtists() {
+  const groups = new Map();
+  favorites.forEach(track => {
+    const names = Array.isArray(track.artistNames) && track.artistNames.length
+      ? track.artistNames
+      : String(track.artist || "").split(",");
+    names.map(name => String(name || "").trim()).filter(Boolean).forEach(name => {
+      const key = name.toLocaleLowerCase();
+      const group = groups.get(key) || {
+        name, count: 0, track,
+        artistId: names.length === 1 ? track.artistId : null,
+        source: track.source
+      };
+      if (!group.track.artwork && track.artwork) group.track = track;
+      if (!group.artistId && names.length === 1 && track.artistId) group.artistId = track.artistId;
+      group.count++;
+      groups.set(key, group);
+    });
+  });
+  return Array.from(groups.values()).sort((a, b) => b.count - a.count).slice(0, 12);
+}
+
+function favoritePlaylistAt(index) {
+  return favoritesPlaylistTab === "liked" ? playlists[index] : savedPlaylists[index];
+}
+
+function renderFavoritePlaylists() {
+  const liked = playlists.map((playlist, index) => ({ playlist, index })).filter(item =>
+    Array.isArray(item.playlist.tracks) &&
+    item.playlist.tracks.some(track => favorites.some(favorite => sameTrack(favorite, track))));
+  const items = favoritesPlaylistTab === "liked"
+    ? liked
+    : savedPlaylists.map((playlist, index) => ({ playlist, index }));
+  $("favorites-playlists-section").hidden = !savedPlaylists.length && !liked.length;
+  $("favorites-playlists-empty").hidden = items.length > 0;
+  $("favorites-playlists").innerHTML = items.map(item =>
+    '<div class="tile card" role="button" tabindex="0" data-favorite-playlist="' + item.index + '">' +
+      '<div class="tile-art">' + artHtml(item.playlist) + "</div>" +
+      '<div class="tile-title">' + esc(item.playlist.title || t("playlist")) + "</div>" +
+      '<div class="tile-sub">' + trackCountText(Array.isArray(item.playlist.tracks) ? item.playlist.tracks.length : 0) + "</div>" +
+    "</div>").join("");
+}
+
+function loadFavoriteArtistAvatars(artists) {
+  artists.forEach((item, index) => {
+    if (item.artistId) return;
+    getJson("/api/artist?name=" + encodeURIComponent(item.name)).then(data => {
+      const avatar = data.artist && data.artist.avatar;
+      if (!avatar) return;
+      const art = $("favorites-artists").querySelector('[data-artist-index="' + index + '"] .favorite-artist-art');
+      if (art) art.innerHTML = '<img src="' + esc(avatar) + '" alt="" loading="lazy" draggable="false">';
+    }).catch(() => {});
+  });
+}
+
 function renderFavorites() {
   const box = $("favorites-list");
   const empty = $("favorites-empty");
-  if (!favorites.length) {
+  const hasFavorites = favorites.length > 0;
+  $("favorites-play-all").hidden = !hasFavorites;
+  box.style.display = hasFavorites ? "" : "none";
+  box.style.setProperty("--favorite-rows", String(Math.ceil(favorites.length / 2)));
+  $("favorites-artists-section").hidden = !hasFavorites;
+  if (!hasFavorites) {
     box.innerHTML = "";
-    box.style.display = "none";
+    $("favorites-playlists-section").hidden = true;
     empty.style.display = "";
     updateSection();
     return;
   }
   empty.style.display = "none";
-  box.style.display = "";
+  $("favorites-cover-art").innerHTML = favoriteArtworkHtml(favorites);
+  $("favorites-featured-count").textContent = trackCountText(favorites.length);
   box.innerHTML = favorites.map((track, index) =>
-    '<div class="row library-track-row favorite-track-row' + (isPlaying(track) ? " playing" : "") + '" data-favorite-track="' + index + '" draggable="true" style="animation-delay:' + Math.min(index * 0.025, 0.4) + 's">' +
+    '<div class="row library-track-row favorite-track-row' + (isPlaying(track) ? " playing" : "") + '" data-favorite-track="' + index + '" style="animation-delay:' + Math.min(index * 0.025, 0.4) + 's">' +
       '<div class="row-art">' + artHtml(track) + "</div>" +
       '<div class="row-info"><div class="row-title">' + esc(track.title || "") + "</div>" +
         '<div class="row-sub"><span class="t">' + artistHtml(track) + "</span></div></div>" +
-      '<div class="row-actions"><span class="row-dur">' + fmt(track.duration) + "</span>" +
-        '<button class="btn btn-ghost btn-icon btn-sm favorite-button favorite-control is-liked" data-favorite-remove="' + index + '" aria-label="' + esc(ht("search_favorite_remove")) + '" title="' + esc(ht("search_favorite_remove")) + '">' + favoriteIconSvg() + "</button>" + trackMoreButton() + "</div>" +
+      '<div class="row-actions">' +
+        '<button class="btn btn-ghost btn-icon btn-sm favorite-button favorite-control is-liked" data-favorite-remove="' + index + '" aria-label="' + esc(ht("search_favorite_remove")) + '" title="' + esc(ht("search_favorite_remove")) + '">' + favoriteIconSvg() + "</button>" +
+        '<span class="row-dur">' + fmt(track.duration) + "</span>" + trackMoreButton() + "</div>" +
     "</div>"
   ).join("");
+  const artistItems = favoriteArtists();
+  $("favorites-artists").innerHTML = artistItems.map((item, index) => {
+    const image = item.track.artwork
+      ? '<img src="' + esc(item.track.artwork) + '" alt="" loading="lazy" draggable="false">'
+      : '<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>';
+    const link = item.artistId && item.source !== "spotify"
+      ? 'data-artist="' + esc(item.artistId) + '"'
+      : 'data-artist-name="' + esc(item.name) + '"';
+    const crown = index === 0
+      ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m3 7 3.5 3L12 5l5.5 5L21 7l-1.8 12H4.8L3 7Z"/></svg>'
+      : "";
+    return '<button type="button" class="favorite-artist" data-artist-index="' + index + '" ' + link + ">" +
+      '<span class="favorite-artist-art">' + image + "</span>" +
+      '<span class="favorite-artist-rank">' + crown + (index + 1) + "</span>" +
+      "<strong>" + esc(item.name) + "</strong>" +
+      "<small>" + trackCountText(item.count) + "</small></button>";
+  }).join("");
+  loadFavoriteArtistAvatars(artistItems);
+  renderFavoritePlaylists();
   updateSection();
 }
 
@@ -1671,16 +1847,18 @@ function recordHistory(track) {
     toast(lang === "en" ? "Could not save playback history" : "Не удалось сохранить историю прослушивания");
   }
   if (view === "history") renderHistory();
+  if (view === "search" && !lastQuery.trim()) renderRecentHome();
 }
 
 function renderPlaylistDetail(playlist, tracks) {
-  $("detail-art").innerHTML = artHtml(playlist);
-  $("detail-kicker").textContent = playlist.type === "album" ? t("album") :
+  $("detail-art").classList.toggle("is-favorites-art", !!playlist.isFavorites);
+  $("detail-art").innerHTML = playlist.isFavorites ? favoriteArtworkHtml(tracks) : artHtml(playlist);
+  $("detail-kicker").textContent = playlist.isFavorites ? ht("favorites_kicker") : playlist.type === "album" ? t("album") :
     playlist.source === "spotify" ? "Spotify" : t("playlist");
   $("detail-title").textContent = playlist.title || "";
   $("detail-title-input").value = playlist.title || "";
-  $("detail-sub").textContent = (playlist.artist || "") +
-    (playlist.artist && tracks.length ? " · " : "") + tracks.length + " " + t("track_count_label");
+  $("detail-sub").textContent = playlist.isFavorites ? trackCountText(tracks.length) :
+    (playlist.artist || "") + (playlist.artist && tracks.length ? " · " : "") + trackCountText(tracks.length);
   $("detail-play").disabled = !tracks.some(track => trackSrc(track) || track.source === "spotify");
   $("playlist-detail-list").innerHTML = tracks.length ? tracks.map((track, i) =>
     '<div class="row search-row' + (isPlaying(track) ? " playing" : "") + '" data-detail-track="' + i + '">' +
@@ -1738,11 +1916,13 @@ async function openPlaylist(playlist) {
   const loadId = ++playlistLoadId;
   const playlistDetail = $("playlist-detail");
   playlistDetail.classList.remove("return-without-animation", "is-opening");
+  playlistDetail.classList.toggle("is-favorites-playlist", !!playlist.isFavorites);
   detailReturnView = view;
   activePlaylist = playlist;
   activePlaylistTracks = Array.isArray(playlist.tracks) ? playlist.tracks : [];
   $("view-search").style.display = "none";
   $("view-library").style.display = "none";
+  $("view-favorites").style.display = "none";
   playlistDetail.style.display = "";
   void playlistDetail.offsetWidth;
   playlistDetail.classList.add("is-opening");
@@ -1752,10 +1932,11 @@ async function openPlaylist(playlist) {
     playlistDetail.removeEventListener("animationend", finishOpening);
   };
   playlistDetail.addEventListener("animationend", finishOpening);
-  $("detail-art").innerHTML = artHtml(playlist);
-  $("detail-kicker").textContent = playlist.source === "spotify" ? "Spotify" : t(playlist.type || "playlist");
+  $("detail-art").classList.toggle("is-favorites-art", !!playlist.isFavorites);
+  $("detail-art").innerHTML = playlist.isFavorites ? favoriteArtworkHtml(activePlaylistTracks) : artHtml(playlist);
+  $("detail-kicker").textContent = playlist.isFavorites ? ht("favorites_kicker") : playlist.source === "spotify" ? "Spotify" : t(playlist.type || "playlist");
   $("detail-title").textContent = playlist.title || "";
-  $("detail-sub").textContent = playlist.artist || "";
+  $("detail-sub").textContent = playlist.isFavorites ? trackCountText(activePlaylistTracks.length) : playlist.artist || "";
   const titleWrap = $("detail-title-wrap");
   const titleInput = $("detail-title-input");
   const canRename = canRenameActivePlaylist();
@@ -1774,7 +1955,7 @@ async function openPlaylist(playlist) {
   const hasIncompleteSoundCloudMetadata = playlist.source !== "spotify" &&
     activePlaylistTracks.some(track => track && track.source === "soundcloud" &&
       (!track.title || !track.artist || !track.artwork || !(Number(track.duration) > 0)));
-  if (!activePlaylistTracks.length || hasIncompleteSoundCloudMetadata) {
+  if (!playlist.isFavorites && (!activePlaylistTracks.length || hasIncompleteSoundCloudMetadata)) {
     try {
       const endpoint = playlist.source === "spotify" ? "/api/spotify/playlist" : "/api/playlist";
       const data = await getJson(endpoint + "?id=" + encodeURIComponent(playlist.id.replace(/^spotify:/, "")));
@@ -1868,6 +2049,7 @@ function closePlaylistDetail() {
   $("playlist-detail").style.display = "none";
   $("view-search").style.display = detailReturnView === "search" ? "" : "none";
   $("view-library").style.display = detailReturnView === "library" ? "" : "none";
+  $("view-favorites").style.display = detailReturnView === "favorites" ? "" : "none";
 }
 
 let activeArtistTracks = [];
@@ -1888,6 +2070,7 @@ function closeArtist() {
   }
   $("view-search").style.display = detailReturnView === "search" ? "" : "none";
   $("view-library").style.display = detailReturnView === "library" ? "" : "none";
+  $("view-favorites").style.display = detailReturnView === "favorites" ? "" : "none";
 }
 
 function renderArtistList() {
@@ -1916,6 +2099,7 @@ async function openArtist(url) {
   }
   $("view-search").style.display = "none";
   $("view-library").style.display = "none";
+  $("view-favorites").style.display = "none";
   const artistDetail = $("artist-detail");
   artistDetail.classList.remove("artist-opening");
   void artistDetail.offsetWidth;
@@ -1934,13 +2118,13 @@ async function openArtist(url) {
     const info = data.artist || {};
     activeArtistTracks = Array.isArray(data.tracks) ? data.tracks : [];
     if (info.avatar)
-      $("artist-art").innerHTML = '<img src="' + esc(info.avatar) + '" alt="">';
+      $("artist-art").innerHTML = '<img src="' + esc(info.avatar) + '" alt="" draggable="false">';
     $("artist-kicker").textContent = t("artist_kicker");
     $("artist-title").textContent = info.name || "";
     const parts = [];
     if (Number(info.followers) > 0)
       parts.push(Number(info.followers).toLocaleString("ru-RU") + " " + t("followers"));
-    parts.push(activeArtistTracks.length + " " + t("track_count_label"));
+    parts.push(trackCountText(activeArtistTracks.length));
     $("artist-sub").textContent = parts.join(" · ");
     renderArtistList();
     $("artist-play").disabled = !activeArtistTracks.some(track => trackSrc(track));
@@ -2801,7 +2985,14 @@ function saveLib() {
 function saveFavorites() {
   localStorage.setItem("velo_favorites", JSON.stringify(favorites));
   renderForYouHome();
-  if (view === "favorites") renderFavorites();
+  if (view === "favorites") {
+    renderFavorites();
+    if (activePlaylist && activePlaylist.isFavorites && $("playlist-detail").style.display !== "none") {
+      activePlaylist.tracks = favorites;
+      activePlaylistTracks = favorites;
+      renderPlaylistDetail(activePlaylist, activePlaylistTracks);
+    }
+  }
 }
 
 function savePlaylists() {
@@ -3104,6 +3295,7 @@ function boot() {
     return;
   }
   applyI18n();
+  renderResults();
   enterApp();
 }
 
@@ -3122,6 +3314,7 @@ document.querySelectorAll(".lang-card").forEach(card => {
     lang = card.dataset.lang;
     localStorage.setItem("velo_lang", lang);
     applyI18n();
+    renderResults();
     enterApp();
   });
 });
@@ -3189,7 +3382,10 @@ document.addEventListener("pointerup", () => {
 }, true);
 
 $("window-minimize").addEventListener("click", () => sendWindowCommand("minimize"));
-$("window-maximize").addEventListener("click", () => sendWindowCommand("maximize"));
+$("window-maximize").addEventListener("click", () => {
+  document.body.classList.toggle("window-maximized");
+  sendWindowCommand("maximize");
+});
 $("window-close").addEventListener("click", () => sendWindowCommand("close"));
 $("window-fullscreen").addEventListener("click", toggleFullscreenMode);
 
@@ -3202,7 +3398,10 @@ function toggleFullscreenMode() {
   sendWindowCommand("fullscreen");
   $("window-fullscreen").querySelector("span").textContent = ht(on ? "win_fullscreen_exit" : "win_fullscreen");
   if (on) enterFullscreenPlayer();
-  else leaveFullscreenPlayer();
+  else {
+    document.body.classList.remove("window-maximized");
+    leaveFullscreenPlayer();
+  }
 }
 
 function enterFullscreenPlayer() {
@@ -3274,13 +3473,82 @@ document.addEventListener("keydown", event => {
   }
 });
 
+function normalizeSettingsSearch(value) {
+  return value.toLocaleLowerCase().replace(/ё/g, "е").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function activateSettingsTab(tabId) {
+  document.querySelectorAll(".settings-nav-item").forEach(item => {
+    item.classList.toggle("active", item.dataset.settingsTab === tabId);
+  });
+  document.querySelectorAll(".settings-section").forEach(section => {
+    section.classList.toggle("active", section.dataset.settingsPanel === tabId);
+  });
+}
+
+function updateSettingsSearch() {
+  const input = $("settings-search-input");
+  if (!input) return;
+  const query = normalizeSettingsSearch(input.value);
+  const items = [...document.querySelectorAll(".settings-nav-item")];
+  const sections = [...document.querySelectorAll(".settings-section")];
+  const candidatesBySection = new Map();
+  const matches = new Map();
+
+  sections.forEach(section => {
+    const navItem = items.find(item => item.dataset.settingsTab === section.dataset.settingsPanel);
+    const navTitle = navItem?.innerText || "";
+    const heading = section.querySelector("h2")?.innerText || "";
+    const description = section.querySelector(":scope > .settings-description")?.innerText || "";
+    const candidates = [...section.querySelectorAll(":scope > .settings-choice-row, :scope > .theme-accent-section, :scope > .settings-actions, :scope > .settings-stats, :scope > .settings-row, :scope > .about-hero, :scope > .about-title, :scope > .about-intro, :scope > .about-details")];
+    const titleMatches = !query || normalizeSettingsSearch(`${navTitle} ${heading} ${description}`).includes(query);
+    const matchingCandidates = candidates.filter(candidate => normalizeSettingsSearch(candidate.innerText).includes(query));
+    candidatesBySection.set(section, candidates);
+    matches.set(section.dataset.settingsPanel, { isMatch: !query || titleMatches || matchingCandidates.length > 0, titleMatches, matchingCandidates });
+  });
+
+  items.forEach(item => {
+    item.hidden = Boolean(query) && !matches.get(item.dataset.settingsTab)?.isMatch;
+  });
+
+  const visibleTabs = items.filter(item => !item.hidden);
+  const activeTab = items.find(item => item.classList.contains("active"))?.dataset.settingsTab;
+  const selectedTab = visibleTabs.some(item => item.dataset.settingsTab === activeTab)
+    ? activeTab
+    : visibleTabs[0]?.dataset.settingsTab;
+
+  if (selectedTab) activateSettingsTab(selectedTab);
+
+  sections.forEach(section => {
+    const result = matches.get(section.dataset.settingsPanel);
+    const isSelected = section.dataset.settingsPanel === selectedTab;
+    section.hidden = Boolean(query) && (!result?.isMatch || !isSelected);
+    const candidates = candidatesBySection.get(section) || [];
+    candidates.forEach(candidate => {
+      candidate.hidden = Boolean(query) && isSelected && !result.titleMatches && !result.matchingCandidates.includes(candidate);
+      if (!query) candidate.hidden = false;
+    });
+    if (!query) section.hidden = false;
+  });
+
+  $("settings-search-empty").hidden = !query || visibleTabs.length > 0;
+}
+
 document.querySelectorAll(".settings-nav-item").forEach(item => {
   item.addEventListener("click", () => {
-    document.querySelectorAll(".settings-nav-item").forEach(button => button.classList.toggle("active", button === item));
-    document.querySelectorAll(".settings-section").forEach(section => {
-      section.classList.toggle("active", section.dataset.settingsPanel === item.dataset.settingsTab);
-    });
+    activateSettingsTab(item.dataset.settingsTab);
+    updateSettingsSearch();
   });
+});
+
+$("settings-search-input").addEventListener("input", updateSettingsSearch);
+$("settings-search-input").addEventListener("keydown", event => {
+  if (event.key === "Escape" && event.currentTarget.value) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.value = "";
+    updateSettingsSearch();
+  }
 });
 
 document.querySelectorAll("[data-language-choice]").forEach(button => {
@@ -3312,8 +3580,8 @@ document.querySelectorAll("[data-theme-accent-choice]").forEach(button => {
 $("settings-export").addEventListener("click", exportLibrary);
 $("settings-open-storage").addEventListener("click", () => sendWindowCommand("open-storage"));
 $("settings-website").addEventListener("click", () => sendWindowCommand("website"));
-$("settings-clear-library").addEventListener("click", () => {
-  if (!window.confirm(st("settings_clear_confirm"))) return;
+$("settings-clear-library").addEventListener("click", async () => {
+  if (!(await openAppConfirm(st("settings_clear_confirm")))) return;
   lib = [];
   savedPlaylists = [];
   saveLib();
@@ -3322,6 +3590,12 @@ $("settings-clear-library").addEventListener("click", () => {
   else if (view === "favorites") showView("favorites");
   else $("playlist-detail").style.display = "none";
   updateSettingsStats();
+});
+
+$("confirm-cancel").addEventListener("click", () => closeAppConfirm(false));
+$("confirm-accept").addEventListener("click", () => closeAppConfirm(true));
+$("confirm-overlay").addEventListener("pointerdown", event => {
+  if (event.target === event.currentTarget) closeAppConfirm(false);
 });
 
 $("settings-volume").addEventListener("input", e => {
@@ -3402,6 +3676,13 @@ $("search-input").addEventListener("input", e => {
     if (view !== "search") showView("search");
     doSearch(q);
   }, 320);
+});
+
+$("discover-recent-list").addEventListener("click", event => {
+  const button = event.target.closest("[data-discover-history]");
+  if (!button) return;
+  const index = parseInt(button.dataset.discoverHistory, 10);
+  if (Number.isInteger(index) && historyTracks[index]) playFromHistory(historyTracks[index]);
 });
 
 $("results").addEventListener("click", e => {
@@ -3542,7 +3823,7 @@ function finishPlaylistDrag(e) {
 playlistScroller.addEventListener("pointerup", finishPlaylistDrag);
 playlistScroller.addEventListener("pointercancel", finishPlaylistDrag);
 
-["results", "library"].forEach(id => {
+["results", "library", "favorites-list"].forEach(id => {
   const container = $(id);
   const animateFavorite = event => {
     const button = event.target.closest(".favorite-control");
@@ -3598,87 +3879,58 @@ $("favorites-list").addEventListener("click", event => {
   }
 });
 
-$("favorites-list").addEventListener("dragstart", event => {
-  const row = event.target.closest("[data-favorite-track]");
-  if (!row) return;
-  event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData("text/plain", row.dataset.favoriteTrack);
-  row.classList.add("is-dragging");
+$("favorites-play-all").addEventListener("click", () => {
+  if (!favorites.length) return;
+  openPlaylist({
+    id: "villife-favorites",
+    source: "local",
+    type: "playlist",
+    title: ht("favorites_liked"),
+    tracks: favorites,
+    isFavorites: true
+  });
 });
 
-$("favorites-list").addEventListener("dragover", event => {
-  const row = event.target.closest("[data-favorite-track]");
-  if (!row) return;
+$("favorites-artists").addEventListener("click", event => {
+  const link = artistLinkFrom(event.target);
+  if (link) openArtistFromLink(link);
+});
+
+$("favorites-playlists").addEventListener("click", event => {
+  const card = event.target.closest("[data-favorite-playlist]");
+  if (card) openPlaylist(favoritePlaylistAt(parseInt(card.dataset.favoritePlaylist, 10)));
+});
+
+$("favorites-playlists").addEventListener("keydown", event => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const card = event.target.closest("[data-favorite-playlist]");
+  if (!card) return;
   event.preventDefault();
-  event.dataTransfer.dropEffect = "move";
-  document.querySelectorAll(".favorite-track-row.drop-before, .favorite-track-row.drop-after")
-    .forEach(item => item.classList.remove("drop-before", "drop-after"));
-  row.classList.add(event.clientY < row.getBoundingClientRect().top + row.offsetHeight / 2
-    ? "drop-before"
-    : "drop-after");
+  openPlaylist(favoritePlaylistAt(parseInt(card.dataset.favoritePlaylist, 10)));
 });
 
-$("favorites-list").addEventListener("drop", event => {
-  const targetRow = event.target.closest("[data-favorite-track]");
-  const sourceIndex = Number(event.dataTransfer.getData("text/plain"));
-  if (!targetRow || !Number.isInteger(sourceIndex) || sourceIndex < 0 ||
-      sourceIndex >= favorites.length) return;
-  event.preventDefault();
-  const targetIndex = Number(targetRow.dataset.favoriteTrack);
-  if (sourceIndex === targetIndex) return;
-  let insertIndex = targetIndex +
-    (event.clientY >= targetRow.getBoundingClientRect().top + targetRow.offsetHeight / 2 ? 1 : 0);
-  if (sourceIndex < insertIndex) insertIndex--;
-  favorites.splice(insertIndex, 0, favorites.splice(sourceIndex, 1)[0]);
-  saveFavorites();
-  renderFavorites();
+document.querySelectorAll("[data-favorites-tab]").forEach(button => {
+  button.addEventListener("click", () => {
+    favoritesPlaylistTab = button.dataset.favoritesTab;
+    document.querySelectorAll("[data-favorites-tab]").forEach(tab => {
+      const active = tab === button;
+      tab.classList.toggle("is-active", active);
+      tab.setAttribute("aria-selected", String(active));
+    });
+    renderFavoritePlaylists();
+  });
 });
 
-$("favorites-list").addEventListener("dragend", () => {
-  document.querySelectorAll(".favorite-track-row").forEach(row =>
-    row.classList.remove("is-dragging", "drop-before", "drop-after"));
+document.querySelectorAll("[data-favorites-toggle]").forEach(button => {
+  button.addEventListener("click", () => {
+    const expanded = button.getAttribute("aria-expanded") === "true";
+    button.setAttribute("aria-expanded", String(!expanded));
+    const content = $(button.getAttribute("aria-controls"));
+    if (content) content.hidden = expanded;
+  });
 });
 
-$("library").addEventListener("dragstart", event => {
-  const row = event.target.closest("[data-lib]");
-  if (!row) return;
-  event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData("text/plain", row.dataset.lib);
-  row.classList.add("is-dragging");
-});
-
-$("library").addEventListener("dragover", event => {
-  const row = event.target.closest("[data-lib]");
-  if (!row) return;
-  event.preventDefault();
-  event.dataTransfer.dropEffect = "move";
-  document.querySelectorAll(".library-track-row.drop-before, .library-track-row.drop-after")
-    .forEach(item => item.classList.remove("drop-before", "drop-after"));
-  row.classList.add(event.clientY < row.getBoundingClientRect().top + row.offsetHeight / 2 ? "drop-before" : "drop-after");
-});
-
-$("library").addEventListener("drop", event => {
-  const targetRow = event.target.closest("[data-lib]");
-  const sourceIndex = Number(event.dataTransfer.getData("text/plain"));
-  if (!targetRow || !Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex >= lib.length) return;
-  event.preventDefault();
-  const targetIndex = Number(targetRow.dataset.lib);
-  if (sourceIndex === targetIndex) return;
-  const dropAfter = event.clientY >= targetRow.getBoundingClientRect().top + targetRow.offsetHeight / 2;
-  let insertIndex = targetIndex + (dropAfter ? 1 : 0);
-  if (sourceIndex < insertIndex) insertIndex--;
-  const movedTrack = lib.splice(sourceIndex, 1)[0];
-  lib.splice(insertIndex, 0, movedTrack);
-  saveLib();
-  renderLibrary();
-  renderForYouHome();
-  updateSettingsStats();
-});
-
-$("library").addEventListener("dragend", () => {
-  document.querySelectorAll(".library-track-row").forEach(row =>
-    row.classList.remove("is-dragging", "drop-before", "drop-after"));
-});
+$("favorites-find").addEventListener("click", () => showView("search"));
 
 $("library-playlists").addEventListener("click", e => {
   const artistLink = artistLinkFrom(e.target);
@@ -3993,6 +4245,25 @@ document.addEventListener("pointerdown", e => {
 });
 
 document.addEventListener("keydown", e => {
+  if (!$("confirm-overlay").hidden) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeAppConfirm(false);
+      return;
+    }
+    if (e.key === "Tab") {
+      const first = $("confirm-cancel");
+      const last = $("confirm-accept");
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    return;
+  }
   if (e.key === "Escape" && document.body.classList.contains("fullscreen-on") && $("view-settings").hidden) {
     toggleFullscreenMode();
     return;
