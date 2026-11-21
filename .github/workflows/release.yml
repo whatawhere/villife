@@ -90,6 +90,9 @@ jobs:
   build:
     name: Build Windows release
     runs-on: windows-2022
+    env:
+      SIGN_CERT: ${{ secrets.SIGN_CERT }}
+      SIGN_PASS: ${{ secrets.SIGN_PASS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -124,6 +127,19 @@ jobs:
         run: |
           msbuild src/Villife.csproj /p:Configuration=Release /p:TargetFrameworkRootPath="$env:TargetFrameworkRootPath" /v:m /nologo
           if (-not (Test-Path Villife.exe)) { throw "Villife.exe was not produced" }
+
+      - name: Sign executable
+        if: env.SIGN_CERT != ''
+        shell: pwsh
+        run: |
+          $bytes = [Convert]::FromBase64String($env:SIGN_CERT)
+          $pfx = Join-Path $env:RUNNER_TEMP "villife-signing.pfx"
+          [IO.File]::WriteAllBytes($pfx, $bytes)
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $signtool) { throw "signtool not found" }
+          & $signtool sign /f $pfx /p $env:SIGN_PASS /tr http://timestamp.digicert.com /td sha256 /fd sha256 Villife.exe
+          if ($LASTEXITCODE -ne 0) { throw "Failed to sign Villife.exe" }
+          Remove-Item $pfx -Force
 
       - name: Package
         shell: pwsh
@@ -160,6 +176,21 @@ jobs:
           $version = $tag -replace '^v', ''
           & $env:ISCC "/DAppVersion=$version" installer.iss
           if (-not (Test-Path release-out/VillifeSetup.exe)) { throw "VillifeSetup.exe was not produced" }
+          $hash = (Get-FileHash release-out/VillifeSetup.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  VillifeSetup.exe" | Out-File -FilePath release-out/VillifeSetup.exe.sha256 -Encoding ascii
+
+      - name: Sign installer
+        if: env.SIGN_CERT != ''
+        shell: pwsh
+        run: |
+          $bytes = [Convert]::FromBase64String($env:SIGN_CERT)
+          $pfx = Join-Path $env:RUNNER_TEMP "villife-signing.pfx"
+          [IO.File]::WriteAllBytes($pfx, $bytes)
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $signtool) { throw "signtool not found" }
+          & $signtool sign /f $pfx /p $env:SIGN_PASS /tr http://timestamp.digicert.com /td sha256 /fd sha256 release-out/VillifeSetup.exe
+          if ($LASTEXITCODE -ne 0) { throw "Failed to sign VillifeSetup.exe" }
+          Remove-Item $pfx -Force
           $hash = (Get-FileHash release-out/VillifeSetup.exe -Algorithm SHA256).Hash.ToLower()
           "$hash  VillifeSetup.exe" | Out-File -FilePath release-out/VillifeSetup.exe.sha256 -Encoding ascii
 
