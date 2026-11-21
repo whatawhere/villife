@@ -204,6 +204,8 @@ jobs:
           body: |
             Windows, macOS and Linux builds of Villife.
 
+            This project uses SignPath Foundation for code signing.
+
             **Windows**
             - `VillifeSetup.exe` - installer. Copies the app to `Program Files\Villife`, adds a Start menu shortcut and installs Microsoft Edge WebView2 Runtime if it is missing.
             - `Villife-win-x64.zip` - portable build. Extract and run `Villife.exe`. Keep the `src` and `webview2` folders next to the executable.
