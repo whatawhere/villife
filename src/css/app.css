@@ -2523,6 +2523,6 @@ body.fullscreen-on .content-inner { max-width: none; margin: 0; }
 
 body { background: radial-gradient(1100px 620px at 10% -12%, #3a1f26 0%, #0e0d0e 56%) !important; }
 #ambient-background.has-artwork { opacity: 0 !important; }
-.favorites-liked-art, .detail-art.is-favorites-art { background: #171416 !important; }
-.favorites-cover-fallback { background: #171416; }
+.favorites-liked-art, .detail-art.is-favorites-art { background: #1b1b1b !important; }
+.favorites-cover-fallback { background: #1b1b1b; }
 .favorites-cover-fallback svg { width: 2.6rem; height: 2.6rem; filter: drop-shadow(0 2px 6px rgb(0 0 0 / .4)); }
