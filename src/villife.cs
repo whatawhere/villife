@@ -2028,7 +2028,7 @@ namespace Villife
             Text = "Villife";
             Size = new Size(1423, 768);
             MinimumSize = new Size(960, 600);
-            FormBorderStyle = FormBorderStyle.None;
+            FormBorderStyle = FormBorderStyle.Sizable;
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Color.FromArgb(13, 13, 15);
 
