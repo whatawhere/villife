@@ -2554,3 +2554,9 @@ body { background: radial-gradient(1100px 620px at 92% -12%, #6a0227 0%, #470119
 .window-button:hover { border-radius: 0 !important; background: rgb(255 255 255 / 0.12) !important; }
 .window-close:hover { background: #e81123 !important; color: #fff !important; }
 .window-button svg { width: 10px; height: 10px; }
+
+.window-shell { padding: 0 !important; }
+.window-actions, .window-actions:hover { background: transparent !important; box-shadow: none !important; border: 0 !important; }
+.window-button { width: 44px; height: 30px; background: transparent !important; }
+.window-button:hover { background: rgb(255 255 255 / 0.08) !important; }
+.window-button svg { width: 12px; height: 12px; }
