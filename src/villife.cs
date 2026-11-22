@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -650,9 +650,9 @@ namespace Villife
                             }
                         }
                     }
-                    else if (path == "/liked-heart.jpg")
+                    else if (path == "/liked-heart.png")
                     {
-                        var heartPath = Path.Combine(wwwPath, "liked-heart.jpg");
+                        var heartPath = Path.Combine(wwwPath, "liked-heart.png");
                         if (!File.Exists(heartPath))
                         {
                             status = 404;
@@ -662,7 +662,7 @@ namespace Villife
                         else
                         {
                             body = File.ReadAllBytes(heartPath);
-                            mime = "image/jpeg";
+                            mime = "image/png";
                         }
                     }
                     else if (path.StartsWith("/fonts/", StringComparison.Ordinal))

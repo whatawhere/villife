@@ -2523,6 +2523,6 @@ body.fullscreen-on .content-inner { max-width: none; margin: 0; }
 
 body { background: radial-gradient(1100px 620px at 10% -12%, #3a1f26 0%, #0e0d0e 56%) !important; }
 #ambient-background.has-artwork { opacity: 0 !important; }
-.favorites-liked-art, .detail-art.is-favorites-art { background: url("/liked-heart.jpg") center / cover no-repeat !important; }
-.favorites-cover-fallback { background: url("/liked-heart.jpg") center / cover no-repeat; }
+.favorites-liked-art, .detail-art.is-favorites-art { background: url("/liked-heart.png") center / cover no-repeat !important; }
+.favorites-cover-fallback { background: url("/liked-heart.png") center / cover no-repeat; }
 .favorites-cover-fallback svg { display: none; }
