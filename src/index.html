@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Villife</title>
 <link rel="icon" type="image/x-icon" href="/villife.ico">
-<link rel="stylesheet" href="/css/app.css?v=164">
+<link rel="stylesheet" href="/css/app.css?v=166">
 </head>
 <body>
 
@@ -109,10 +109,10 @@
         <img class="search-art" id="search-art" alt="" hidden>
         <input class="input" id="search-input" type="text" autocomplete="off">
       </div>
-      <div class="topbar-window-controls">
-        <button class="topbar-window-btn" id="top-minimize" type="button" aria-label="Свернуть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
-        <button class="topbar-window-btn" id="top-maximize" type="button" aria-label="Развернуть"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12"/></svg></button>
-        <button class="topbar-window-btn topbar-window-close" id="top-close" type="button" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div class="win11-controls">
+        <button class="win11-btn" id="btn-min" title="Свернуть"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 5h10v1H0z" fill="currentColor"/></svg></button>
+        <button class="win11-btn" id="btn-max" title="Развернуть"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 0v10h10V0H0zm9 9H1V1h8v8z" fill="currentColor"/></svg></button>
+        <button class="win11-btn win11-close" id="btn-close" title="Закрыть"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M10 .7L9.3 0 5 4.3.7 0 0 .7 4.3 5 0 9.3l.7.7L5 5.7 9.3 10l.7-.7L5.7 5z" fill="currentColor"/></svg></button>
       </div>
     </div>
 
@@ -783,6 +783,6 @@
 </div>
 
 <script src="/js/hls.min.js"></script>
-<script src="/js/app.js?v=94" defer></script>
+<script src="/js/app.js?v=95" defer></script>
 </body>
 </html>

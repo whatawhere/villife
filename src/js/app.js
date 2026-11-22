@@ -3449,13 +3449,13 @@ $("window-maximize").addEventListener("click", () => {
   sendWindowCommand("maximize");
 });
 $("window-close").addEventListener("click", () => sendWindowCommand("close"));
-if ($("top-minimize")) $("top-minimize").addEventListener("click", () => sendWindowCommand("minimize"));
-if ($("top-maximize")) $("top-maximize").addEventListener("click", () => {
+if ($("btn-min")) $("btn-min").addEventListener("click", () => sendWindowCommand("minimize"));
+if ($("btn-max")) $("btn-max").addEventListener("click", () => {
   document.body.classList.toggle("window-maximized");
   sendWindowCommand("maximize");
 });
-if ($("top-close")) $("top-close").addEventListener("click", () => sendWindowCommand("close"));
-if ($("top-minimize") && !(window.chrome && window.chrome.webview)) $("top-minimize").closest(".topbar-window-controls").hidden = true;
+if ($("btn-close")) $("btn-close").addEventListener("click", () => sendWindowCommand("close"));
+if ($("btn-min") && !(window.chrome && window.chrome.webview)) $("btn-min").closest(".win11-controls").hidden = true;
 $("window-fullscreen").addEventListener("click", toggleFullscreenMode);
 
 let fullscreenPanelWasOpen = false;

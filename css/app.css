@@ -2578,3 +2578,12 @@ body.electron .topbar-window-controls { display: none; }
 .search-wrap .input { background: #1f1f1f !important; border: 0 !important; border-radius: 999px !important; height: 32px; }
 .topbar-window-controls { height: 40px; }
 .topbar-window-btn { width: 46px; height: 40px; }
+html, body { margin: 0; }
+.topbar { height: 48px !important; padding: 6px 0 !important; display: flex; align-items: center; justify-content: center; border: 0 !important; }
+.search-wrap .input { height: 36px !important; }
+.win11-controls { position: fixed; top: 0; right: 0; display: flex; height: 48px; z-index: 9999; margin: 0; padding: 0; }
+.win11-btn { width: 46px; height: 100%; border: none; border-radius: 0; background: transparent; color: #ffffff; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; transition: background-color 0.1s ease; }
+.win11-btn:hover { background-color: rgba(255, 255, 255, 0.08); }
+.win11-close:hover { background-color: #e81123; }
+
+.search-wrap .input { min-height: 36px !important; }
