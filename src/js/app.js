@@ -3443,6 +3443,17 @@ document.addEventListener("pointerup", () => {
   if (moved) document.addEventListener("click", suppressClick, { capture: true, once: true });
 }, true);
 
+const maximizeSvg = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 0v10h10V0H0zm9 9H1V1h8v8z" fill="currentColor"/></svg>';
+const restoreSvg = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2.1 0v2H0v8.1h8.2v-2h2V0H2.1zm5.1 9.2H1.1V3h6.1v6.2zm2-2.1h-1V2H3.1V1h6.1v6.1z" fill="currentColor"/></svg>';
+function villifeSetMaximized(value) {
+  const button = $("btn-max");
+  if (!button) return;
+  button.innerHTML = value ? restoreSvg : maximizeSvg;
+  button.title = value ? "Свернуть в окно" : "Развернуть";
+  document.body.classList.toggle("window-maximized", !!value);
+}
+window.villifeSetMaximized = villifeSetMaximized;
+
 $("window-minimize").addEventListener("click", () => sendWindowCommand("minimize"));
 $("window-maximize").addEventListener("click", () => {
   document.body.classList.toggle("window-maximized");

@@ -2077,6 +2077,11 @@ namespace Villife
                 settings.AreBrowserAcceleratorKeysEnabled = false;
                 settings.AreDevToolsEnabled = false;
                 settings.IsStatusBarEnabled = false;
+                web.CoreWebView2.NavigationCompleted += delegate
+                {
+                    try { BeginInvoke((MethodInvoker)NotifyMaximizedState); }
+                    catch (Exception error) { Trace.TraceError("Maximized sync failed: " + error); }
+                };
                 web.CoreWebView2.WebMessageReceived += delegate(object messageSender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs messageArgs)
                 {
                     var message = messageArgs.TryGetWebMessageAsString();
@@ -2525,6 +2530,42 @@ namespace Villife
             public Point ptMaxTrackSize;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        struct WinRect
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct NccalcsizeParams
+        {
+            public WinRect rgrc0;
+            public WinRect rgrc1;
+            public WinRect rgrc2;
+            public IntPtr lppos;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        struct MonitorInfo
+        {
+            public int cbSize;
+            public WinRect rcMonitor;
+            public WinRect rcWork;
+            public int dwFlags;
+        }
+
+        [DllImport("user32.dll")]
+        static extern bool IsZoomed(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr MonitorFromWindow(IntPtr hWnd, uint dwFlags);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo info);
+
         void ApplyRoundedCorners()
         {
             try
@@ -2598,6 +2639,13 @@ namespace Villife
         {
             if (web == null || web.CoreWebView2 == null) return;
             web.CoreWebView2.ExecuteScriptAsync("window.villifeNative && window.villifeNative." + command + "()");
+        }
+
+        void NotifyMaximizedState()
+        {
+            if (web == null || web.CoreWebView2 == null) return;
+            var state = WindowState == FormWindowState.Maximized ? "true" : "false";
+            web.CoreWebView2.ExecuteScriptAsync("window.villifeSetMaximized && window.villifeSetMaximized(" + state + ")");
         }
 
         void CheckClipboardForProfile(object sender, EventArgs e)
@@ -2717,6 +2765,17 @@ namespace Villife
         {
             if (message.Msg == WmNcCalcSize && message.WParam != IntPtr.Zero)
             {
+                if (IsZoomed(Handle))
+                {
+                    var monitor = MonitorFromWindow(Handle, 2);
+                    var info = new MonitorInfo { cbSize = Marshal.SizeOf(typeof(MonitorInfo)) };
+                    if (GetMonitorInfo(monitor, ref info))
+                    {
+                        var parameters = (NccalcsizeParams)Marshal.PtrToStructure(message.LParam, typeof(NccalcsizeParams));
+                        parameters.rgrc0 = info.rcWork;
+                        Marshal.StructureToPtr(parameters, message.LParam, true);
+                    }
+                }
                 message.Result = IntPtr.Zero;
                 return;
             }
@@ -2766,6 +2825,7 @@ namespace Villife
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
+            NotifyMaximizedState();
             if (WindowState == FormWindowState.Minimized)
             {
                 restoreFixPending = true;
