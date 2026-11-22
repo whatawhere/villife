@@ -1885,6 +1885,7 @@ function recordHistory(track) {
 }
 
 function renderPlaylistDetail(playlist, tracks) {
+  $("playlist-detail").querySelector(".detail-heading").classList.toggle("is-favorites", !!playlist.isFavorites);
   $("detail-art").classList.toggle("is-favorites-art", !!playlist.isFavorites);
   $("detail-art").innerHTML = playlist.isFavorites ? favoriteArtworkHtml(tracks) : artHtml(playlist);
   $("detail-kicker").textContent = playlist.isFavorites ? ht("favorites_kicker") : playlist.type === "album" ? t("album") :
@@ -1967,6 +1968,7 @@ async function openPlaylist(playlist) {
     playlistDetail.removeEventListener("animationend", finishOpening);
   };
   playlistDetail.addEventListener("animationend", finishOpening);
+  $("playlist-detail").querySelector(".detail-heading").classList.toggle("is-favorites", !!playlist.isFavorites);
   $("detail-art").classList.toggle("is-favorites-art", !!playlist.isFavorites);
   $("detail-art").innerHTML = playlist.isFavorites ? favoriteArtworkHtml(activePlaylistTracks) : artHtml(playlist);
   $("detail-kicker").textContent = playlist.isFavorites ? ht("favorites_kicker") : playlist.source === "spotify" ? "Spotify" : t(playlist.type || "playlist");
