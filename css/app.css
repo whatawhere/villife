@@ -2539,3 +2539,5 @@ body { background: radial-gradient(1100px 620px at 92% -12%, #6a0227 0%, #470119
 .favorites-owner-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 [data-settings-panel="account"] { display: none !important; }
+
+.about-account { display: none !important; }
