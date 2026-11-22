@@ -2547,3 +2547,10 @@ body { background: radial-gradient(1100px 620px at 92% -12%, #6a0227 0%, #470119
 .row.playing::before { background: #fff !important; box-shadow: 0 0 10px rgb(255 255 255 / .6) !important; }
 .row.playing .row-number { color: #fff !important; }
 .row.playing .row-number::before, .row.playing .row-number::after { background: #fff !important; }
+
+.window-fullscreen { display: none !important; }
+.window-actions { border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; padding: 0 !important; gap: 0 !important; }
+.window-button { width: 46px; height: 32px; border-radius: 0 !important; }
+.window-button:hover { border-radius: 0 !important; background: rgb(255 255 255 / 0.12) !important; }
+.window-close:hover { background: #e81123 !important; color: #fff !important; }
+.window-button svg { width: 10px; height: 10px; }
