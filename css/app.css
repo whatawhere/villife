@@ -2515,3 +2515,6 @@ body.fullscreen-on .content-inner { max-width: none; margin: 0; }
 .nav { gap: 0.5rem; margin-top: 0.5rem; }
 
 .nav-item svg { width: 1.15rem; height: 1.15rem; }
+
+.nav-item { min-height: 2.25rem; }
+.nav-item > svg:first-child { flex: 0 0 1.15rem; width: 1.15rem; height: 1.15rem; }
