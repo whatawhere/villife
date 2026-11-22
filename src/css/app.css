@@ -2541,3 +2541,5 @@ body { background: radial-gradient(1100px 620px at 92% -12%, #6a0227 0%, #470119
 [data-settings-panel="account"] { display: none !important; }
 
 .about-account { display: none !important; }
+
+#lib-count { display: none !important; }
