@@ -650,6 +650,21 @@ namespace Villife
                             }
                         }
                     }
+                    else if (path == "/liked-heart.jpg")
+                    {
+                        var heartPath = Path.Combine(wwwPath, "liked-heart.jpg");
+                        if (!File.Exists(heartPath))
+                        {
+                            status = 404;
+                            body = Encoding.UTF8.GetBytes("not found");
+                            mime = "text/plain; charset=utf-8";
+                        }
+                        else
+                        {
+                            body = File.ReadAllBytes(heartPath);
+                            mime = "image/jpeg";
+                        }
+                    }
                     else if (path.StartsWith("/fonts/", StringComparison.Ordinal))
                     {
                         var fontName = Path.GetFileName(path);
