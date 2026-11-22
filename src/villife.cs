@@ -2025,7 +2025,8 @@ namespace Villife
             discordRpc = new DiscordRpcClient();
             storagePath = Program.BrowserProfileDir();
             Program.MigrateLegacyProfile(storagePath);
-            Text = "Villife";
+            Text = "";
+            ShowIcon = false;
             Size = new Size(1423, 768);
             MinimumSize = new Size(960, 600);
             FormBorderStyle = FormBorderStyle.Sizable;
@@ -2514,6 +2515,10 @@ namespace Villife
             {
                 int round = 2;
                 DwmSetWindowAttribute(Handle, 33, ref round, 4);
+                int captionColor = 0;
+                DwmSetWindowAttribute(Handle, 35, ref captionColor, 4);
+                int textColor = 0xFFFFFF;
+                DwmSetWindowAttribute(Handle, 36, ref textColor, 4);
             }
             catch
             {
