@@ -19,6 +19,12 @@ function createWindow() {
     show: false,
     backgroundColor: "#12140f",
     title: "Villife",
+    titleBarStyle: "hidden",
+    titleBarOverlay: {
+      color: "#00000000",
+      symbolColor: "#ffffff",
+      height: 42
+    },
     icon: iconPath(),
     autoHideMenuBar: true,
     webPreferences: {
