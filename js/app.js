@@ -1754,7 +1754,6 @@ function renderFavorites() {
   empty.style.display = "none";
   $("favorites-cover-art").innerHTML = favoriteArtworkHtml(favorites);
   $("favorites-featured-count").textContent = trackCountText(favorites.length);
-  updateSidebarProfileStats();
   box.innerHTML = favorites.map((track, index) =>
     '<div class="row library-track-row favorite-track-row' + (isPlaying(track) ? " playing" : "") + '" data-favorite-track="' + index + '" style="animation-delay:' + Math.min(index * 0.025, 0.4) + 's">' +
       '<div class="row-art">' + artHtml(track) + "</div>" +
@@ -1892,8 +1891,8 @@ function renderPlaylistDetail(playlist, tracks) {
     playlist.source === "spotify" ? "Spotify" : t("playlist");
   $("detail-title").textContent = playlist.title || "";
   $("detail-title-input").value = playlist.title || "";
-  $("detail-sub").textContent = playlist.isFavorites ? trackCountText(tracks.length) :
-    (playlist.artist || "") + (playlist.artist && tracks.length ? " · " : "") + trackCountText(tracks.length);
+  $("detail-sub").innerHTML = playlist.isFavorites ? favoritesSubtitle(tracks) :
+    esc((playlist.artist || "") + (playlist.artist && tracks.length ? " · " : "") + trackCountText(tracks.length));
   $("detail-play").disabled = !tracks.some(track => trackSrc(track) || track.source === "spotify");
   $("playlist-detail-list").innerHTML = tracks.length ? tracks.map((track, i) =>
     '<div class="row search-row' + (isPlaying(track) ? " playing" : "") + '" data-detail-track="' + i + '">' +
@@ -1972,7 +1971,7 @@ async function openPlaylist(playlist) {
   $("detail-art").innerHTML = playlist.isFavorites ? favoriteArtworkHtml(activePlaylistTracks) : artHtml(playlist);
   $("detail-kicker").textContent = playlist.isFavorites ? ht("favorites_kicker") : playlist.source === "spotify" ? "Spotify" : t(playlist.type || "playlist");
   $("detail-title").textContent = playlist.title || "";
-  $("detail-sub").textContent = playlist.isFavorites ? trackCountText(activePlaylistTracks.length) : playlist.artist || "";
+  $("detail-sub").innerHTML = playlist.isFavorites ? favoritesSubtitle(activePlaylistTracks) : esc(playlist.artist || "");
   const titleWrap = $("detail-title-wrap");
   const titleInput = $("detail-title-input");
   const canRename = canRenameActivePlaylist();
@@ -3606,17 +3605,21 @@ function accountInitials(account) {
   return (parts.length > 1 ? parts[0][0] + parts[1][0] : parts[0].slice(0, 2)).toLocaleUpperCase();
 }
 
-function updateSidebarProfileStats() {
-  const element = $("sidebar-profile-stats");
-  if (!element) return;
-  const tracks = favorites.length ? favorites : lib;
+function favoritesSubtitle(tracks) {
+  const account = loadAccount();
+  const name = account && (account.name || account.username) ? (account.name || account.username) : "";
+  const avatar = account
+    ? '<span class="favorites-owner-avatar">' + (account.photo
+      ? '<img src="' + esc(account.photo) + '" alt="">'
+      : esc(accountInitials(account))) + "</span>"
+    : "";
   const total = tracks.reduce((sum, track) => sum + Number(track && track.duration || 0), 0);
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
   const duration = hours
     ? hours + (lang === "en" ? " h " : " ч. ") + minutes + (lang === "en" ? " min" : " мин.")
     : minutes + (lang === "en" ? " min" : " мин.");
-  element.textContent = trackCountText(tracks.length) + ", " + duration;
+  return avatar + "<span>" + esc(name ? name + " · " : "") + esc(trackCountText(tracks.length)) + " · " + esc(duration) + "</span>";
 }
 
 function renderAccount() {
@@ -3638,7 +3641,6 @@ function renderAccount() {
   }
   const sidebarName = $("sidebar-profile-name");
   if (sidebarName) sidebarName.textContent = name || (lang === "en" ? "Profile" : "Аккаунт");
-  updateSidebarProfileStats();
   if (view === "profile") renderUserProfile();
   if (!account) return;
   $("account-name").value = account.name || "";
