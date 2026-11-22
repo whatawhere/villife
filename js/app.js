@@ -1754,6 +1754,7 @@ function renderFavorites() {
   empty.style.display = "none";
   $("favorites-cover-art").innerHTML = favoriteArtworkHtml(favorites);
   $("favorites-featured-count").textContent = trackCountText(favorites.length);
+  updateSidebarProfileStats();
   box.innerHTML = favorites.map((track, index) =>
     '<div class="row library-track-row favorite-track-row' + (isPlaying(track) ? " playing" : "") + '" data-favorite-track="' + index + '" style="animation-delay:' + Math.min(index * 0.025, 0.4) + 's">' +
       '<div class="row-art">' + artHtml(track) + "</div>" +
@@ -3605,6 +3606,19 @@ function accountInitials(account) {
   return (parts.length > 1 ? parts[0][0] + parts[1][0] : parts[0].slice(0, 2)).toLocaleUpperCase();
 }
 
+function updateSidebarProfileStats() {
+  const element = $("sidebar-profile-stats");
+  if (!element) return;
+  const tracks = favorites.length ? favorites : lib;
+  const total = tracks.reduce((sum, track) => sum + Number(track && track.duration || 0), 0);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const duration = hours
+    ? hours + (lang === "en" ? " h " : " ч. ") + minutes + (lang === "en" ? " min" : " мин.")
+    : minutes + (lang === "en" ? " min" : " мин.");
+  element.textContent = trackCountText(tracks.length) + ", " + duration;
+}
+
 function renderAccount() {
   const account = loadAccount();
   const name = account && (account.name || account.username) ? (account.name || account.username) : st("account_no_profile");
@@ -3624,6 +3638,7 @@ function renderAccount() {
   }
   const sidebarName = $("sidebar-profile-name");
   if (sidebarName) sidebarName.textContent = name || (lang === "en" ? "Profile" : "Аккаунт");
+  updateSidebarProfileStats();
   if (view === "profile") renderUserProfile();
   if (!account) return;
   $("account-name").value = account.name || "";

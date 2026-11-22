@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Villife</title>
 <link rel="icon" type="image/x-icon" href="/villife.ico">
-<link rel="stylesheet" href="/css/app.css?v=150">
+<link rel="stylesheet" href="/css/app.css?v=151">
 </head>
 <body>
 
@@ -90,7 +90,10 @@
     <div class="sidebar-settings">
       <button class="nav-item sidebar-profile" data-view="profile" type="button" aria-label="Профиль">
         <span class="sidebar-profile-avatar" id="sidebar-profile-avatar"></span>
-        <span class="sidebar-profile-name" data-settings-i18n="nav_account">Аккаунт</span>
+        <span class="sidebar-profile-copy">
+          <span class="sidebar-profile-name" data-settings-i18n="nav_account">Аккаунт</span>
+          <span class="sidebar-profile-stats" id="sidebar-profile-stats"></span>
+        </span>
       </button>
       <button class="nav-item" data-view="settings" aria-label="Настройки">
         <svg class="settings-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 2.7 4 0 .7 2.6a7.7 7.7 0 0 1 1.8 1l2.5-.8 2 3.5-2 1.8a7.7 7.7 0 0 1 0 2.2l2 1.8-2 3.5-2.5-.8a7.7 7.7 0 0 1-1.8 1l-.7 2.6h-4l-.7-2.6a7.7 7.7 0 0 1-1.8-1l-2.5.8-2-3.5 2-1.8a7.7 7.7 0 0 1 0-2.2l-2-1.8 2-3.5 2.5.8a7.7 7.7 0 0 1 1.8-1z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -777,6 +780,6 @@
 </div>
 
 <script src="/js/hls.min.js"></script>
-<script src="/js/app.js?v=89" defer></script>
+<script src="/js/app.js?v=90" defer></script>
 </body>
 </html>

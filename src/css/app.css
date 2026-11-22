@@ -2531,3 +2531,6 @@ body { background: radial-gradient(1100px 620px at 92% -12%, #6a0227 0%, #470119
 
 
 #playlist-detail .detail-heading { background: linear-gradient(100deg, #1b191e 0%, #470119 48%, #6a0227 72%, #1b191e 100%) !important; }
+
+.sidebar-profile-copy { display: flex; min-width: 0; flex-direction: column; gap: 0.1rem; }
+.sidebar-profile-stats { overflow: hidden; color: hsl(var(--muted-foreground)); font-size: 0.6875rem; text-overflow: ellipsis; white-space: nowrap; }
