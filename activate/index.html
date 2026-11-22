@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#121212">
+  <meta name="robots" content="noindex, follow">
+  <title>Вход в Villife for Desktop</title>
+  <link rel="icon" href="/villife.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/villife.css?v=20261122-4">
+  <style>
+    .activate { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #121212; color: #fff; }
+    .activate-card { width: min(440px, 100%); padding: 34px; border: 1px solid #2a2a2a; border-radius: 18px; background: #181818; text-align: center; }
+    .activate-mark { display: grid; width: 64px; height: 64px; margin: 0 auto 20px; place-items: center; }
+    .activate-mark img { width: 40px; height: 40px; }
+    .activate-mark svg { width: 40px; height: 40px; fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; }
+    .activate-kicker { color: #b3b3b3; font-size: 13px; }
+    .activate-title { margin: 8px 0 24px; font-family: var(--display); font-size: 26px; font-weight: 600; }
+    .activate-account { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; padding: 12px 14px; border: 1px solid #333; border-radius: 12px; background: #202020; text-align: left; }
+    .activate-avatar { display: grid; width: 40px; height: 40px; flex: 0 0 40px; place-items: center; overflow: hidden; border-radius: 50%; background: #535353; font-size: 14px; font-weight: 700; }
+    .activate-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .activate-account b { display: block; font-size: 14px; }
+    .activate-account small { color: #b3b3b3; font-size: 11px; }
+    .activate-notyou { margin-left: auto; color: #b3b3b3; font-size: 11px; text-decoration: underline; cursor: pointer; }
+    .activate-btn { width: 100%; min-height: 48px; margin-bottom: 10px; border: 1px solid #444; border-radius: 999px; background: transparent; color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .activate-btn:hover { border-color: #fff; background: rgb(255 255 255 / .06); }
+    .activate-cancel { background: transparent; border: 1px solid #444; color: #fff; }
+    .activate-code { width: 100%; min-height: 90px; margin-top: 18px; padding: 12px; border: 1px solid #333; border-radius: 10px; background: #111; color: #fff; font-family: monospace; font-size: 11px; word-break: break-all; resize: none; }
+    .activate-copy { width: 100%; min-height: 40px; margin-top: 8px; border: 1px solid #444; border-radius: 999px; background: transparent; color: #fff; font: inherit; font-size: 12px; cursor: pointer; }
+    .activate-hint { margin: 14px 0 0; color: #b3b3b3; font-size: 11px; line-height: 1.5; }
+    .activate-login { display: inline-block; margin-top: 10px; color: #fff; font-size: 13px; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="activate">
+    <div class="activate-card" id="activate-approve" hidden>
+      <div class="activate-mark"><img src="/villife-flower.png" alt=""></div>
+      <div class="activate-kicker">Разрешите подключиться к:</div>
+      <h1 class="activate-title">Villife for Desktop</h1>
+      <div class="activate-account">
+        <span class="activate-avatar" id="activate-avatar"></span>
+        <span><b id="activate-name"></b><small id="activate-email"></small></span>
+        <a class="activate-notyou" id="activate-notyou" href="/signin/">Это не вы?</a>
+      </div>
+      <button class="activate-btn" id="activate-approve-btn" type="button">Перейти в приложение</button>
+      <button class="activate-btn activate-cancel" id="activate-cancel" type="button">Отмена</button>
+    </div>
+    <div class="activate-card" id="activate-code" hidden>
+      <div class="activate-mark"><img src="/villife-flower.png" alt=""></div>
+      <div class="activate-kicker">Почти готово</div>
+      <h1 class="activate-title">Скопируйте код</h1>
+      <p class="activate-hint">Вставьте этот код в приложение Villife — оно войдёт в ваш аккаунт.</p>
+      <textarea class="activate-code" id="activate-code-text" readonly></textarea>
+      <button class="activate-copy" id="activate-copy" type="button">Скопировать код</button>
+    </div>
+    <div class="activate-card" id="activate-login" hidden>
+      <div class="activate-mark"><img src="/villife-flower.png" alt=""></div>
+      <h1 class="activate-title">Войдите в аккаунт</h1>
+      <p class="activate-hint">Чтобы подключить приложение, сначала войдите в Villife через Microsoft.</p>
+      <a class="activate-login" href="/signin/?next=/activate/">Войти через Microsoft →</a>
+    </div>
+    <div class="activate-card" id="activate-expired" hidden>
+      <div class="activate-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 8 8 8m0-8-8 8"/></svg></div>
+      <h1 class="activate-title">Сеанс истёк</h1>
+      <p class="activate-hint">Повторите попытку позже.</p>
+      <button class="activate-btn" id="activate-retry" type="button">Повторить</button>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const readCookie = name => {
+        const part = document.cookie.split("; ").find(item => item.startsWith(name + "="));
+        return part ? part.slice(name.length + 1) : "";
+      };
+      const count = parseInt(readCookie("villife_sync_count"), 10);
+      const stamp = parseInt(readCookie("villife_sync_ts"), 10);
+      if (count && stamp && stamp > parseInt(localStorage.getItem("villife_sync_ts") || "0", 10)) {
+        let data = "";
+        for (let index = 0; index < count; index++) data += readCookie("villife_sync_" + index);
+        if (data) {
+          try {
+            const padded = data.replace(/-/g, "+").replace(/_/g, "/");
+            const json = decodeURIComponent(escape(atob(padded + "=".repeat((4 - padded.length % 4) % 4))));
+            const profile = JSON.parse(json);
+            if (profile && profile.name) {
+              localStorage.setItem("villife_signup", JSON.stringify(profile));
+              localStorage.setItem("villife_sync_ts", String(stamp));
+            }
+          } catch (error) {}
+        }
+      }
+      const savedStamp = parseInt(localStorage.getItem("villife_sync_ts") || "0", 10);
+      if (savedStamp && Date.now() - savedStamp > 900000) {
+        show("activate-expired");
+        document.getElementById("activate-retry").addEventListener("click", () => { location.href = "/signin/?next=/activate/"; });
+        return;
+      }
+      const show = id => { document.getElementById(id).hidden = false; };
+      const raw = localStorage.getItem("villife_signup");
+      let profile = null;
+      try { profile = raw ? JSON.parse(raw) : null; } catch (e) { profile = null; }
+      if (!profile || !profile.name) { show("activate-login"); return; }
+      const name = profile.name || profile.username || "Аккаунт";
+      const parts = name.trim().split(/\s+/);
+      document.getElementById("activate-name").textContent = name;
+      document.getElementById("activate-email").textContent = profile.email || "";
+      const avatar = document.getElementById("activate-avatar");
+      if (profile.photo) {
+        const img = document.createElement("img");
+        img.src = profile.photo;
+        img.alt = "";
+        avatar.appendChild(img);
+      } else {
+        avatar.textContent = (parts[0] || "")[0] + (parts[1] || parts[0] || "")[0];
+      }
+      show("activate-approve");
+      document.getElementById("activate-cancel").addEventListener("click", () => { location.href = "/"; });
+      document.getElementById("activate-approve-btn").addEventListener("click", () => {
+        const payload = {
+          name: profile.name || "",
+          firstName: profile.firstName || (parts[0] || ""),
+          lastName: profile.lastName || parts.slice(1).join(" "),
+          username: profile.username || "",
+          email: profile.email || "",
+          photo: profile.photo || ""
+        };
+        const json = JSON.stringify(payload);
+        const bytes = new TextEncoder().encode(json);
+        let binary = "";
+        bytes.forEach(b => { binary += String.fromCharCode(b); });
+        const code = "VLF1-" + btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        document.getElementById("activate-code-text").value = code;
+        document.getElementById("activate-approve").hidden = true;
+        show("activate-code");
+      });
+      document.getElementById("activate-copy").addEventListener("click", async () => {
+        const field = document.getElementById("activate-code-text");
+        field.select();
+        try { await navigator.clipboard.writeText(field.value); } catch (e) { document.execCommand("copy"); }
+        document.getElementById("activate-copy").textContent = "Скопировано ✓";
+      });
+    })();
+  </script>
+</body>
+</html>
