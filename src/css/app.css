@@ -2509,3 +2509,5 @@ body.fullscreen-on .content-inner { max-width: none; margin: 0; }
 .sidebar:not(.collapsed) .sidebar-profile { margin-left: -0.1875rem; }
 
 .sidebar.collapsed .nav-item svg { width: 1.15rem; height: 1.15rem; }
+
+.sidebar.collapsed .nav { gap: 0.5rem; margin-top: 0.5rem; }
