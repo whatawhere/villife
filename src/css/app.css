@@ -2525,4 +2525,4 @@ body { background: radial-gradient(1100px 620px at 10% -12%, #3a1f26 0%, #0e0d0e
 #ambient-background.has-artwork { opacity: 0 !important; }
 .favorites-liked-art, .detail-art.is-favorites-art { background: #171416 !important; }
 .favorites-cover-fallback { background: #171416; }
-.favorites-cover-fallback svg { width: 4rem; height: 4rem; filter: drop-shadow(0 2px 8px rgb(0 0 0 / .45)); }
+.favorites-cover-fallback svg { width: 2.6rem; height: 2.6rem; filter: drop-shadow(0 2px 6px rgb(0 0 0 / .4)); }
