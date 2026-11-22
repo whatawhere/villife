@@ -2694,11 +2694,6 @@ namespace Villife
 
         protected override void WndProc(ref Message message)
         {
-            if (message.Msg == WmNcCalcSize && message.WParam != IntPtr.Zero)
-            {
-                message.Result = IntPtr.Zero;
-                return;
-            }
             if (message.Msg == WmGetMinMaxInfo)
             {
                 var info = (MINMAXINFO)Marshal.PtrToStructure(message.LParam, typeof(MINMAXINFO));
