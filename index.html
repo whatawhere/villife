@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Villife</title>
 <link rel="icon" type="image/x-icon" href="/villife.ico">
-<link rel="stylesheet" href="/css/app.css?v=161">
+<link rel="stylesheet" href="/css/app.css?v=163">
 <style>
   .web-login-overlay { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(0 0 0 / 68%); backdrop-filter: blur(8px); }
   .web-login-overlay[hidden] { display: none !important; }
@@ -128,6 +128,11 @@
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         <img class="search-art" id="search-art" alt="" hidden>
         <input class="input" id="search-input" type="text" autocomplete="off">
+      </div>
+      <div class="topbar-window-controls">
+        <button class="topbar-window-btn" id="top-minimize" type="button" aria-label="Свернуть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+        <button class="topbar-window-btn" id="top-maximize" type="button" aria-label="Развернуть"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12"/></svg></button>
+        <button class="topbar-window-btn topbar-window-close" id="top-close" type="button" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
     </div>
 
@@ -845,6 +850,6 @@
   })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
-<script src="/js/app.js?v=100" defer></script>
+<script src="/js/app.js?v=102" defer></script>
 </body>
 </html>

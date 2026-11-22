@@ -2562,3 +2562,13 @@ body { background: radial-gradient(1100px 620px at 92% -12%, #6a0227 0%, #470119
 .window-button svg { width: 12px; height: 12px; }
 
 .window-shell { display: none !important; }
+
+.topbar { -webkit-app-region: drag; padding-right: 140px !important; }
+.topbar button, .topbar input, .topbar a, .topbar select, .topbar [role="button"] { -webkit-app-region: no-drag; }
+.topbar { padding-right: 1.5rem !important; }
+.topbar-window-controls { position: absolute; top: 0; right: 0; display: flex; height: 42px; -webkit-app-region: no-drag; }
+.topbar-window-btn { display: grid; width: 46px; height: 42px; place-items: center; border: 0; background: transparent; color: #fff; cursor: pointer; -webkit-app-region: no-drag; }
+.topbar-window-btn svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.topbar-window-btn:hover { background: rgb(255 255 255 / 0.08); }
+.topbar-window-close:hover { background: #e81123; }
+body.electron .topbar-window-controls { display: none; }

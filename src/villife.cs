@@ -1998,11 +1998,27 @@ namespace Villife
         const int DwmCornerRound = 2;
         const int HtClient = 1;
         const int HtCaption = 2;
+        const int HtMinButton = 8;
+        const int HtMaxButton = 9;
+        const int HtClose = 20;
         const int CaptionHeight = 42;
         const int WindowControlsWidth = 255;
+        const int WindowButtonWidth = 46;
 
         [DllImport("dwmapi.dll")]
         static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct Margins
+        {
+            public int Left;
+            public int Right;
+            public int Top;
+            public int Bottom;
+        }
+
+        [DllImport("dwmapi.dll")]
+        static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref Margins margins);
 
         [DllImport("user32.dll")]
         static extern bool ReleaseCapture();
@@ -2699,6 +2715,11 @@ namespace Villife
 
         protected override void WndProc(ref Message message)
         {
+            if (message.Msg == WmNcCalcSize && message.WParam != IntPtr.Zero)
+            {
+                message.Result = IntPtr.Zero;
+                return;
+            }
             if (message.Msg == WmGetMinMaxInfo)
             {
                 var info = (MINMAXINFO)Marshal.PtrToStructure(message.LParam, typeof(MINMAXINFO));
@@ -2711,14 +2732,21 @@ namespace Villife
                 message.Result = IntPtr.Zero;
                 return;
             }
-            if (message.Msg == WmNcHitTest && WindowState == FormWindowState.Normal && !fullscreenActive)
+            if (message.Msg == WmNcHitTest)
             {
                 base.WndProc(ref message);
                 var hit = (int)message.Result;
                 if (hit != HtClient && hit != 0) return;
-                var point = PointToClient(Cursor.Position);
-                if (point.Y < CaptionHeight && point.X < ClientSize.Width - WindowControlsWidth)
-                    message.Result = (IntPtr)HtCaption;
+                var raw = message.LParam.ToInt64();
+                var point = PointToClient(new Point((int)(raw & 0xFFFF), (int)((raw >> 16) & 0xFFFF)));
+                if (point.Y < CaptionHeight)
+                {
+                    var fromRight = ClientSize.Width - point.X;
+                    if (fromRight <= WindowButtonWidth) message.Result = (IntPtr)HtClose;
+                    else if (fromRight <= WindowButtonWidth * 2) message.Result = (IntPtr)HtMaxButton;
+                    else if (fromRight <= WindowButtonWidth * 3) message.Result = (IntPtr)HtMinButton;
+                    else message.Result = (IntPtr)HtCaption;
+                }
                 return;
             }
 
@@ -2784,6 +2812,10 @@ namespace Villife
                 DwmSetWindowAttribute(Handle, 32, ref on, 4);
                 int round = 2;
                 DwmSetWindowAttribute(Handle, 33, ref round, 4);
+                int captionColor = 0;
+                DwmSetWindowAttribute(Handle, 35, ref captionColor, 4);
+                int textColor = 0xFFFFFF;
+                DwmSetWindowAttribute(Handle, 36, ref textColor, 4);
             }
             catch
             {
