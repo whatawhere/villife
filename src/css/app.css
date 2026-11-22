@@ -2572,3 +2572,9 @@ body { background: radial-gradient(1100px 620px at 92% -12%, #6a0227 0%, #470119
 .topbar-window-btn:hover { background: rgb(255 255 255 / 0.08); }
 .topbar-window-close:hover { background: #e81123; }
 body.electron .topbar-window-controls { display: none; }
+#app { padding: 0 !important; gap: 0 !important; }
+.main { border-radius: 0 !important; border: 0 !important; }
+.topbar { height: 40px; padding: 0 1.5rem !important; }
+.search-wrap .input { background: #1f1f1f !important; border: 0 !important; border-radius: 999px !important; height: 32px; }
+.topbar-window-controls { height: 40px; }
+.topbar-window-btn { width: 46px; height: 40px; }

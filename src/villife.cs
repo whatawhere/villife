@@ -2001,7 +2001,7 @@ namespace Villife
         const int HtMinButton = 8;
         const int HtMaxButton = 9;
         const int HtClose = 20;
-        const int CaptionHeight = 42;
+        const int CaptionHeight = 40;
         const int WindowControlsWidth = 255;
         const int WindowButtonWidth = 46;
 
