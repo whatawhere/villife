@@ -1195,13 +1195,8 @@ document.addEventListener("dragstart", event => {
 }, true);
 
 function favoriteArtworkHtml(tracks) {
-  const artwork = tracks.map(track => track && track.artwork).filter(Boolean)
-    .filter((src, index, sources) => sources.indexOf(src) === index).slice(0, 4);
   const heart = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-8.5-5.4-8.5-11A4.7 4.7 0 0 1 12 7.2 4.7 4.7 0 0 1 20.5 10c0 5.6-8.5 11-8.5 11Z"/></svg>';
-  if (!artwork.length) return '<span class="favorites-cover-fallback">' + heart + "</span>";
-  return '<span class="favorites-cover-mosaic count-' + artwork.length + '">' +
-    artwork.map(src => '<img src="' + esc(src) + '" alt="" loading="lazy" draggable="false">').join("") +
-    '</span><span class="favorites-cover-mark" aria-hidden="true">' + heart + "</span>";
+  return '<span class="favorites-cover-fallback">' + heart + "</span>";
 }
 
 function artistHtml(entity) {
