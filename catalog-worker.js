@@ -119,6 +119,22 @@ export default {
       return json({ id, status });
     }
 
+    if (path === "/reports" && request.method === "POST") {
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const targetType = String(body && body.targetType || "");
+      const targetId = String(body && body.targetId || "");
+      const reason = String(body && body.reason || "").slice(0, 2000);
+      if (!targetType || !targetId || !reason) return json({ error: "missing fields" }, 400);
+      const id = crypto.randomUUID();
+      await env.DB.prepare("INSERT INTO moderation_actions (id, target_type, target_id, action, actor, reason) VALUES (?, ?, ?, ?, ?, ?)").bind(id, targetType, targetId, "report", "public", reason).run();
+      return json({ id, status: "pending review" });
+    }
+
     return json({ error: "not found" }, 404);
   }
 };
