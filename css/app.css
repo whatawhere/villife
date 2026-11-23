@@ -2605,9 +2605,11 @@ html, body { margin: 0; }
 .search-wrap .input { height: 100% !important; min-height: 0 !important; }
 *, *::before, *::after { box-sizing: border-box; }
 .topbar-search-group { flex: 0 1 auto; width: auto; }
-.search-wrap { flex: 1 1 545px !important; max-width: 545px !important; min-width: 320px !important; box-sizing: border-box !important; }
+.search-wrap { flex: 1 1 474px !important; max-width: 474px !important; min-width: 320px !important; box-sizing: border-box !important; }
 .search-wrap .input { box-sizing: border-box !important; }
 .search-wrap .input:focus, .search-wrap .input:focus-visible { box-shadow: inset 0 0 0 2px #ffffff !important; outline: none !important; }
 
 .topbar-search-group { transform: translateY(3px) !important; }
 .search-wrap .input { padding-right: 1rem !important; padding-left: 2.5rem !important; }
+.topbar-search-group { width: 474px !important; max-width: 474px !important; }
+.search-wrap { width: 100% !important; }
