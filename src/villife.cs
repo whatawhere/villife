@@ -23,7 +23,7 @@ namespace Villife
     {
         static MainForm mainForm;
         static string wwwPath;
-        static string clientId = "39AVoiZVrdvJEMFLH8T0c5WGshQaAPRJ";
+        static string clientId = Environment.GetEnvironmentVariable("SOUNDCLOUD_CLIENT_ID") ?? "39AVoiZVrdvJEMFLH8T0c5WGshQaAPRJ";
         static readonly object idLock = new object();
         static readonly Dictionary<string, CacheEntry> cache = new Dictionary<string, CacheEntry>();
         static readonly object cacheLock = new object();
