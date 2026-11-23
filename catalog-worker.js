@@ -28,6 +28,12 @@ function phrase(value) {
   return "%" + String(value || "").replace(/[%"_]/g, "") + "%";
 }
 
+function sortOrder(url, allowed, fallback) {
+  const field = String(url.searchParams.get("sort") || "");
+  const direction = String(url.searchParams.get("order") || "").toLowerCase() === "desc" ? "DESC" : "ASC";
+  return (allowed.includes(field) ? field : fallback) + " " + direction;
+}
+
 async function all(env, sql, params) {
   const statement = env.DB.prepare(sql);
   const result = await (params && params.length ? statement.bind(...params) : statement).all();
@@ -55,20 +61,20 @@ export default {
     if (path === "/health") return json({ ready: true, r2: !!(env && env.MEDIA), db: !!(env && env.DB) });
 
     if (path === "/artists" && request.method === "GET") {
-      const rows = await all(env, "SELECT id, name, avatar_url FROM artists WHERE name LIKE ? ORDER BY name LIMIT ? OFFSET ?", [phrase(q), page.limit, page.offset]);
+      const rows = await all(env, "SELECT id, name, avatar_url FROM artists WHERE name LIKE ? ORDER BY " + sortOrder(url, ["name", "created_at"], "name") + " LIMIT ? OFFSET ?", [phrase(q), page.limit, page.offset]);
       return json(rows);
     }
 
     if (path === "/albums" && request.method === "GET") {
       const artist = url.searchParams.get("artist") || "";
-      const rows = await all(env, "SELECT a.id, a.title, a.artwork_url, a.release_date, ar.name AS artist FROM albums a JOIN artists ar ON ar.id = a.artist_id WHERE (a.title LIKE ? OR ar.name LIKE ?) AND (? = '' OR ar.id = ?) AND EXISTS (SELECT 1 FROM releases r WHERE r.album_id = a.id AND r.status = 'published') ORDER BY a.release_date DESC LIMIT ? OFFSET ?", [phrase(q), phrase(q), artist, artist, page.limit, page.offset]);
+      const rows = await all(env, "SELECT a.id, a.title, a.artwork_url, a.release_date, ar.name AS artist FROM albums a JOIN artists ar ON ar.id = a.artist_id WHERE (a.title LIKE ? OR ar.name LIKE ?) AND (? = '' OR ar.id = ?) AND EXISTS (SELECT 1 FROM releases r WHERE r.album_id = a.id AND r.status = 'published') ORDER BY " + sortOrder(url, ["title", "release_date"], "release_date") + " LIMIT ? OFFSET ?", [phrase(q), phrase(q), artist, artist, page.limit, page.offset]);
       return json(rows);
     }
 
     if (path === "/tracks" && request.method === "GET") {
       const album = url.searchParams.get("album") || "";
       const artist = url.searchParams.get("artist") || "";
-      const rows = await all(env, "SELECT t.id, t.title, t.duration, t.artwork_url, ar.name AS artist, al.title AS album FROM tracks t JOIN artists ar ON ar.id = t.artist_id LEFT JOIN albums al ON al.id = t.album_id WHERE (t.title LIKE ? OR ar.name LIKE ?) AND (? = '' OR t.album_id = ?) AND (? = '' OR t.artist_id = ?) AND " + publishedTrack("t") + " ORDER BY t.title LIMIT ? OFFSET ?", [phrase(q), phrase(q), album, album, artist, artist, page.limit, page.offset]);
+      const rows = await all(env, "SELECT t.id, t.title, t.duration, t.artwork_url, ar.name AS artist, al.title AS album FROM tracks t JOIN artists ar ON ar.id = t.artist_id LEFT JOIN albums al ON al.id = t.album_id WHERE (t.title LIKE ? OR ar.name LIKE ?) AND (? = '' OR t.album_id = ?) AND (? = '' OR t.artist_id = ?) AND " + publishedTrack("t") + " ORDER BY " + sortOrder(url, ["title", "duration"], "title") + " LIMIT ? OFFSET ?", [phrase(q), phrase(q), album, album, artist, artist, page.limit, page.offset]);
       return json(rows);
     }
 
@@ -95,7 +101,7 @@ export default {
     if (path === "/releases" && request.method === "GET") {
       if (!isAdmin(request, env)) return json({ error: "forbidden" }, 403);
       const status = url.searchParams.get("status") || "";
-      const rows = await all(env, "SELECT id, album_id, track_id, owner_id, status, territory, license_type, updated_at FROM releases WHERE (? = '' OR status = ?) ORDER BY updated_at DESC LIMIT ? OFFSET ?", [status, status, page.limit, page.offset]);
+      const rows = await all(env, "SELECT id, album_id, track_id, owner_id, status, reason, territory, license_type, updated_at FROM releases WHERE (? = '' OR status = ?) ORDER BY " + sortOrder(url, ["updated_at", "status"], "updated_at") + " LIMIT ? OFFSET ?", [status, status, page.limit, page.offset]);
       return json(rows);
     }
 
@@ -114,9 +120,28 @@ export default {
       if (!statuses.includes(status)) return json({ error: "invalid status" }, 400);
       const existing = await one(env, "SELECT id FROM " + table + " WHERE id = ?", [id]);
       if (!existing) return json({ error: "not found" }, 404);
-      await env.DB.prepare("UPDATE " + table + " SET status = ?, updated_at = datetime('now') WHERE id = ?").bind(status, id).run();
+      const reason = String(body.reason || "");
+      if (table === "releases") await env.DB.prepare("UPDATE releases SET status = ?, reason = ?, updated_at = datetime('now') WHERE id = ?").bind(status, reason, id).run();
+      else await env.DB.prepare("UPDATE lyrics SET status = ?, updated_at = datetime('now') WHERE id = ?").bind(status, id).run();
       await env.DB.prepare("INSERT INTO moderation_actions (id, target_type, target_id, action, actor, reason) VALUES (?, ?, ?, ?, ?, ?)").bind(crypto.randomUUID(), table, id, status, String(body.actor || "admin"), String(body.reason || "")).run();
       return json({ id, status });
+    }
+
+    if (path === "/catalog/duplicates" && request.method === "GET") {
+      if (!isAdmin(request, env)) return json({ error: "forbidden" }, 403);
+      const rows = await all(env, "SELECT lower(trim(t.title)) AS title_key, ar.name AS artist, COUNT(*) AS copies, GROUP_CONCAT(t.id) AS ids FROM tracks t JOIN artists ar ON ar.id = t.artist_id GROUP BY title_key, ar.name HAVING copies > 1 ORDER BY copies DESC LIMIT 100");
+      return json(rows);
+    }
+
+    if (path === "/analytics" && request.method === "GET") {
+      if (!isAdmin(request, env)) return json({ error: "forbidden" }, 403);
+      const tables = ["artists", "albums", "tracks", "releases", "lyrics", "rights", "users", "playlists", "listening_history", "moderation_actions"];
+      const result = {};
+      for (const table of tables) {
+        const row = await one(env, "SELECT COUNT(*) AS total FROM " + table);
+        result[table] = row ? Number(row.total) : 0;
+      }
+      return json(result);
     }
 
     if (path === "/reports" && request.method === "POST") {
@@ -139,7 +164,7 @@ export default {
       if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
       if (path === "/studio/releases") {
         const owner = url.searchParams.get("owner") || "";
-        const rows = await all(env, "SELECT id, album_id, track_id, owner_id, status, updated_at FROM releases WHERE owner_id = ? ORDER BY updated_at DESC LIMIT ? OFFSET ?", [owner, page.limit, page.offset]);
+        const rows = await all(env, "SELECT id, album_id, track_id, owner_id, status, reason, updated_at FROM releases WHERE owner_id = ? ORDER BY updated_at DESC LIMIT ? OFFSET ?", [owner, page.limit, page.offset]);
         return json(rows);
       }
       return json({ error: "not found" }, 404);
@@ -155,6 +180,20 @@ export default {
       if (file.size > 52428800) return json({ error: "file too large" }, 400);
       const extension = String(file.name || "").split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "bin";
       const key = "audio/" + crypto.randomUUID() + "." + extension;
+      await env.MEDIA.put(key, file, { httpMetadata: { contentType: type }, customMetadata: { studio: "1" } });
+      return json({ key });
+    }
+
+    if (path === "/studio/upload-cover" && request.method === "POST") {
+      if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
+      const form = await request.formData();
+      const file = form.get("file");
+      if (!file || typeof file === "string") return json({ error: "no file" }, 400);
+      const type = String(file.type || "");
+      if (!/^image\/(jpeg|png|webp)$/.test(type)) return json({ error: "invalid type" }, 400);
+      if (file.size > 10485760) return json({ error: "file too large" }, 400);
+      const extension = type.split("/")[1] === "jpeg" ? "jpg" : type.split("/")[1];
+      const key = "covers/" + crypto.randomUUID() + "." + extension;
       await env.MEDIA.put(key, file, { httpMetadata: { contentType: type }, customMetadata: { studio: "1" } });
       return json({ key });
     }
@@ -180,6 +219,27 @@ export default {
       await env.DB.prepare("INSERT INTO tracks (id, artist_id, title, duration, audio_key, artwork_url) VALUES (?, ?, ?, ?, ?, ?)").bind(id, artistId, title, duration, audioKey, String(body.artworkUrl || "")).run();
       await env.DB.prepare("INSERT INTO releases (id, track_id, owner_id, status, territory, license_type) VALUES (?, ?, ?, 'draft', ?, ?)").bind(releaseId, id, owner, String(body.territory || ""), String(body.licenseType || "")).run();
       return json({ id, releaseId, status: "draft" });
+    }
+
+    const editMatch = path.match(/^\/studio\/tracks\/([^/]+)$/);
+    if (editMatch && request.method === "PATCH") {
+      if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const id = editMatch[1];
+      const release = await one(env, "SELECT status FROM releases WHERE track_id = ?", [id]);
+      if (!release) return json({ error: "not found" }, 404);
+      if (release.status !== "draft" && release.status !== "rejected") return json({ error: "not editable" }, 409);
+      const title = String(body && body.title || "").trim();
+      const duration = Math.max(0, Number(body && body.duration) || 0);
+      const artworkUrl = String(body && body.artworkUrl || "").trim();
+      await env.DB.prepare("UPDATE tracks SET title = ?, duration = ?, artwork_url = ? WHERE id = ?").bind(title, duration, artworkUrl, id).run();
+      if (release.status === "rejected") await env.DB.prepare("UPDATE releases SET status = 'draft', updated_at = datetime('now') WHERE track_id = ?").bind(id).run();
+      return json({ id, title, duration, artworkUrl });
     }
 
     const submitMatch = path.match(/^\/studio\/releases\/([^/]+)\/submit$/);
