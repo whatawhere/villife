@@ -38,7 +38,7 @@
 - Нотаризация macOS: нужны `APPLE_ID`, `APPLE_TEAM_ID`, `APPLE_APP_PASSWORD` в секретах репозитория. Шаг `notarytool` уже добавлен в CI.
 - Единая учётная запись: backend готов — `/auth/register`, `/auth/login`, `/auth/me` с HMAC-токенами и PBKDF2. Клиентам нужно перейти с VLF1 на эти токены.
 - Персонализация рекомендаций: `/recommendations` уже учитывает частоту прослушивания исполнителей; качество улучшится по мере накопления истории.
-- Коды входа по почте: нужны секреты Worker `EMAIL_API_URL`, `EMAIL_API_KEY` и переменная `EMAIL_FROM`. Формат совместим с Resend (`https://api.resend.com/emails`). Без них `/auth/email/request` возвращает 503. `EMAIL_DEBUG=1` показывает код на экране только для отладки — включать в проде нельзя.
+- Коды входа по почте: настроена отправка через Gmail SMTP (`smtp.gmail.com:465`, TLS) с App Password в секретах Worker `MAIL_USER` / `MAIL_PASS`. Заголовок `From` — `villife@villife.hs.vc`, `Reply-To` — Gmail-аккаунт. Резервный путь через HTTP-провайдера: `EMAIL_API_URL`, `EMAIL_API_KEY`, `EMAIL_FROM` (формат Resend). `EMAIL_DEBUG=1` показывает код на экране только для отладки — в проде не включать.
 
 ## Критерии готовности
 
