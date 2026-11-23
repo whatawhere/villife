@@ -282,6 +282,91 @@ Deno.test("auth rejects wrong password", async () => {
   check(response.status === 401, "wrong password");
 });
 
+Deno.test("email code login works in debug mode", async () => {
+  let codeRow = null;
+  let user = null;
+  const env = { AUTH_SECRET: "test-secret", EMAIL_DEBUG: "1", DB: makeDb((sql, params) => {
+    if (sql.startsWith("INSERT INTO email_codes")) {
+      codeRow = { hash: params[1], expires: params[2] };
+      return [];
+    }
+    if (sql.startsWith("SELECT hash, expires FROM email_codes")) return codeRow ? [codeRow] : [];
+    if (sql.startsWith("DELETE FROM email_codes")) {
+      codeRow = null;
+      return [];
+    }
+    if (sql.startsWith("SELECT id, email, display_name, role, token_version FROM users")) return user ? [user] : [];
+    if (sql.startsWith("INSERT INTO users")) {
+      user = { id: params[0], email: params[1], display_name: params[2], role: "user", token_version: 0 };
+      return [];
+    }
+    return [];
+  }, []) };
+  const requested = await worker.fetch(request("/auth/email/request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "code@villife.test" })
+  }), env);
+  const challenge = await requested.json();
+  check(requested.status === 200 && /^\d{6}$/.test(challenge.devCode), "code issued");
+  const verified = await worker.fetch(request("/auth/email/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "code@villife.test", code: challenge.devCode })
+  }), env);
+  const result = await verified.json();
+  check(verified.status === 200 && result.token, "email token");
+});
+
+Deno.test("qr login approves from phone", async () => {
+  let session = null;
+  let user = null;
+  const env = { AUTH_SECRET: "test-secret", DB: makeDb((sql, params) => {
+    if (sql.startsWith("INSERT INTO users")) {
+      user = { id: params[0], email: params[1], display_name: params[2], password_hash: null, salt: null, role: "user", token_version: 0 };
+      return [];
+    }
+    if (sql.startsWith("SELECT id, email, display_name, password_hash, salt, role, token_version FROM users")) return user ? [user] : [];
+    if (sql.startsWith("INSERT INTO qr_sessions")) {
+      session = { id: params[0], device: params[1], status: "pending", token: null, expires: params[4] };
+      return [];
+    }
+    if (sql.startsWith("SELECT status, token, device, expires FROM qr_sessions") || sql.startsWith("SELECT expires, status FROM qr_sessions")) return session ? [session] : [];
+    if (sql.startsWith("UPDATE qr_sessions SET status = 'approved'")) {
+      session.status = "approved";
+      session.token = params[0];
+      return [];
+    }
+    return [];
+  }, []) };
+  const registered = await worker.fetch(request("/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "qr@villife.test", password: "password123" })
+  }), env);
+  const token = (await registered.json()).token;
+  check(!!token, "phone token");
+
+  const created = await worker.fetch(request("/auth/qr/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ device: "Windows 11" })
+  }), env);
+  const qr = await created.json();
+  check(created.status === 200 && qr.device === "Windows 11", "qr session");
+
+  const approved = await worker.fetch(request("/auth/qr/approve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+    body: JSON.stringify({ session: qr.session, decision: "approve" })
+  }), env);
+  check(approved.status === 200, "qr approve");
+
+  const status = await worker.fetch(request("/auth/qr/status?session=" + qr.session), env);
+  const state = await status.json();
+  check(state.status === "approved" && state.token, "qr status token");
+});
+
 Deno.test("catalog recommends tracks by history", async () => {
   const captured = [];
   const env = { DB: makeDb(() => [{ id: "tr-1", title: "Rec" }], captured) };
