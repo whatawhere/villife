@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5f0">
+  <meta name="robots" content="noindex, follow">
+  <title>Подтверждение входа — Villife</title>
+  <link rel="icon" href="/villife.ico">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/villife.css">
+  <style>
+    .qr-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .qr-card { width: min(100%, 420px); padding: 30px; border: 1px solid rgba(255,255,255,.85); border-radius: 24px; background: var(--glass-strong); box-shadow: var(--shadow-mid); backdrop-filter: blur(22px) saturate(150%); }
+    .qr-card h1 { margin: 0 0 12px; font-family: var(--display); font-size: 26px; font-weight: 500; }
+    .qr-card p { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+    .qr-device { color: var(--ink); font-weight: 600; }
+    .qr-actions { display: flex; gap: 10px; }
+    .qr-actions button { flex: 1; border: 0; border-radius: 999px; padding: 13px 18px; font-weight: 600; cursor: pointer; }
+    .qr-yes { background: var(--ink); color: #fff; }
+    .qr-no { border: 1px solid var(--line) !important; background: transparent; color: var(--ink-soft); }
+    .qr-result { color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main class="qr-page">
+    <section class="qr-card">
+      <h1>Villife</h1>
+      <div id="qr-content"><p>Проверяем сессию...</p></div>
+    </section>
+  </main>
+  <script>
+    const API = "https://villife-catalog.telesamafia.workers.dev";
+    const params = new URLSearchParams(location.search);
+    const session = params.get("session") || "";
+    const device = params.get("device") || "неизвестного устройства";
+    const box = document.getElementById("qr-content");
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+      }));
+    }
+
+    async function decide(decision) {
+      box.innerHTML = '<p class="qr-result">Отправляем ответ...</p>';
+      try {
+        const response = await fetch(API + "/auth/qr/approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + localStorage.getItem("villife_token") },
+          body: JSON.stringify({ session, decision })
+        });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || ("HTTP " + response.status));
+        }
+        box.innerHTML = '<p class="qr-result">' + (decision === "approve" ? "Вход подтверждён. Можно закрыть страницу." : "Вход отклонён.") + "</p>";
+      } catch (error) {
+        box.innerHTML = '<p class="qr-result">Ошибка: ' + escapeHtml(error.message) + "</p>";
+      }
+    }
+
+    if (!session) {
+      box.innerHTML = "<p>Нет данных сессии. Отсканируй QR заново.</p>";
+    } else if (!localStorage.getItem("villife_token")) {
+      box.innerHTML = '<p>Войди в Villife на этом телефоне, чтобы подтвердить вход.</p><div class="qr-actions"><a class="button button-primary" href="/signin/">Войти в аккаунт</a></div>';
+    } else {
+      setTimeout(() => {
+        box.innerHTML = '<p>Вы пытаетесь войти с устройства <span class="qr-device">' + escapeHtml(device) + "</span>?</p>" +
+          '<div class="qr-actions"><button class="qr-yes" type="button" id="qr-yes">Да</button><button class="qr-no" type="button" id="qr-no">Нет</button></div>';
+        document.getElementById("qr-yes").addEventListener("click", () => decide("approve"));
+        document.getElementById("qr-no").addEventListener("click", () => decide("deny"));
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
