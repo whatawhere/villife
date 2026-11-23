@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Villife</title>
 <link rel="icon" type="image/x-icon" href="/villife.ico">
-<link rel="stylesheet" href="/css/app.css?v=173">
+<link rel="stylesheet" href="/css/app.css?v=175">
 </head>
 <body>
 
@@ -104,10 +104,15 @@
 
   <div class="main">
     <div class="topbar">
-      <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <img class="search-art" id="search-art" alt="" hidden>
-        <input class="input" id="search-input" type="text" autocomplete="off">
+      <div class="topbar-search-group">
+        <button class="topbar-home" id="topbar-home" type="button" title="Главная" aria-label="Главная"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg></button>
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <img class="search-art" id="search-art" alt="" hidden>
+          <input class="input" id="search-input" type="text" autocomplete="off">
+          <span class="topbar-search-sep"></span>
+          <button class="topbar-browse" id="topbar-browse" type="button" title="Коллекция" aria-label="Коллекция"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+        </div>
       </div>
       <div class="win11-controls">
         <button class="win11-btn" id="btn-min" title="Свернуть"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 5h10v1H0z" fill="currentColor"/></svg></button>
@@ -786,6 +791,6 @@
 </div>
 
 <script src="/js/hls.min.js"></script>
-<script src="/js/app.js?v=97" defer></script>
+<script src="/js/app.js?v=98" defer></script>
 </body>
 </html>

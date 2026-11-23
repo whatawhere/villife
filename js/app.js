@@ -3512,6 +3512,8 @@ if ($("btn-close")) $("btn-close").addEventListener("click", () => sendWindowCom
 if ($("btn-min") && !(window.chrome && window.chrome.webview)) $("btn-min").closest(".win11-controls").hidden = true;
 $("window-fullscreen").addEventListener("click", toggleFullscreenMode);
 if ($("pl-fullscreen")) $("pl-fullscreen").addEventListener("click", toggleFullscreenMode);
+if ($("topbar-home")) $("topbar-home").addEventListener("click", () => showView("search"));
+if ($("topbar-browse")) $("topbar-browse").addEventListener("click", () => showView("library"));
 
 let fullscreenPanelWasOpen = false;
 
