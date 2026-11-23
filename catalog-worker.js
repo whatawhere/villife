@@ -127,6 +127,38 @@ export default {
       return json({ id, status });
     }
 
+    if (path === "/catalog/import" && request.method === "POST") {
+      if (!isAdmin(request, env)) return json({ error: "forbidden" }, 403);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const items = Array.isArray(body) ? body : (body && Array.isArray(body.items) ? body.items : []);
+      let imported = 0;
+      let skipped = 0;
+      const errors = [];
+      for (const item of items) {
+        const id = String(item && item.id || "").trim();
+        const title = String(item && item.title || "").trim();
+        const artistId = String(item && item.artistId || "").trim();
+        const duration = Math.max(0, Number(item && item.duration) || 0);
+        if (!/^[a-zA-Z0-9:_-]{1,128}$/.test(id) || !title || !artistId) {
+          errors.push({ id: id || null, error: "invalid metadata" });
+          continue;
+        }
+        const existing = await one(env, "SELECT id FROM tracks WHERE id = ?", [id]);
+        if (existing) {
+          skipped += 1;
+          continue;
+        }
+        await env.DB.prepare("INSERT INTO tracks (id, album_id, artist_id, title, duration, artwork_url) VALUES (?, ?, ?, ?, ?, ?)").bind(id, String(item.albumId || ""), artistId, title, duration, String(item.artworkUrl || "")).run();
+        imported += 1;
+      }
+      return json({ imported, skipped, errors });
+    }
+
     if (path === "/catalog/duplicates" && request.method === "GET") {
       if (!isAdmin(request, env)) return json({ error: "forbidden" }, 403);
       const rows = await all(env, "SELECT lower(trim(t.title)) AS title_key, ar.name AS artist, COUNT(*) AS copies, GROUP_CONCAT(t.id) AS ids FROM tracks t JOIN artists ar ON ar.id = t.artist_id GROUP BY title_key, ar.name HAVING copies > 1 ORDER BY copies DESC LIMIT 100");
@@ -219,6 +251,13 @@ export default {
       await env.DB.prepare("INSERT INTO tracks (id, artist_id, title, duration, audio_key, artwork_url) VALUES (?, ?, ?, ?, ?, ?)").bind(id, artistId, title, duration, audioKey, String(body.artworkUrl || "")).run();
       await env.DB.prepare("INSERT INTO releases (id, track_id, owner_id, status, territory, license_type) VALUES (?, ?, ?, 'draft', ?, ?)").bind(releaseId, id, owner, String(body.territory || ""), String(body.licenseType || "")).run();
       return json({ id, releaseId, status: "draft" });
+    }
+
+    const trackMatch = path.match(/^\/studio\/tracks\/([^/]+)$/);
+    if (trackMatch && request.method === "GET") {
+      if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
+      const row = await one(env, "SELECT t.id, t.title, t.duration, t.artwork_url, r.status, r.reason FROM tracks t JOIN releases r ON r.track_id = t.id WHERE t.id = ?", [trackMatch[1]]);
+      return row ? json(row) : json({ error: "not found" }, 404);
     }
 
     const editMatch = path.match(/^\/studio\/tracks\/([^/]+)$/);
