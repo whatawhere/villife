@@ -135,6 +135,63 @@ export default {
       return json({ id, status: "pending review" });
     }
 
+    if (path.startsWith("/studio/") && request.method === "GET") {
+      if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
+      if (path === "/studio/releases") {
+        const owner = url.searchParams.get("owner") || "";
+        const rows = await all(env, "SELECT id, album_id, track_id, owner_id, status, updated_at FROM releases WHERE owner_id = ? ORDER BY updated_at DESC LIMIT ? OFFSET ?", [owner, page.limit, page.offset]);
+        return json(rows);
+      }
+      return json({ error: "not found" }, 404);
+    }
+
+    if (path === "/studio/upload" && request.method === "POST") {
+      if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
+      const form = await request.formData();
+      const file = form.get("file");
+      if (!file || typeof file === "string") return json({ error: "no file" }, 400);
+      const type = String(file.type || "");
+      if (!/^(audio\/|application\/octet-stream)/.test(type)) return json({ error: "invalid type" }, 400);
+      if (file.size > 52428800) return json({ error: "file too large" }, 400);
+      const extension = String(file.name || "").split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "bin";
+      const key = "audio/" + crypto.randomUUID() + "." + extension;
+      await env.MEDIA.put(key, file, { httpMetadata: { contentType: type }, customMetadata: { studio: "1" } });
+      return json({ key });
+    }
+
+    if (path === "/studio/tracks" && request.method === "POST") {
+      if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const title = String(body && body.title || "").trim();
+      const artistId = String(body && body.artistId || "").trim();
+      const owner = String(body && body.ownerId || "").trim();
+      const duration = Math.max(0, Number(body && body.duration) || 0);
+      const audioKey = String(body && body.audioKey || "").trim();
+      if (!title || !artistId || !owner || !/^audio\/[a-f0-9-]+\.[a-z0-9]+$/.test(audioKey)) return json({ error: "missing fields" }, 400);
+      const artist = await one(env, "SELECT id FROM artists WHERE id = ?", [artistId]);
+      if (!artist) return json({ error: "unknown artist" }, 404);
+      const id = "tr-" + crypto.randomUUID();
+      const releaseId = "rel-" + crypto.randomUUID();
+      await env.DB.prepare("INSERT INTO tracks (id, artist_id, title, duration, audio_key, artwork_url) VALUES (?, ?, ?, ?, ?, ?)").bind(id, artistId, title, duration, audioKey, String(body.artworkUrl || "")).run();
+      await env.DB.prepare("INSERT INTO releases (id, track_id, owner_id, status, territory, license_type) VALUES (?, ?, ?, 'draft', ?, ?)").bind(releaseId, id, owner, String(body.territory || ""), String(body.licenseType || "")).run();
+      return json({ id, releaseId, status: "draft" });
+    }
+
+    const submitMatch = path.match(/^\/studio\/releases\/([^/]+)\/submit$/);
+    if (submitMatch && request.method === "POST") {
+      if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
+      const release = await one(env, "SELECT id, status FROM releases WHERE id = ?", [submitMatch[1]]);
+      if (!release) return json({ error: "not found" }, 404);
+      if (release.status !== "draft" && release.status !== "rejected") return json({ error: "invalid status" }, 400);
+      await env.DB.prepare("UPDATE releases SET status = 'pending review', updated_at = datetime('now') WHERE id = ?").bind(release.id).run();
+      return json({ id: release.id, status: "pending review" });
+    }
+
     return json({ error: "not found" }, 404);
   }
 };
