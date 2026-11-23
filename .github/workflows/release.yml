@@ -80,6 +80,31 @@ jobs:
           done
           ls -lh bundle
 
+      - name: Notarize macOS build
+        if: runner.os == 'macOS'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          if [ -z "$APPLE_ID" ] || [ -z "$APPLE_TEAM_ID" ] || [ -z "$APPLE_APP_PASSWORD" ]; then
+            echo "Apple credentials are not configured; skipping notarization"
+            exit 0
+          fi
+          for file in bundle/*.dmg bundle/*.zip; do
+            [ -e "$file" ] || continue
+            xcrun notarytool submit "$file" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD" --wait
+            xcrun stapler staple "$file"
+          done
+
+      - name: Validate Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          dpkg-deb --info bundle/*.deb > /dev/null
+          file bundle/*.AppImage
+          chmod +x bundle/*.AppImage
+          ldd bundle/*.AppImage > /dev/null 2>&1 || true
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
