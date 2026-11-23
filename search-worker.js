@@ -50,7 +50,9 @@ async function refreshClientId() {
     const text = await page.text();
     const match = text.match(/client_id:"([a-zA-Z0-9]+)"/);
     if (match && match[1]) clientId = match[1];
-  } catch (error) {}
+  } catch (error) {
+    console.error("client id refresh failed", error && error.message);
+  }
 }
 
 async function soundcloud(path, options) {
@@ -197,7 +199,10 @@ async function proxyHls(targetUrl, base, depth, env, key, request) {
   const range = request && request.headers ? request.headers.get("Range") : null;
   const response = await fetch(targetUrl.toString(), { redirect: "follow", headers: range ? { Range: range } : {} });
   if (response.status === 206) return passthrough(response);
-  if (!response.ok) return json({ error: "upstream failed" }, 502);
+  if (!response.ok) {
+    console.error("hls upstream failed", host, response.status);
+    return json({ error: "upstream failed" }, 502);
+  }
   const type = response.headers.get("Content-Type") || "";
   const clone = response.clone();
   const text = await response.text();
@@ -349,7 +354,10 @@ export default {
       const range = request.headers.get("Range");
       const response = await fetch(targetUrl.toString(), { redirect: "follow", headers: range ? { Range: range } : {} });
       if (response.status === 206) return passthrough(response);
-      if (!response.ok) return json({ error: "image unavailable" }, 502);
+      if (!response.ok) {
+        console.error("image upstream failed", host, response.status);
+        return json({ error: "image unavailable" }, 502);
+      }
       const type = response.headers.get("Content-Type") || "image/jpeg";
       const buffer = await response.arrayBuffer();
       await storeResponse(env, key, buffer, type);
