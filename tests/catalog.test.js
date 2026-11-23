@@ -152,6 +152,65 @@ Deno.test("studio submits release for review", async () => {
   check(captured.some(item => item.sql.includes("'pending review'")), "submit update");
 });
 
+Deno.test("catalog applies sort and order", async () => {
+  const captured = [];
+  const env = { DB: makeDb(() => [], captured) };
+  await worker.fetch(request("/tracks?sort=duration&order=desc"), env);
+  const query = captured.find(item => item.sql.startsWith("SELECT t.id"));
+  check(query.sql.includes("ORDER BY duration DESC"), "sort clause");
+});
+
+Deno.test("catalog finds duplicate tracks for admin", async () => {
+  const env = { DB: makeDb(() => [{ title_key: "song", copies: 2 }], []), ADMIN_SECRET: "secret" };
+  const response = await worker.fetch(request("/catalog/duplicates", { headers: { "X-Admin-Key": "secret" } }), env);
+  const data = await response.json();
+  check(response.status === 200, "duplicates status");
+  check(data[0].copies === 2, "duplicates body");
+});
+
+Deno.test("catalog exposes analytics for admin", async () => {
+  const env = { DB: makeDb((sql) => sql.startsWith("SELECT COUNT") ? [{ total: 7 }] : [], []), ADMIN_SECRET: "secret" };
+  const response = await worker.fetch(request("/analytics", { headers: { "X-Admin-Key": "secret" } }), env);
+  const data = await response.json();
+  check(data.tracks === 7 && data.releases === 7, "analytics counts");
+});
+
+Deno.test("studio uploads cover", async () => {
+  const stored = [];
+  const env = { DB: makeDb(() => [], []), STUDIO_SECRET: "studio-secret", MEDIA: { put: async (key) => stored.push(key) } };
+  const form = new FormData();
+  form.set("file", new File([new Uint8Array([1, 2])], "cover.jpg", { type: "image/jpeg" }));
+  const response = await worker.fetch(request("/studio/upload-cover", { method: "POST", headers: { "X-Studio-Key": "studio-secret" }, body: form }), env);
+  const data = await response.json();
+  check(/^covers\/[a-f0-9-]+\.jpg$/.test(data.key), "cover key");
+  check(stored.length === 1, "cover stored");
+});
+
+Deno.test("studio edits draft track", async () => {
+  const captured = [];
+  const env = { DB: makeDb((sql) => sql.startsWith("SELECT status FROM releases") ? [{ status: "draft" }] : [], captured), STUDIO_SECRET: "studio-secret" };
+  const response = await worker.fetch(request("/studio/tracks/tr-1", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", "X-Studio-Key": "studio-secret" },
+    body: JSON.stringify({ title: "New title", duration: 200, artworkUrl: "covers/a.jpg" })
+  }), env);
+  const data = await response.json();
+  check(response.status === 200, "edit status");
+  check(data.title === "New title", "edit body");
+  check(captured.some(item => item.sql.startsWith("UPDATE tracks")), "edit update");
+});
+
+Deno.test("catalog records rejection reason", async () => {
+  const captured = [];
+  const env = { DB: makeDb((sql) => sql.startsWith("SELECT id FROM releases") ? [{ id: "rel-1" }] : [], captured), ADMIN_SECRET: "secret" };
+  await worker.fetch(request("/releases/rel-1/status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Admin-Key": "secret" },
+    body: JSON.stringify({ status: "rejected", reason: "no rights" })
+  }), env);
+  check(captured.some(item => item.sql.includes("reason = ?")), "reason stored");
+});
+
 Deno.test("catalog rejects invalid status", async () => {
   const env = { DB: makeDb(() => [{ id: "rel-1" }], []), ADMIN_SECRET: "secret" };
   const response = await worker.fetch(request("/releases/rel-1/status", {
