@@ -94,6 +94,20 @@
             </button>
           </div>
           <p class="signup-error" id="social-status"></p>
+          <div class="vlf-extra">
+            <button class="vlf-toggle" id="vlf-email-toggle" type="button">Получить код по почте</button>
+            <form class="vlf-panel" id="vlf-email-form" hidden>
+              <input id="vlf-email-address" type="email" placeholder="name@gmail.com" required>
+              <input id="vlf-email-code" inputmode="numeric" placeholder="Код из письма" maxlength="6">
+              <button type="submit">Отправить код / Войти</button>
+              <p class="vlf-status" id="vlf-email-status"></p>
+            </form>
+            <button class="vlf-toggle" id="vlf-qr-toggle" type="button">Войти по QR-коду</button>
+            <div class="vlf-panel" id="vlf-qr-panel" hidden>
+              <div class="vlf-qr" id="vlf-qr-image"></div>
+              <p class="vlf-status" id="vlf-qr-status"></p>
+            </div>
+          </div>
         </div>
         <div class="signup-done" id="signin-done">
             <div class="signup-avatar" id="signin-avatar"></div>
@@ -106,6 +120,7 @@
     </main>
   </div>
   <script src="/auth.js"></script>
+  <script src="/auth-extra.js" defer></script>
   <script>
     const readCookie = name => {
       const part = document.cookie.split("; ").find(item => item.startsWith(name + "="));
