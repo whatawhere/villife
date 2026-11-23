@@ -81,6 +81,20 @@ Deno.test("catalog status transition records moderation", async () => {
   check(captured.some(item => item.sql.startsWith("INSERT INTO moderation_actions")), "audit executed");
 });
 
+Deno.test("catalog accepts public report", async () => {
+  const captured = [];
+  const env = { DB: makeDb(() => [], captured) };
+  const response = await worker.fetch(request("/reports", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetType: "track", targetId: "tr-1", reason: "rights" })
+  }), env);
+  const data = await response.json();
+  check(response.status === 200, "report status");
+  check(data.status === "pending review", "report value");
+  check(captured.some(item => item.sql.startsWith("INSERT INTO moderation_actions")), "report stored");
+});
+
 Deno.test("catalog rejects invalid status", async () => {
   const env = { DB: makeDb(() => [{ id: "rel-1" }], []), ADMIN_SECRET: "secret" };
   const response = await worker.fetch(request("/releases/rel-1/status", {
