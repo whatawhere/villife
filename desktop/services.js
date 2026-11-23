@@ -2,7 +2,7 @@ const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 const SOUNDCLOUD = "https://api-v2.soundcloud.com";
 const LRCLIB = "https://lrclib.net/api";
 
-let clientId = "39AVoiZVrdvJEMFLH8T0c5WGshQaAPRJ";
+let clientId = process.env.SOUNDCLOUD_CLIENT_ID || "39AVoiZVrdvJEMFLH8T0c5WGshQaAPRJ";
 let refreshing = null;
 
 async function httpText(url, headers = {}) {
