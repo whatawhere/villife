@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS releases (
   license_type TEXT,
   evidence_url TEXT,
   reason TEXT,
+  offline_allowed INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -111,6 +112,19 @@ CREATE TABLE IF NOT EXISTS listening_history (
   user_id TEXT NOT NULL REFERENCES users(id),
   track_id TEXT NOT NULL REFERENCES tracks(id),
   played_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id TEXT NOT NULL,
+  artist_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (follower_id, artist_id)
+);
+
+CREATE TABLE IF NOT EXISTS sync_state (
+  owner_id TEXT PRIMARY KEY,
+  data TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS moderation_actions (
