@@ -34,6 +34,58 @@ function sortOrder(url, allowed, fallback) {
   return (allowed.includes(field) ? field : fallback) + " " + direction;
 }
 
+function toHex(bytes) {
+  return Array.from(new Uint8Array(bytes)).map(byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function randomHex(length) {
+  return toHex(crypto.getRandomValues(new Uint8Array(length)));
+}
+
+function base64url(bytes) {
+  let binary = "";
+  new Uint8Array(bytes).forEach(byte => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function unbase64url(value) {
+  const padded = String(value).replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
+async function derivePassword(password, salt) {
+  const material = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: new TextEncoder().encode(salt), iterations: 100000, hash: "SHA-256" }, material, 256);
+  return toHex(bits);
+}
+
+async function authKey(secret) {
+  return crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+}
+
+async function makeToken(payload, secret) {
+  const body = base64url(new TextEncoder().encode(JSON.stringify(payload)));
+  const signature = base64url(await crypto.subtle.sign("HMAC", await authKey(secret), new TextEncoder().encode(body)));
+  return body + "." + signature;
+}
+
+async function readToken(token, secret) {
+  const parts = String(token || "").split(".");
+  if (parts.length !== 2) return null;
+  const valid = await crypto.subtle.verify("HMAC", await authKey(secret), unbase64url(parts[1]), new TextEncoder().encode(parts[0]));
+  if (!valid) return null;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(unbase64url(parts[0])));
+    if (!payload || !payload.sub || !payload.exp || payload.exp < Date.now()) return null;
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
 async function all(env, sql, params) {
   const statement = env.DB.prepare(sql);
   const result = await (params && params.length ? statement.bind(...params) : statement).all();
@@ -59,6 +111,56 @@ export default {
     const q = url.searchParams.get("q") || "";
 
     if (path === "/health") return json({ ready: true, r2: !!(env && env.MEDIA), db: !!(env && env.DB) });
+
+    if (path === "/auth/register" && request.method === "POST") {
+      if (!env.AUTH_SECRET) return json({ error: "auth unavailable" }, 503);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const email = String(body && body.email || "").trim().toLowerCase();
+      const password = String(body && body.password || "");
+      const displayName = String(body && body.displayName || "").trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 8) return json({ error: "invalid credentials" }, 400);
+      const existing = await one(env, "SELECT id FROM users WHERE email = ?", [email]);
+      if (existing) return json({ error: "email already registered" }, 409);
+      const id = "usr-" + crypto.randomUUID();
+      const salt = randomHex(16);
+      const hash = await derivePassword(password, salt);
+      await env.DB.prepare("INSERT INTO users (id, email, display_name, password_hash, salt) VALUES (?, ?, ?, ?, ?)").bind(id, email, displayName, hash, salt).run();
+      const token = await makeToken({ sub: id, email, exp: Date.now() + 2592000000 }, env.AUTH_SECRET);
+      return json({ id, email, displayName, token });
+    }
+
+    if (path === "/auth/login" && request.method === "POST") {
+      if (!env.AUTH_SECRET) return json({ error: "auth unavailable" }, 503);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const email = String(body && body.email || "").trim().toLowerCase();
+      const password = String(body && body.password || "");
+      const user = await one(env, "SELECT id, email, display_name, password_hash, salt, role, token_version FROM users WHERE email = ?", [email]);
+      if (!user || !user.password_hash || !user.salt) return json({ error: "invalid credentials" }, 401);
+      const hash = await derivePassword(password, String(user.salt));
+      if (hash !== String(user.password_hash)) return json({ error: "invalid credentials" }, 401);
+      const token = await makeToken({ sub: user.id, email: user.email, ver: Number(user.token_version), exp: Date.now() + 2592000000 }, env.AUTH_SECRET);
+      return json({ id: user.id, email: user.email, displayName: user.display_name, role: user.role, token });
+    }
+
+    if (path === "/auth/me" && request.method === "GET") {
+      if (!env.AUTH_SECRET) return json({ error: "auth unavailable" }, 503);
+      const header = request.headers.get("Authorization") || "";
+      const payload = await readToken(header.replace(/^Bearer\s+/i, ""), env.AUTH_SECRET);
+      if (!payload) return json({ error: "unauthorized" }, 401);
+      const user = await one(env, "SELECT id, email, display_name, role, token_version FROM users WHERE id = ?", [payload.sub]);
+      if (!user || Number(user.token_version) !== Number(payload.ver || 0)) return json({ error: "unauthorized" }, 401);
+      return json({ id: user.id, email: user.email, displayName: user.display_name, role: user.role });
+    }
 
     if (path === "/artists" && request.method === "GET") {
       const rows = await all(env, "SELECT id, name, avatar_url FROM artists WHERE name LIKE ? ORDER BY " + sortOrder(url, ["name", "created_at"], "name") + " LIMIT ? OFFSET ?", [phrase(q), page.limit, page.offset]);
@@ -180,7 +282,7 @@ export default {
       const user = url.searchParams.get("user") || "";
       const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 12));
       if (!user) return json([]);
-      const rows = await all(env, "SELECT DISTINCT t.id, t.title, t.duration, t.artwork_url, ar.name AS artist FROM tracks t JOIN artists ar ON ar.id = t.artist_id WHERE t.artist_id IN (SELECT t2.artist_id FROM tracks t2 JOIN listening_history h ON h.track_id = t2.id WHERE h.user_id = ?) AND t.id NOT IN (SELECT track_id FROM listening_history WHERE user_id = ?) AND " + publishedTrack("t") + " ORDER BY t.title LIMIT ?", [user, user, limit]);
+      const rows = await all(env, "SELECT t.id, t.title, t.duration, t.artwork_url, ar.name AS artist, COUNT(h.id) AS score FROM tracks t JOIN artists ar ON ar.id = t.artist_id LEFT JOIN listening_history h ON h.user_id = ? AND h.track_id IN (SELECT id FROM tracks WHERE artist_id = t.artist_id) WHERE t.artist_id IN (SELECT t2.artist_id FROM tracks t2 JOIN listening_history h2 ON h2.track_id = t2.id WHERE h2.user_id = ?) AND t.id NOT IN (SELECT track_id FROM listening_history WHERE user_id = ?) AND " + publishedTrack("t") + " GROUP BY t.id ORDER BY score DESC, t.title LIMIT ?", [user, user, user, limit]);
       return json(rows);
     }
 
