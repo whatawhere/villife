@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS releases (
   valid_until TEXT,
   license_type TEXT,
   evidence_url TEXT,
+  reason TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
