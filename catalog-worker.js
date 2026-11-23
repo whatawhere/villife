@@ -176,6 +176,79 @@ export default {
       return json(result);
     }
 
+    if (path === "/recommendations" && request.method === "GET") {
+      const user = url.searchParams.get("user") || "";
+      const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 12));
+      if (!user) return json([]);
+      const rows = await all(env, "SELECT DISTINCT t.id, t.title, t.duration, t.artwork_url, ar.name AS artist FROM tracks t JOIN artists ar ON ar.id = t.artist_id WHERE t.artist_id IN (SELECT t2.artist_id FROM tracks t2 JOIN listening_history h ON h.track_id = t2.id WHERE h.user_id = ?) AND t.id NOT IN (SELECT track_id FROM listening_history WHERE user_id = ?) AND " + publishedTrack("t") + " ORDER BY t.title LIMIT ?", [user, user, limit]);
+      return json(rows);
+    }
+
+    const followMatch = path.match(/^\/users\/([^/]+)\/follow$/);
+    if (followMatch && request.method === "POST") {
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const follower = String(body && body.followerId || "").trim();
+      const artist = followMatch[1];
+      if (!follower || !artist) return json({ error: "missing fields" }, 400);
+      await env.DB.prepare("INSERT OR IGNORE INTO follows (follower_id, artist_id) VALUES (?, ?)").bind(follower, artist).run();
+      return json({ followerId: follower, artistId: artist, following: true });
+    }
+    if (followMatch && request.method === "DELETE") {
+      const follower = url.searchParams.get("follower") || "";
+      if (!follower) return json({ error: "missing follower" }, 400);
+      await env.DB.prepare("DELETE FROM follows WHERE follower_id = ? AND artist_id = ?").bind(follower, followMatch[1]).run();
+      return json({ following: false });
+    }
+
+    const followingMatch = path.match(/^\/users\/([^/]+)\/following$/);
+    if (followingMatch && request.method === "GET") {
+      const rows = await all(env, "SELECT artist_id, created_at FROM follows WHERE follower_id = ? ORDER BY created_at DESC LIMIT ?", [followingMatch[1], page.limit]);
+      return json(rows);
+    }
+
+    const artistAnalytics = path.match(/^\/analytics\/artist\/([^/]+)$/);
+    if (artistAnalytics && request.method === "GET") {
+      const id = artistAnalytics[1];
+      const plays = await one(env, "SELECT COUNT(*) AS total FROM listening_history h JOIN tracks t ON t.id = h.track_id WHERE t.artist_id = ?", [id]);
+      const listeners = await one(env, "SELECT COUNT(DISTINCT h.user_id) AS total FROM listening_history h JOIN tracks t ON t.id = h.track_id WHERE t.artist_id = ?", [id]);
+      const tracks = await one(env, "SELECT COUNT(*) AS total FROM tracks WHERE artist_id = ?", [id]);
+      return json({ artistId: id, plays: plays ? Number(plays.total) : 0, listeners: listeners ? Number(listeners.total) : 0, tracks: tracks ? Number(tracks.total) : 0 });
+    }
+
+    const offlineMatch = path.match(/^\/offline\/eligible\/([^/]+)$/);
+    if (offlineMatch && request.method === "GET") {
+      const row = await one(env, "SELECT r.offline_allowed, r.status, r.valid_until FROM releases r WHERE r.track_id = ? ORDER BY r.updated_at DESC LIMIT 1", [offlineMatch[1]]);
+      const allowed = !!row && row.status === "published" && Number(row.offline_allowed) === 1 && (!row.valid_until || row.valid_until > new Date().toISOString().slice(0, 10));
+      return json({ trackId: offlineMatch[1], allowed });
+    }
+
+    const syncMatch = path.match(/^\/sync\/([^/]+)$/);
+    if (syncMatch) {
+      if (!env.STUDIO_SECRET || request.headers.get("X-Studio-Key") !== env.STUDIO_SECRET) return json({ error: "forbidden" }, 403);
+      const owner = syncMatch[1];
+      if (request.method === "GET") {
+        const row = await one(env, "SELECT data, updated_at FROM sync_state WHERE owner_id = ?", [owner]);
+        return row ? json({ data: JSON.parse(row.data), updatedAt: row.updated_at }) : json({ data: null });
+      }
+      if (request.method === "PUT") {
+        let body;
+        try {
+          body = await request.json();
+        } catch (error) {
+          return json({ error: "invalid json" }, 400);
+        }
+        const data = JSON.stringify(body && body.data !== undefined ? body.data : body);
+        if (data.length > 1048576) return json({ error: "too large" }, 400);
+        await env.DB.prepare("INSERT INTO sync_state (owner_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(owner_id) DO UPDATE SET data = excluded.data, updated_at = datetime('now')").bind(owner, data).run();
+        return json({ ownerId: owner, updated: true });
+      }
+    }
+
     if (path === "/reports" && request.method === "POST") {
       let body;
       try {
@@ -212,8 +285,10 @@ export default {
       if (file.size > 52428800) return json({ error: "file too large" }, 400);
       const extension = String(file.name || "").split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "bin";
       const key = "audio/" + crypto.randomUUID() + "." + extension;
-      await env.MEDIA.put(key, file, { httpMetadata: { contentType: type }, customMetadata: { studio: "1" } });
-      return json({ key });
+      const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+      const sha256 = Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, "0")).join("");
+      await env.MEDIA.put(key, file, { httpMetadata: { contentType: type }, customMetadata: { studio: "1", sha256: sha256 } });
+      return json({ key, sha256 });
     }
 
     if (path === "/studio/upload-cover" && request.method === "POST") {
