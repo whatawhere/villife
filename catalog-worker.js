@@ -89,7 +89,7 @@ async function smtpSend(env, to, subject, text) {
     reply = await command("DATA");
     if (!reply.startsWith("354")) return false;
     const message = [
-      "From: Villife <" + env.MAIL_USER + ">",
+      "From: \"Villife <villife@villife.hs.vc>\" <" + env.MAIL_USER + ">",
       "Reply-To: villife@villife.hs.vc",
       "To: " + to,
       "Subject: " + subject,
