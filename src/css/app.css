@@ -2610,3 +2610,7 @@ html, body { margin: 0; }
 .search-wrap .input:focus, .search-wrap .input:focus-visible { box-shadow: inset 0 0 0 2px #ffffff !important; outline: none !important; }
 
 .topbar-search-group { transform: translateY(3px) !important; }
+.spotify-home-btn { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; padding: 0; border: 1px solid hsl(var(--border) / 0.72); border-radius: 9999px; background: hsl(var(--background) / 0.2); color: #b3b3b3; cursor: pointer; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease; }
+.spotify-home-btn:hover { background: hsl(var(--background) / 0.32); color: #ffffff; transform: scale(1.03); }
+.spotify-home-btn:active { transform: scale(0.97); }
+.spotify-home-btn.active { color: #ffffff; }
