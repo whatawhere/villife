@@ -125,7 +125,8 @@
           lastName: profile.lastName || parts.slice(1).join(" "),
           username: profile.username || "",
           email: profile.email || "",
-          photo: profile.photo || ""
+          photo: profile.photo || "",
+          ts: Date.now()
         };
         const json = JSON.stringify(payload);
         const bytes = new TextEncoder().encode(json);
