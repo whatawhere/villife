@@ -228,6 +228,64 @@ Deno.test("catalog records rejection reason", async () => {
   check(captured.some(item => item.sql.includes("reason = ?")), "reason stored");
 });
 
+Deno.test("catalog recommends tracks by history", async () => {
+  const captured = [];
+  const env = { DB: makeDb(() => [{ id: "tr-1", title: "Rec" }], captured) };
+  const response = await worker.fetch(request("/recommendations?user=u1&limit=5"), env);
+  const data = await response.json();
+  check(response.status === 200, "recommendations status");
+  check(data[0].id === "tr-1", "recommendations body");
+  check(captured.some(item => item.sql.includes("listening_history")), "history query");
+});
+
+Deno.test("catalog follows artist", async () => {
+  const captured = [];
+  const env = { DB: makeDb(() => [], captured) };
+  const response = await worker.fetch(request("/users/ar-1/follow", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ followerId: "u1" })
+  }), env);
+  const data = await response.json();
+  check(response.status === 200 && data.following === true, "follow result");
+  check(captured.some(item => item.sql.startsWith("INSERT OR IGNORE INTO follows")), "follow insert");
+});
+
+Deno.test("catalog exposes artist analytics", async () => {
+  const env = { DB: makeDb(() => [{ total: 9 }], []) };
+  const response = await worker.fetch(request("/analytics/artist/ar-1"), env);
+  const data = await response.json();
+  check(data.plays === 9 && data.listeners === 9 && data.tracks === 9, "artist analytics");
+});
+
+Deno.test("catalog checks offline eligibility", async () => {
+  const env = { DB: makeDb(() => [{ offline_allowed: 1, status: "published", valid_until: null }], []) };
+  const response = await worker.fetch(request("/offline/eligible/tr-1"), env);
+  const data = await response.json();
+  check(data.allowed === true, "offline allowed");
+});
+
+Deno.test("catalog sync persists state", async () => {
+  const captured = [];
+  const env = { DB: makeDb(() => [], captured), STUDIO_SECRET: "studio-secret" };
+  const response = await worker.fetch(request("/sync/u1", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "X-Studio-Key": "studio-secret" },
+    body: JSON.stringify({ data: { favorites: ["tr-1"] } })
+  }), env);
+  check(response.status === 200, "sync status");
+  check(captured.some(item => item.sql.startsWith("INSERT INTO sync_state")), "sync insert");
+});
+
+Deno.test("catalog upload returns checksum", async () => {
+  const env = { DB: makeDb(() => [], []), STUDIO_SECRET: "studio-secret", MEDIA: { put: async () => {} } };
+  const form = new FormData();
+  form.set("file", new File([new Uint8Array([1, 2, 3])], "song.mp3", { type: "audio/mpeg" }));
+  const response = await worker.fetch(request("/studio/upload", { method: "POST", headers: { "X-Studio-Key": "studio-secret" }, body: form }), env);
+  const data = await response.json();
+  check(/^[a-f0-9]{64}$/.test(data.sha256), "checksum");
+});
+
 Deno.test("catalog rejects invalid status", async () => {
   const env = { DB: makeDb(() => [{ id: "rel-1" }], []), ADMIN_SECRET: "secret" };
   const response = await worker.fetch(request("/releases/rel-1/status", {
