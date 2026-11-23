@@ -2279,8 +2279,23 @@ function warmTracks(tracks) {
   });
 }
 
+let playbackRetrySrc = "";
 function handlePlaybackError(error) {
   if (error && error.name === "AbortError") return;
+  const src = audio.dataset.src || audio.src;
+  if (src && src !== playbackRetrySrc && !window.__villifeHls) {
+    playbackRetrySrc = src;
+    try {
+      audio.src = src;
+      audio.load();
+      audio.play().catch(() => {
+        $("pl-play").classList.remove("loading");
+        toast(t("playback_error"));
+      });
+      return;
+    } catch (failure) {}
+  }
+  playbackRetrySrc = "";
   console.error("Playback could not start.", error);
   $("pl-play").classList.remove("loading");
   toast(t("playback_error"));
@@ -2289,6 +2304,7 @@ function handlePlaybackError(error) {
 function loadTrack(tr) {
   const src = trackSrc(tr);
   if (audio.dataset.src === src) return;
+  playbackRetrySrc = "";
   audio.dataset.src = src;
   if (window.__villifeHls) {
     window.__villifeHls.destroy();
