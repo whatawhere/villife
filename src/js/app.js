@@ -168,13 +168,28 @@ function playbackMetrics() {
   } catch (error) {
     values = [];
   }
-  if (!Array.isArray(values) || !values.length) return { count: 0, p50: 0, p95: 0 };
+  if (!Array.isArray(values) || !values.length) return { count: 0, p50: 0, p95: 0, errors: playbackErrorCount() };
   const sorted = values.slice().sort((a, b) => a - b);
   return {
     count: sorted.length,
     p50: sorted[Math.floor((sorted.length - 1) * 0.5)],
-    p95: sorted[Math.floor((sorted.length - 1) * 0.95)]
+    p95: sorted[Math.floor((sorted.length - 1) * 0.95)],
+    errors: playbackErrorCount()
   };
+}
+
+function playbackErrorCount() {
+  try {
+    return Number(localStorage.getItem(PLAYBACK_METRICS_KEY + "_errors") || "0");
+  } catch (error) {
+    return 0;
+  }
+}
+
+function recordPlaybackFailure() {
+  try {
+    localStorage.setItem(PLAYBACK_METRICS_KEY + "_errors", JSON.stringify(playbackErrorCount() + 1));
+  } catch (error) {}
 }
 
 window.villifePlaybackMetrics = playbackMetrics;
@@ -2349,6 +2364,7 @@ function handlePlaybackError(error) {
   }
   playbackRetrySrc = "";
   console.error("Playback could not start.", error);
+  recordPlaybackFailure();
   $("pl-play").classList.remove("loading");
   toast(t("playback_error"));
 }
