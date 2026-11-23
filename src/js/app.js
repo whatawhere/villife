@@ -3468,6 +3468,7 @@ if ($("btn-max")) $("btn-max").addEventListener("click", () => {
 if ($("btn-close")) $("btn-close").addEventListener("click", () => sendWindowCommand("close"));
 if ($("btn-min") && !(window.chrome && window.chrome.webview)) $("btn-min").closest(".win11-controls").hidden = true;
 $("window-fullscreen").addEventListener("click", toggleFullscreenMode);
+if ($("pl-fullscreen")) $("pl-fullscreen").addEventListener("click", toggleFullscreenMode);
 
 let fullscreenPanelWasOpen = false;
 
