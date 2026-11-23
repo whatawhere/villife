@@ -160,6 +160,23 @@ Deno.test("catalog applies sort and order", async () => {
   check(query.sql.includes("ORDER BY duration DESC"), "sort clause");
 });
 
+Deno.test("catalog imports valid tracks and rejects bad ones", async () => {
+  const captured = [];
+  const env = { DB: makeDb(() => [], captured), ADMIN_SECRET: "secret" };
+  const response = await worker.fetch(request("/catalog/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Admin-Key": "secret" },
+    body: JSON.stringify({ items: [
+      { id: "tr-ok", title: "Song", artistId: "ar-1", duration: 120 },
+      { id: "", title: "Bad", artistId: "ar-1" }
+    ] })
+  }), env);
+  const data = await response.json();
+  check(response.status === 200, "import status");
+  check(data.imported === 1 && data.errors.length === 1, "import counts");
+  check(captured.some(item => item.sql.startsWith("INSERT INTO tracks")), "import insert");
+});
+
 Deno.test("catalog finds duplicate tracks for admin", async () => {
   const env = { DB: makeDb(() => [{ title_key: "song", copies: 2 }], []), ADMIN_SECRET: "secret" };
   const response = await worker.fetch(request("/catalog/duplicates", { headers: { "X-Admin-Key": "secret" } }), env);
