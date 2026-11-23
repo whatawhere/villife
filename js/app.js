@@ -1,4 +1,4 @@
-﻿const homeText = {
+const homeText = {
   ru: {
     for_you: "Для тебя", for_you_based: "Подборка из избранных треков",
     discover_recent: "Недавно слушали", search_home_title: "Найди музыку", search_home_subtitle: "Начни вводить название трека или исполнителя.",
@@ -135,6 +135,50 @@ let shuffleEnabled = localStorage.getItem("velo_shuffle") === "true";
 let repeatMode = ["off", "all", "one"].includes(localStorage.getItem("velo_repeat"))
   ? localStorage.getItem("velo_repeat")
   : "off";
+const PLAYBACK_METRICS_KEY = "velo_playback_metrics";
+let playbackStartedAt = 0;
+let playbackMetricPending = false;
+
+function recordPlaybackStart() {
+  playbackStartedAt = performance.now();
+  playbackMetricPending = true;
+}
+
+function recordPlaybackReady() {
+  if (!playbackMetricPending || !playbackStartedAt) return;
+  playbackMetricPending = false;
+  const ms = Math.round(performance.now() - playbackStartedAt);
+  let values = [];
+  try {
+    values = JSON.parse(localStorage.getItem(PLAYBACK_METRICS_KEY) || "[]");
+  } catch (error) {
+    values = [];
+  }
+  if (!Array.isArray(values)) values = [];
+  values.push(ms);
+  if (values.length > 100) values = values.slice(-100);
+  try {
+    localStorage.setItem(PLAYBACK_METRICS_KEY, JSON.stringify(values));
+  } catch (error) {}
+}
+
+function playbackMetrics() {
+  let values = [];
+  try {
+    values = JSON.parse(localStorage.getItem(PLAYBACK_METRICS_KEY) || "[]");
+  } catch (error) {
+    values = [];
+  }
+  if (!Array.isArray(values) || !values.length) return { count: 0, p50: 0, p95: 0 };
+  const sorted = values.slice().sort((a, b) => a - b);
+  return {
+    count: sorted.length,
+    p50: sorted[Math.floor((sorted.length - 1) * 0.5)],
+    p95: sorted[Math.floor((sorted.length - 1) * 0.95)]
+  };
+}
+
+window.villifePlaybackMetrics = playbackMetrics;
 let searchTimer = null;
 let lastQuery = "";
 let searchError = false;
@@ -2363,6 +2407,7 @@ async function startTrack(list, index, requestId) {
   queue = list;
   qIndex = index;
   fillQueue(4);
+  recordPlaybackStart();
   loadTrack(tr);
   audio.play().catch(handlePlaybackError);
   renderPlayer();
@@ -4746,6 +4791,7 @@ function bindAudioEvents(element) {
   }));
   element.addEventListener("waiting", onActive(updateDiscordPresence));
   element.addEventListener("playing", onActive(() => {
+    if (element === audio) recordPlaybackReady();
     updateDiscordPresence();
     recordHistory(qIndex >= 0 ? queue[qIndex] : null);
   }));
