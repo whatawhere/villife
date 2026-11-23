@@ -4107,6 +4107,47 @@ renderAccount();
 
 $("settings-open-storage").addEventListener("click", () => sendWindowCommand("open-storage"));
 $("settings-website").addEventListener("click", () => sendWindowCommand("website"));
+const CLOUD_SYNC_BASE = "https://villife-catalog.telesamafia.workers.dev";
+
+function cloudSyncCredentials() {
+  const owner = localStorage.getItem("villife_sync_owner") || window.prompt("ID для синхронизации");
+  const key = localStorage.getItem("villife_sync_key") || window.prompt("Ключ синхронизации");
+  if (!owner || !key) return null;
+  localStorage.setItem("villife_sync_owner", owner);
+  localStorage.setItem("villife_sync_key", key);
+  return { owner, key };
+}
+
+async function cloudSyncPush() {
+  const credentials = cloudSyncCredentials();
+  if (!credentials) return;
+  const data = { favorites: favorites, playlists: savedPlaylists, history: historyTracks };
+  const response = await fetch(CLOUD_SYNC_BASE + "/sync/" + encodeURIComponent(credentials.owner), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "X-Studio-Key": credentials.key },
+    body: JSON.stringify({ data })
+  });
+  if (!response.ok) throw new Error("HTTP " + response.status);
+  toast("Синхронизировано");
+}
+
+async function cloudSyncPull() {
+  const credentials = cloudSyncCredentials();
+  if (!credentials) return;
+  const response = await fetch(CLOUD_SYNC_BASE + "/sync/" + encodeURIComponent(credentials.owner), {
+    headers: { "X-Studio-Key": credentials.key }
+  });
+  if (!response.ok) throw new Error("HTTP " + response.status);
+  const result = await response.json();
+  if (!result.data) { toast("Нет данных в облаке"); return; }
+  localStorage.setItem("velo_favorites", JSON.stringify(result.data.favorites || []));
+  localStorage.setItem("velo_playlists", JSON.stringify(result.data.playlists || []));
+  localStorage.setItem("velo_history", JSON.stringify(result.data.history || []));
+  location.reload();
+}
+
+$("settings-cloud-push").addEventListener("click", () => cloudSyncPush().catch(error => toast("Ошибка: " + error.message)));
+$("settings-cloud-pull").addEventListener("click", () => cloudSyncPull().catch(error => toast("Ошибка: " + error.message)));
 $("settings-clear-cache").addEventListener("click", async () => {
   await clearVillifeCache();
   toast("Кэш очищен");
