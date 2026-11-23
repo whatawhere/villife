@@ -2235,6 +2235,48 @@ function showSkeleton() {
   ).join("");
 }
 
+const SEARCH_CACHE_KEY = "velo_search_cache";
+const SEARCH_CACHE_TTL = 300000;
+const SEARCH_CACHE_LIMIT = 20;
+
+function searchCacheGet(key) {
+  try {
+    const store = JSON.parse(localStorage.getItem(SEARCH_CACHE_KEY) || "{}");
+    const entry = store[key];
+    if (!entry || Date.now() - entry.t > SEARCH_CACHE_TTL) return null;
+    return entry.v;
+  } catch (error) {
+    return null;
+  }
+}
+
+function searchCacheSet(key, value) {
+  try {
+    const store = JSON.parse(localStorage.getItem(SEARCH_CACHE_KEY) || "{}");
+    const keys = Object.keys(store);
+    if (keys.length >= SEARCH_CACHE_LIMIT) delete store[keys[0]];
+    store[key] = { t: Date.now(), v: value };
+    localStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(store));
+  } catch (error) {}
+}
+
+async function clearVillifeCache() {
+  localStorage.removeItem(SEARCH_CACHE_KEY);
+  localStorage.removeItem(PLAYBACK_METRICS_KEY);
+  if (typeof lyricsCache !== "undefined") lyricsCache.clear();
+  if (window.caches && caches.keys) {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(name => name.indexOf("villife") === 0).map(name => caches.delete(name)));
+  }
+  if (window.indexedDB && indexedDB.deleteDatabase) {
+    await new Promise(resolve => {
+      const request = indexedDB.deleteDatabase("villife-audio-cache");
+      request.onsuccess = resolve;
+      request.onerror = resolve;
+      request.onblocked = resolve;
+    });
+  }
+}
 async function doSearch(q) {
   lastQuery = q;
   searchError = false;
@@ -2245,6 +2287,14 @@ async function doSearch(q) {
   updateSection();
   if (!q.trim()) {
     renderResults();
+    return;
+  }
+  const cachedResult = searchCacheGet(q.trim().toLowerCase());
+  if (cachedResult) {
+    results = Array.isArray(cachedResult.tracks) ? cachedResult.tracks : [];
+    playlists = Array.isArray(cachedResult.playlists) ? cachedResult.playlists : [];
+    renderResults();
+    warmTracks(results.slice(0, 3));
     return;
   }
   showSkeleton();
@@ -2260,6 +2310,7 @@ async function doSearch(q) {
   searchError = !!trackQuery.error && !!playlistQuery.error;
   results = Array.isArray(trackQuery.data) ? uniqueSearchTracks(trackQuery.data) : [];
   playlists = Array.isArray(playlistQuery.data) ? playlistQuery.data : [];
+  if (!searchError) searchCacheSet(q.trim().toLowerCase(), { tracks: results, playlists: playlists });
   renderResults();
   warmTracks(results.slice(0, 3));
 }
@@ -2279,6 +2330,7 @@ function warmTracks(tracks) {
   });
 }
 
+let playbackStallTimer = null;
 let playbackRetrySrc = "";
 function handlePlaybackError(error) {
   if (error && error.name === "AbortError") return;
@@ -2305,6 +2357,7 @@ function loadTrack(tr) {
   const src = trackSrc(tr);
   if (audio.dataset.src === src) return;
   playbackRetrySrc = "";
+  if (playbackStallTimer) { clearTimeout(playbackStallTimer); playbackStallTimer = null; }
   audio.dataset.src = src;
   if (window.__villifeHls) {
     window.__villifeHls.destroy();
@@ -3995,6 +4048,10 @@ renderAccount();
 
 $("settings-open-storage").addEventListener("click", () => sendWindowCommand("open-storage"));
 $("settings-website").addEventListener("click", () => sendWindowCommand("website"));
+$("settings-clear-cache").addEventListener("click", async () => {
+  await clearVillifeCache();
+  toast("Кэш очищен");
+});
 $("settings-clear-library").addEventListener("click", async () => {
   if (!(await openAppConfirm(st("settings_clear_confirm")))) return;
   lib = [];
@@ -4763,6 +4820,26 @@ function bindAudioEvents(element) {
     updateDiscordPresence();
   }));
   element.addEventListener("waiting", onActive(updateDiscordPresence));
+  element.addEventListener("stalled", onActive(() => {
+    if (element !== audio || window.__villifeHls || playbackStallTimer) return;
+    playbackStallTimer = setTimeout(() => {
+      playbackStallTimer = null;
+      if (audio.paused || audio.readyState >= 3) return;
+      const src = audio.dataset.src || audio.src;
+      if (!src) return;
+      const at = audio.currentTime;
+      audio.src = src;
+      audio.load();
+      if (at > 0) audio.addEventListener("loadedmetadata", () => { try { audio.currentTime = at; } catch (error) {} }, { once: true });
+      audio.play().catch(() => {});
+    }, 8000);
+  }));
+  element.addEventListener("canplay", onActive(() => {
+    if (playbackStallTimer) {
+      clearTimeout(playbackStallTimer);
+      playbackStallTimer = null;
+    }
+  }));
   element.addEventListener("playing", onActive(() => {
     if (element === audio) recordPlaybackReady();
     updateDiscordPresence();
