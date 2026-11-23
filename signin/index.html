@@ -102,6 +102,13 @@
               <button type="submit">Отправить код / Войти</button>
               <p class="vlf-status" id="vlf-email-status"></p>
             </form>
+            <button class="vlf-toggle" id="vlf-pass-toggle" type="button">Войти с паролем</button>
+            <form class="vlf-panel" id="vlf-pass-form" hidden>
+              <input id="vlf-pass-email" type="email" placeholder="name@gmail.com" required>
+              <input id="vlf-pass-password" type="password" placeholder="Пароль" required>
+              <button type="submit">Войти</button>
+              <p class="vlf-status" id="vlf-pass-status"></p>
+            </form>
             <button class="vlf-toggle" id="vlf-qr-toggle" type="button">Войти по QR-коду</button>
             <div class="vlf-panel" id="vlf-qr-panel" hidden>
               <div class="vlf-qr" id="vlf-qr-image"></div>
