@@ -19,6 +19,9 @@
     "start": "electron .",
     "dist": "electron-builder --publish never"
   },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
   "devDependencies": {
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8"
@@ -43,6 +46,11 @@
     ],
     "extraMetadata": {
       "main": "main.js"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "whatawhere",
+      "repo": "villife"
     },
     "mac": {
       "target": [
