@@ -47,7 +47,74 @@ async function hashValue(value) {
   return toHex(digest);
 }
 
+async function smtpSend(env, to, subject, text) {
+  const { connect } = await import("cloudflare:sockets");
+  const socket = connect("smtp.gmail.com:465", { secureTransport: "on" });
+  const writer = socket.writable.getWriter();
+  const reader = socket.readable.getReader();
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const readResponse = async () => {
+    let buffer = "";
+    while (true) {
+      if (buffer.endsWith("\r\n")) {
+        const lines = buffer.trimEnd().split("\r\n");
+        if (/^\d{3} /.test(lines[lines.length - 1])) return buffer;
+      }
+      const result = await reader.read();
+      if (result.done) break;
+      buffer += decoder.decode(result.value, { stream: true });
+    }
+    return buffer;
+  };
+  const command = async line => {
+    await writer.write(encoder.encode(line + "\r\n"));
+    const reply = await readResponse();
+    const status = reply.slice(0, 3);
+    if (!/^\d{3} /.test(status)) console.error("smtp unexpected reply", line.split(" ")[0], reply.slice(0, 200));
+    return reply;
+  };
+  try {
+    let reply = await readResponse();
+    if (!reply.startsWith("220")) return false;
+    reply = await command("EHLO villife.hs.vc");
+    if (!reply.includes("250")) return false;
+    const auth = btoa("\0" + env.MAIL_USER + "\0" + env.MAIL_PASS);
+    reply = await command("AUTH PLAIN " + auth);
+    if (!reply.startsWith("235")) return false;
+    reply = await command("MAIL FROM:<" + env.MAIL_USER + ">");
+    if (!reply.startsWith("250")) return false;
+    reply = await command("RCPT TO:<" + to + ">");
+    if (!reply.startsWith("250") && !reply.startsWith("251")) return false;
+    reply = await command("DATA");
+    if (!reply.startsWith("354")) return false;
+    const message = [
+      "From: Villife <villife@villife.hs.vc>",
+      "Reply-To: " + env.MAIL_USER,
+      "To: " + to,
+      "Subject: " + subject,
+      "MIME-Version: 1.0",
+      "Content-Type: text/plain; charset=UTF-8",
+      "",
+      text,
+      "."
+    ].join("\r\n") + "\r\n";
+    await writer.write(encoder.encode(message));
+    reply = await readResponse();
+    if (!reply.startsWith("250")) return false;
+    await command("QUIT");
+    return true;
+  } finally {
+    writer.releaseLock();
+    reader.releaseLock();
+    socket.close();
+  }
+}
+
 async function sendEmailCode(env, to, code) {
+  const subject = "Villife login code";
+  const text = "Your Villife login code is " + code + ". It expires in 10 minutes.";
+  if (env.MAIL_USER && env.MAIL_PASS) return smtpSend(env, to, subject, text);
   if (!env.EMAIL_API_URL || !env.EMAIL_API_KEY) return false;
   const response = await fetch(env.EMAIL_API_URL, {
     method: "POST",
