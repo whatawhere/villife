@@ -28,6 +28,7 @@ function makeDb(rows, captured) {
         },
         async run() {
           captured.push({ sql, params: statement.params });
+          rows(sql, statement.params);
           return { success: true };
         }
       };
@@ -226,6 +227,59 @@ Deno.test("catalog records rejection reason", async () => {
     body: JSON.stringify({ status: "rejected", reason: "no rights" })
   }), env);
   check(captured.some(item => item.sql.includes("reason = ?")), "reason stored");
+});
+
+Deno.test("auth requires configured secret", async () => {
+  const env = { DB: makeDb(() => [], []) };
+  const response = await worker.fetch(request("/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "a@b.co", password: "password123" })
+  }), env);
+  check(response.status === 503, "auth unavailable");
+});
+
+Deno.test("auth register login and me", async () => {
+  const captured = [];
+  let user = null;
+  const env = { DB: makeDb((sql, params) => {
+    if (sql.startsWith("INSERT INTO users")) {
+      user = { id: params[0], email: params[1], display_name: params[2], password_hash: params[3], salt: params[4], role: "user", token_version: 0 };
+      return [];
+    }
+    if (sql.startsWith("SELECT id, email, display_name") && user) return [user];
+    return [];
+  }, captured), AUTH_SECRET: "test-secret" };
+  const register = await worker.fetch(request("/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "a@b.co", password: "password123", displayName: "A" })
+  }), env);
+  const registered = await register.json();
+  check(register.status === 200 && registered.token, "registration token");
+  check(captured.some(item => item.sql.startsWith("INSERT INTO users")), "user insert");
+
+  const login = await worker.fetch(request("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "a@b.co", password: "password123" })
+  }), env);
+  const logged = await login.json();
+  check(login.status === 200 && logged.token, "login token");
+
+  const me = await worker.fetch(request("/auth/me", { headers: { Authorization: "Bearer " + logged.token } }), env);
+  const profile = await me.json();
+  check(me.status === 200 && profile.email === "a@b.co", "me profile");
+});
+
+Deno.test("auth rejects wrong password", async () => {
+  const env = { DB: makeDb(() => [{ id: "usr-1", email: "a@b.co", display_name: "A", password_hash: "00".repeat(32), salt: "11".repeat(16), role: "user", token_version: 0 }], []), AUTH_SECRET: "test-secret" };
+  const response = await worker.fetch(request("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "a@b.co", password: "wrongpass" })
+  }), env);
+  check(response.status === 401, "wrong password");
 });
 
 Deno.test("catalog recommends tracks by history", async () => {
