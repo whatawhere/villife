@@ -2590,3 +2590,4 @@ html, body { margin: 0; }
 .topbar { justify-content: center !important; }
 .search-wrap { position: absolute !important; left: 50% !important; top: calc(50% + 2px) !important; transform: translate(-50%, -50%) !important; margin: 0 !important; flex: 0 0 32rem !important; }
 .search-wrap .input { background: hsl(var(--background) / 0.2) !important; border: 1px solid hsl(var(--border) / 0.72) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.content { margin: 0.75rem !important; border: 1px solid hsl(var(--border) / 0.5) !important; border-radius: 0.9rem !important; overflow: hidden !important; }
