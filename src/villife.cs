@@ -319,6 +319,17 @@ namespace Villife
                     var head = ReadRequest(stream);
                     if (head == null) return;
 
+                    var origin = "";
+                    var fetchSite = "";
+                    foreach (var header in head.Split('\n'))
+                    {
+                        var colon = header.IndexOf(':');
+                        if (colon < 0) continue;
+                        var name = header.Substring(0, colon).Trim();
+                        if (name.Equals("Origin", StringComparison.OrdinalIgnoreCase) && origin.Length == 0) origin = header.Substring(colon + 1).Trim();
+                        if (name.Equals("Sec-Fetch-Site", StringComparison.OrdinalIgnoreCase) && fetchSite.Length == 0) fetchSite = header.Substring(colon + 1).Trim();
+                    }
+
                     var line = head.Split('\n')[0].Trim();
                     var parts = line.Split(' ');
                     if (parts.Length < 2)
@@ -419,24 +430,38 @@ namespace Villife
                     }
                     else if (path == "/api/sync-profile")
                     {
-                        var data = GetParam(query, "data");
-                        if (!string.IsNullOrEmpty(data))
+                        var allowedOrigin = origin.Length == 0 ||
+                            origin.StartsWith("http://127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+                            origin.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
+                            origin.StartsWith("https://villife.hs.vc", StringComparison.OrdinalIgnoreCase) ||
+                            origin.StartsWith("https://web.villife.hs.vc", StringComparison.OrdinalIgnoreCase);
+                        if (!allowedOrigin || fetchSite.Equals("cross-site", StringComparison.OrdinalIgnoreCase))
                         {
-                            try
-                            {
-                                var normalized = data.Replace("-", "+").Replace("_", "/");
-                                normalized += new string('=', (4 - normalized.Length % 4) % 4);
-                                var json = Encoding.UTF8.GetString(Convert.FromBase64String(normalized));
-                                if (mainForm != null) mainForm.SyncProfile(json);
-                            }
-                            catch (Exception error)
-                            {
-                                Trace.TraceError("Profile sync failed: " + error);
-                            }
+                            status = 403;
+                            body = Encoding.UTF8.GetBytes("forbidden");
+                            mime = "text/plain; charset=utf-8";
                         }
-                        body = Encoding.UTF8.GetBytes("ok");
-                        mime = "text/plain; charset=utf-8";
-                        extra = "Access-Control-Allow-Origin: *\r\n";
+                        else
+                        {
+                            var data = GetParam(query, "data");
+                            if (!string.IsNullOrEmpty(data))
+                            {
+                                try
+                                {
+                                    var normalized = data.Replace("-", "+").Replace("_", "/");
+                                    normalized += new string('=', (4 - normalized.Length % 4) % 4);
+                                    var json = Encoding.UTF8.GetString(Convert.FromBase64String(normalized));
+                                    if (mainForm != null) mainForm.SyncProfile(json);
+                                }
+                                catch (Exception error)
+                                {
+                                    Trace.TraceError("Profile sync failed: " + error);
+                                }
+                            }
+                            body = Encoding.UTF8.GetBytes("ok");
+                            mime = "text/plain; charset=utf-8";
+                            extra = origin.Length == 0 ? "" : "Access-Control-Allow-Origin: " + origin + "\r\n";
+                        }
                     }
                     else if (path == "/api/search")
                     {
@@ -2683,7 +2708,8 @@ namespace Villife
             {
                 BeginInvoke(new Action(() =>
                 {
-                    var script = "(function(){try{localStorage.setItem('velo_account', " + json + "); if (typeof renderAccount === 'function') renderAccount();}catch(e){}})()";
+                    var payload = new JavaScriptSerializer().Serialize(json);
+                    var script = "(function(){try{localStorage.setItem('velo_account', " + payload + "); if (typeof renderAccount === 'function') renderAccount();}catch(e){}})()";
                     web.CoreWebView2.ExecuteScriptAsync(script);
                 }));
             }
