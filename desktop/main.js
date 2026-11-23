@@ -1,5 +1,6 @@
 const path = require("path");
 const { app, BrowserWindow, Menu, Tray, nativeImage, shell } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const { startServer } = require("./server");
 
 let mainWindow = null;
@@ -55,6 +56,7 @@ function createTray() {
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: "Open Villife", click: () => mainWindow && mainWindow.show() },
+      { label: "Check for updates", click: () => autoUpdater.checkForUpdatesAndNotify().catch(() => {}) },
       { type: "separator" },
       { label: "Quit", click: () => app.quit() }
     ])
@@ -67,6 +69,7 @@ app.whenReady().then(async () => {
   port = started.port;
   createWindow();
   createTray();
+  if (app.isPackaged) autoUpdater.checkForUpdatesAndNotify().catch(() => {});
 
   app.on("activate", () => {
     if (!mainWindow) createWindow();
