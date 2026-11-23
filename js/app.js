@@ -1,4 +1,4 @@
-const homeText = {
+﻿const homeText = {
   ru: {
     for_you: "Для тебя", for_you_based: "Подборка из избранных треков",
     discover_recent: "Недавно слушали", search_home_title: "Найди музыку", search_home_subtitle: "Начни вводить название трека или исполнителя.",
@@ -3512,7 +3512,6 @@ if ($("btn-close")) $("btn-close").addEventListener("click", () => sendWindowCom
 if ($("btn-min") && !(window.chrome && window.chrome.webview)) $("btn-min").closest(".win11-controls").hidden = true;
 $("window-fullscreen").addEventListener("click", toggleFullscreenMode);
 if ($("pl-fullscreen")) $("pl-fullscreen").addEventListener("click", toggleFullscreenMode);
-if ($("topbar-home")) $("topbar-home").addEventListener("click", () => showView("search"));
 if ($("topbar-browse")) $("topbar-browse").addEventListener("click", () => showView("library"));
 
 let fullscreenPanelWasOpen = false;
