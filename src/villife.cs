@@ -309,6 +309,24 @@ namespace Villife
             }
         }
 
+        public static bool IsFreshProfile(string json)
+        {
+            try
+            {
+                var data = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(json);
+                if (data == null || !data.ContainsKey("photo")) return false;
+                object value;
+                if (!data.TryGetValue("ts", out value)) return true;
+                long ts = Convert.ToInt64(value);
+                long age = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - ts;
+                return age >= -60000 && age <= 900000;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         static void Handle(TcpClient client)
         {
             try
@@ -451,7 +469,7 @@ namespace Villife
                                     var normalized = data.Replace("-", "+").Replace("_", "/");
                                     normalized += new string('=', (4 - normalized.Length % 4) % 4);
                                     var json = Encoding.UTF8.GetString(Convert.FromBase64String(normalized));
-                                    if (mainForm != null) mainForm.SyncProfile(json);
+                                    if (IsFreshProfile(json) && mainForm != null) mainForm.SyncProfile(json);
                                 }
                                 catch (Exception error)
                                 {
@@ -2696,7 +2714,7 @@ namespace Villife
                 var normalized = text.Substring(5).Replace("-", "+").Replace("_", "/");
                 normalized += new string('=', (4 - normalized.Length % 4) % 4);
                 var json = Encoding.UTF8.GetString(Convert.FromBase64String(normalized));
-                if (!json.Contains("\"photo\"")) return;
+                if (!Program.IsFreshProfile(json)) return;
                 lastSyncedCode = text;
                 SyncProfile(json);
             }
