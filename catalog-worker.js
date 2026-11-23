@@ -42,6 +42,27 @@ function randomHex(length) {
   return toHex(crypto.getRandomValues(new Uint8Array(length)));
 }
 
+async function hashValue(value) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(value)));
+  return toHex(digest);
+}
+
+async function sendEmailCode(env, to, code) {
+  if (!env.EMAIL_API_URL || !env.EMAIL_API_KEY) return false;
+  const response = await fetch(env.EMAIL_API_URL, {
+    method: "POST",
+    headers: { Authorization: "Bearer " + env.EMAIL_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: env.EMAIL_FROM || "Villife <no-reply@villife.hs.vc>",
+      to: [to],
+      subject: "Villife login code",
+      text: "Your Villife login code is " + code + ". It expires in 10 minutes.",
+      html: "<p>Your Villife login code is <b>" + code + "</b>. It expires in 10 minutes.</p>"
+    })
+  });
+  return response.ok;
+}
+
 function base64url(bytes) {
   let binary = "";
   new Uint8Array(bytes).forEach(byte => { binary += String.fromCharCode(byte); });
@@ -160,6 +181,103 @@ export default {
       const user = await one(env, "SELECT id, email, display_name, role, token_version FROM users WHERE id = ?", [payload.sub]);
       if (!user || Number(user.token_version) !== Number(payload.ver || 0)) return json({ error: "unauthorized" }, 401);
       return json({ id: user.id, email: user.email, displayName: user.display_name, role: user.role });
+    }
+
+    if (path === "/auth/email/request" && request.method === "POST") {
+      if (!env.AUTH_SECRET) return json({ error: "auth unavailable" }, 503);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const email = String(body && body.email || "").trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "invalid email" }, 400);
+      const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, "0");
+      const hash = await hashValue(code);
+      const expires = Date.now() + 600000;
+      await env.DB.prepare("INSERT INTO email_codes (email, hash, expires) VALUES (?, ?, ?) ON CONFLICT(email) DO UPDATE SET hash = excluded.hash, expires = excluded.expires").bind(email, hash, expires).run();
+      const sent = await sendEmailCode(env, email, code);
+      if (!sent && env.EMAIL_DEBUG !== "1") return json({ error: "email delivery unavailable" }, 503);
+      const result = { sent };
+      if (!sent && env.EMAIL_DEBUG === "1") result.devCode = code;
+      return json(result);
+    }
+
+    if (path === "/auth/email/verify" && request.method === "POST") {
+      if (!env.AUTH_SECRET) return json({ error: "auth unavailable" }, 503);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const email = String(body && body.email || "").trim().toLowerCase();
+      const code = String(body && body.code || "").trim();
+      const record = await one(env, "SELECT hash, expires FROM email_codes WHERE email = ?", [email]);
+      if (!record || Number(record.expires) < Date.now()) return json({ error: "code expired" }, 410);
+      if (await hashValue(code) !== String(record.hash)) return json({ error: "invalid code" }, 401);
+      await env.DB.prepare("DELETE FROM email_codes WHERE email = ?").bind(email).run();
+      let user = await one(env, "SELECT id, email, display_name, role, token_version FROM users WHERE email = ?", [email]);
+      if (!user) {
+        const id = "usr-" + crypto.randomUUID();
+        const displayName = email.split("@")[0];
+        await env.DB.prepare("INSERT INTO users (id, email, display_name) VALUES (?, ?, ?)").bind(id, email, displayName).run();
+        user = { id, email, display_name: displayName, role: "user", token_version: 0 };
+      }
+      const token = await makeToken({ sub: user.id, email: user.email, ver: Number(user.token_version), exp: Date.now() + 2592000000 }, env.AUTH_SECRET);
+      return json({ id: user.id, email: user.email, displayName: user.display_name, role: user.role, token });
+    }
+
+    if (path === "/auth/qr/create" && request.method === "POST") {
+      if (!env.AUTH_SECRET) return json({ error: "auth unavailable" }, 503);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        body = {};
+      }
+      const device = String(body && body.device || "Unknown device").slice(0, 120);
+      const id = randomHex(16);
+      const now = Date.now();
+      await env.DB.prepare("INSERT INTO qr_sessions (id, device, status, created_at, expires) VALUES (?, ?, 'pending', ?, ?)").bind(id, device, now, now + 300000).run();
+      return json({ session: id, device, expires: now + 300000 });
+    }
+
+    if (path === "/auth/qr/status" && request.method === "GET") {
+      const session = url.searchParams.get("session") || "";
+      const row = await one(env, "SELECT status, token, device, expires FROM qr_sessions WHERE id = ?", [session]);
+      if (!row) return json({ error: "not found" }, 404);
+      if (Number(row.expires) < Date.now()) return json({ status: "expired" });
+      const result = { status: row.status, device: row.device };
+      if (row.status === "approved" && row.token) result.token = row.token;
+      return json(result);
+    }
+
+    if (path === "/auth/qr/approve" && request.method === "POST") {
+      if (!env.AUTH_SECRET) return json({ error: "auth unavailable" }, 503);
+      const header = request.headers.get("Authorization") || "";
+      const payload = await readToken(header.replace(/^Bearer\s+/i, ""), env.AUTH_SECRET);
+      if (!payload) return json({ error: "unauthorized" }, 401);
+      let body;
+      try {
+        body = await request.json();
+      } catch (error) {
+        return json({ error: "invalid json" }, 400);
+      }
+      const session = String(body && body.session || "");
+      const decision = String(body && body.decision || "");
+      if (decision !== "approve" && decision !== "deny") return json({ error: "invalid decision" }, 400);
+      const row = await one(env, "SELECT expires, status FROM qr_sessions WHERE id = ?", [session]);
+      if (!row) return json({ error: "not found" }, 404);
+      if (Number(row.expires) < Date.now() || row.status !== "pending") return json({ error: "session unavailable" }, 409);
+      if (decision === "deny") {
+        await env.DB.prepare("UPDATE qr_sessions SET status = 'denied' WHERE id = ? AND status = 'pending'").bind(session).run();
+        return json({ status: "denied" });
+      }
+      const token = await makeToken({ sub: payload.sub, email: payload.email, ver: Number(payload.ver || 0), exp: Date.now() + 2592000000 }, env.AUTH_SECRET);
+      await env.DB.prepare("UPDATE qr_sessions SET status = 'approved', token = ? WHERE id = ? AND status = 'pending'").bind(token, session).run();
+      return json({ status: "approved" });
     }
 
     if (path === "/artists" && request.method === "GET") {
