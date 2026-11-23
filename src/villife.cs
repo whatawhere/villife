@@ -1676,10 +1676,15 @@ namespace Villife
             return null;
         }
 
+        static bool HostMatches(string host, string suffix)
+        {
+            return host.Equals(suffix, StringComparison.OrdinalIgnoreCase) || host.EndsWith("." + suffix, StringComparison.OrdinalIgnoreCase);
+        }
+
         static bool IsAllowedHlsHost(Uri uri)
         {
-            var host = uri.Host.ToLowerInvariant();
-            return host.EndsWith("soundcloud.com") || host.EndsWith("sndcdn.com") || host.EndsWith("soundcloud.cloud");
+            var host = uri.Host;
+            return HostMatches(host, "soundcloud.com") || HostMatches(host, "sndcdn.com") || HostMatches(host, "soundcloud.cloud");
         }
 
         static byte[] FetchHlsBytes(string target, int depth, out string contentType)
@@ -1713,7 +1718,7 @@ namespace Villife
                             Uri absolute;
                             if (!Uri.TryCreate(uri, line, out absolute)) { rewritten.AppendLine(raw.TrimEnd('\r')); continue; }
                             var value = absolute.ToString();
-                            if (!absolute.Host.EndsWith("soundcloud.cloud", StringComparison.OrdinalIgnoreCase))
+                            if (!HostMatches(absolute.Host, "soundcloud.cloud"))
                                 value += (value.Contains("?") ? "&" : "?") + "client_id=" + clientId;
                             rewritten.AppendLine("/api/hls?url=" + Uri.EscapeDataString(value));
                         }
