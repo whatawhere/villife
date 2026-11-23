@@ -2610,3 +2610,4 @@ html, body { margin: 0; }
 .search-wrap .input:focus, .search-wrap .input:focus-visible { box-shadow: inset 0 0 0 2px #ffffff !important; outline: none !important; }
 
 .topbar-search-group { transform: translateY(3px) !important; }
+.search-wrap .input { padding-right: 1rem !important; padding-left: 2.5rem !important; }
