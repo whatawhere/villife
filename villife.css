@@ -311,3 +311,13 @@ h1, h2, h3, p { margin-top: 0; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+.vlf-extra { display: grid; gap: 12px; margin-top: 22px; }
+.vlf-toggle { width: 100%; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.6); padding: 11px 16px; font: inherit; font-size: 13px; color: var(--ink-soft); cursor: pointer; transition: border-color .25s, color .25s; }
+.vlf-toggle:hover { border-color: var(--accent-soft); color: var(--accent); }
+.vlf-panel { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.5); }
+.vlf-panel[hidden] { display: none; }
+.vlf-panel input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; background: #fff; color: var(--ink); }
+.vlf-panel button { border: 0; border-radius: 999px; background: var(--ink); color: #fff; padding: 10px 18px; font-weight: 600; cursor: pointer; }
+.vlf-status { margin: 0; color: var(--muted); font-size: 12px; }
+.vlf-qr img { width: 220px; height: 220px; border-radius: 12px; }
