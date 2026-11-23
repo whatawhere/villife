@@ -110,5 +110,31 @@ function vlfInitQr() {
   });
 }
 
+function vlfInitPassword() {
+  const toggle = document.getElementById("vlf-pass-toggle");
+  const form = document.getElementById("vlf-pass-form");
+  if (!toggle || !form) return;
+  toggle.addEventListener("click", () => {
+    form.hidden = !form.hidden;
+  });
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const email = document.getElementById("vlf-pass-email").value.trim();
+    const password = document.getElementById("vlf-pass-password").value;
+    try {
+      const result = await vlfJson("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password })
+      });
+      vlfStoreToken(result.token);
+      vlfMessage("vlf-pass-status", "Вход выполнен");
+      location.href = "/profile/";
+    } catch (error) {
+      vlfMessage("vlf-pass-status", "Ошибка: " + error.message);
+    }
+  });
+}
+
 vlfInitEmail();
+vlfInitPassword();
 vlfInitQr();
