@@ -62,6 +62,48 @@ Deno.test("image serves cached byte range", async () => {
   check(body.length === 3 && body[0] === 1 && body[2] === 3, "range body");
 });
 
+Deno.test("image serves suffix range", async () => {
+  const bytes = new Uint8Array([0, 1, 2, 3, 4]);
+  const bucket = {
+    get: async () => ({
+      arrayBuffer: async () => bytes.buffer,
+      httpMetadata: { contentType: "image/jpeg" }
+    })
+  };
+  const target = "https://i1.sndcdn.com/cover.jpg";
+  const path = "/image?url=" + encodeURIComponent(target);
+  const response = await worker.fetch(request(path, { Range: "bytes=-2" }), { MEDIA: bucket });
+  check(response.status === 206, "suffix status");
+  check(response.headers.get("Content-Range") === "bytes 3-4/5", "suffix range");
+});
+
+Deno.test("image ignores unsatisfiable range", async () => {
+  const bytes = new Uint8Array([0, 1, 2, 3, 4]);
+  const bucket = {
+    get: async () => ({
+      arrayBuffer: async () => bytes.buffer,
+      httpMetadata: { contentType: "image/jpeg" }
+    })
+  };
+  const target = "https://i1.sndcdn.com/cover.jpg";
+  const path = "/image?url=" + encodeURIComponent(target);
+  const response = await worker.fetch(request(path, { Range: "bytes=999-" }), { MEDIA: bucket });
+  check(response.status === 200, "unsatisfiable status");
+  check(new Uint8Array(await response.arrayBuffer()).length === 5, "full body");
+});
+
+Deno.test("hls rejects upstream failure", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("unavailable", { status: 502 });
+  try {
+    const target = "https://i1.sndcdn.com/segment.ts";
+    const response = await worker.fetch(request("/hls?url=" + encodeURIComponent(target)), {});
+    check(response.status === 502, "upstream failure status");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 Deno.test("search maps upstream tracks", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(JSON.stringify({
