@@ -26,7 +26,7 @@
 
 Find a track, add it to the queue or save it to your library — and just listen. Shuffle, repeat, crossfade and a sleep timer are there too.
 
-There are profiles now: set an avatar, see your listening stats, build public playlists and follow artists. Sign in with Microsoft, a code from your email, a password, or a QR code confirmed on your phone.
+There are profiles now: set an avatar, see your listening stats, build public playlists and follow artists. Your profile follows you between the site, the web player and the desktop app.
 
 The player also runs in the browser at `web.villife.hs.vc` — nothing to install.
 
@@ -82,7 +82,7 @@ You will get `Villife.exe` in the project root.
 
 Saved tracks, favourites, history and settings live on your device (or in browser storage for the web player). You do not need an account just to listen.
 
-Passwords are hashed on the server, and the desktop app is linked to your account with a one-time code.
+Account data is protected on the server, and the desktop app stays linked to your profile without exposing your library.
 
 ## Questions
 
