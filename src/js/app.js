@@ -5258,7 +5258,7 @@ setupMediaSession();
 const VLF_SYNC_API = window.VLF_API || "";
 let vlfSyncUser = null;
 let vlfCsrfTokenValue = null;
-let vlfSyncTimer = null;
+var vlfSyncTimer = null;
 
 async function vlfSyncSession() {
   if (!VLF_SYNC_API || vlfSyncUser) return vlfSyncUser;
