@@ -41,18 +41,18 @@ function json(value, status, request) {
   });
 }
 
-const rateBuckets = new Map();
-function rateLimit(request, scope, limit) {
+async function rateLimit(request, env, scope, limit) {
   const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For") || "unknown";
   const key = scope + ":" + ip;
   const now = Date.now();
-  const bucket = rateBuckets.get(key);
-  if (!bucket || now - bucket.start > 60000) {
-    rateBuckets.set(key, { start: now, count: 1 });
-    return null;
+  const row = await one(env, "SELECT count, start FROM rate_limits WHERE key = ?", [key]);
+  if (!row || now - Number(row.start) > 60000) {
+    await env.DB.prepare("INSERT INTO rate_limits (key, count, start) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = 1, start = excluded.start").bind(key, now).run();
+    return false;
   }
-  bucket.count += 1;
-  return bucket.count > limit;
+  const count = Number(row.count) + 1;
+  await env.DB.prepare("UPDATE rate_limits SET count = ? WHERE key = ?").bind(count, key).run();
+  return count > limit;
 }
 
 function cookieToken(request, name) {
@@ -302,7 +302,7 @@ export default {
       const csrfCookie = cookieToken(request, "villife_csrf");
       if (!csrfToken || !csrfCookie || csrfToken !== csrfCookie) return reply({ error: "invalid csrf token" }, 403);
     }
-    if (rateLimit(request, path, path.startsWith("/auth/") ? 30 : 60)) return reply({ error: "too many requests" }, 429);
+    if (await rateLimit(request, env, path, path.startsWith("/auth/") ? 30 : 60)) return reply({ error: "too many requests" }, 429);
 
     if (path === "/auth/csrf" && request.method === "GET") {
       const token = randomHex(24);
