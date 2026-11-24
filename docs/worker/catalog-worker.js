@@ -420,7 +420,8 @@ export default {
       }
       const email = String(body && body.email || "").trim().toLowerCase();
       const password = String(body && body.password || "");
-      const user = await one(env, "SELECT id, email, display_name, password_hash, salt, role, token_version FROM users WHERE email = ?", [email]);
+      const identity = String(body && body.email || "").trim();
+      const user = await one(env, "SELECT id, email, display_name, password_hash, salt, role, token_version FROM users WHERE email = ? OR lower(display_name) = lower(?) OR id = ? ORDER BY CASE WHEN email = ? THEN 0 ELSE 1 END LIMIT 1", [identity, identity, identity, identity]);
       if (!user || !user.password_hash || !user.salt) return reply({ error: "invalid credentials" }, 401);
       if (!(await verifyPassword(password, String(user.salt), String(user.password_hash)))) return reply({ error: "invalid credentials" }, 401);
       const token = await makeToken({ sub: user.id, email: user.email, ver: Number(user.token_version), exp: Date.now() + 2592000000 }, env.AUTH_SECRET);
