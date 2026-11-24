@@ -1,0 +1,4 @@
+C:\velo\Villife.exe.config
+C:\velo\src\obj\Release\Villife.exe
+C:\velo\Villife.exe
+C:\velo\src\obj\Release\Villife.csprojResolveAssemblyReference.cache
