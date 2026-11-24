@@ -3605,6 +3605,7 @@ function welcomeFinish(social) {
 async function welcomeContinue() {
   const button = $("welcome-continue");
   button.disabled = true;
+  welcomeStatus(lang === "ru" ? "Отправляем код..." : "Sending code...");
   try {
     if (welcomeStage === "code") {
       const code = $("welcome-code").value.trim();
