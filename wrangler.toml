@@ -1,5 +1,5 @@
 name = "villife-search"
-main = "search-worker.js"
+main = "worker/search-worker.js"
 compatibility_date = "2024-09-23"
 account_id = "bd56a9c0fbb01fbb2ba298b7b7a4862d"
 

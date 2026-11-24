@@ -4107,7 +4107,7 @@ renderAccount();
 
 $("settings-open-storage").addEventListener("click", () => sendWindowCommand("open-storage"));
 $("settings-website").addEventListener("click", () => sendWindowCommand("website"));
-const CLOUD_SYNC_BASE = "https://villife-catalog.telesamafia.workers.dev";
+const CLOUD_SYNC_BASE = window.VLF_API || "";
 let cloudCsrf = null;
 
 function cloudSyncOwner() {

@@ -1,4 +1,4 @@
-const VLF_API = "https://villife-catalog.telesamafia.workers.dev";
+const VLF_API = window.VLF_API;
 let vlfCsrf = null;
 
 function vlfDeviceName() {

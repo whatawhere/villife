@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/villife.css">
+  <link rel="stylesheet" href="/css/site.css">
   <style>
     :root { --ink-soft: #b9c1b6; --faint: #8f988d; --line: rgb(224 236 217 / 14%); --glass-strong: rgb(24 29 23 / 90%); --shadow-mid: 0 18px 60px rgb(0 0 0 / 35%); --accent: var(--lime); --accent-soft: #dafa9c; }
     .signup-page { position: relative; z-index: 4; min-height: 100vh; display: flex; flex-direction: column; }
@@ -126,8 +126,9 @@
       </div>
     </main>
   </div>
-  <script src="/auth.js"></script>
-  <script src="/auth-extra.js?v=20261124-1" defer></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/auth-extra.js?v=20261124-1" defer></script>
   <script>
     const readCookie = name => {
       const part = document.cookie.split("; ").find(item => item.startsWith(name + "="));

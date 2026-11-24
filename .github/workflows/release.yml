@@ -199,7 +199,7 @@ jobs:
         run: |
           $tag = "${{ inputs.tag || github.ref_name }}"
           $version = $tag -replace '^v', ''
-          & $env:ISCC "/DAppVersion=$version" installer.iss
+          & $env:ISCC "/DAppVersion=$version" desktop/installer.iss
           if (-not (Test-Path release-out/VillifeSetup.exe)) { throw "VillifeSetup.exe was not produced" }
           $hash = (Get-FileHash release-out/VillifeSetup.exe -Algorithm SHA256).Hash.ToLower()
           "$hash  VillifeSetup.exe" | Out-File -FilePath release-out/VillifeSetup.exe.sha256 -Encoding ascii

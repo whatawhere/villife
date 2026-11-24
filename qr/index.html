@@ -10,7 +10,7 @@
   <title>Подтверждение входа — Villife</title>
   <link rel="icon" href="/villife.ico">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/villife.css">
+  <link rel="stylesheet" href="/css/site.css">
   <style>
     .qr-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
     .qr-card { width: min(100%, 420px); padding: 30px; border: 1px solid rgba(255,255,255,.85); border-radius: 24px; background: var(--glass-strong); box-shadow: var(--shadow-mid); backdrop-filter: blur(22px) saturate(150%); }
@@ -31,8 +31,9 @@
       <div id="qr-content"><p>Проверяем сессию...</p></div>
     </section>
   </main>
+  <script src="/js/config.js"></script>
   <script>
-    const API = "https://villife-catalog.telesamafia.workers.dev";
+    const API = window.VLF_API;
     const params = new URLSearchParams(location.search);
     const session = params.get("session") || "";
     const device = params.get("device") || "неизвестного устройства";
