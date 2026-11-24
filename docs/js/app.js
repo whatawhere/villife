@@ -5334,7 +5334,7 @@ setupMediaSession();
 
 const VLF_SYNC_API = window.VLF_API || "";
 let vlfSyncUser = null;
-let vlfSyncCsrf = null;
+let vlfCsrfTokenValue = null;
 let vlfSyncTimer = null;
 
 async function vlfSyncSession() {
@@ -5350,11 +5350,11 @@ async function vlfSyncSession() {
 }
 
 async function vlfSyncCsrf() {
-  if (vlfSyncCsrf) return vlfSyncCsrf;
+  if (vlfCsrfTokenValue) return vlfCsrfTokenValue;
   const response = await fetch(VLF_SYNC_API + "/auth/csrf", { credentials: "include" });
   const result = await response.json();
-  vlfSyncCsrf = result.token;
-  return vlfSyncCsrf;
+  vlfCsrfTokenValue = result.token;
+  return vlfCsrfTokenValue;
 }
 
 function vlfSyncData() {
