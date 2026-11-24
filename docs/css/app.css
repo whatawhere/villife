@@ -2610,3 +2610,17 @@ html, body { margin: 0; }
 .search-wrap .input { padding-right: 1rem !important; padding-left: 2.5rem !important; }
 .topbar-search-group { width: 474px !important; max-width: 474px !important; }
 .search-wrap { width: 100% !important; }
+
+.welcome-auth { display: grid; gap: 10px; width: min(320px, 100%); margin: 22px auto 0; }
+.welcome-auth[hidden], .welcome-input[hidden] { display: none; }
+.welcome-social { display: grid; gap: 8px; }
+.welcome-social-btn { min-height: 40px; border: 1px solid rgba(255,255,255,.24); border-radius: 10px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: 13px; cursor: pointer; }
+.welcome-social-btn:hover { background: rgba(255,255,255,.18); }
+.welcome-divider { color: rgba(255,255,255,.6); font-size: 11px; text-align: center; }
+.welcome-input { width: 100%; height: 40px; padding: 0 12px; border: 1px solid rgba(255,255,255,.24); border-radius: 10px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: 13px; outline: none; }
+.welcome-input::placeholder { color: rgba(255,255,255,.55); }
+.welcome-input:focus { border-color: rgba(255,255,255,.6); }
+.welcome-submit { min-height: 40px; border: 0; border-radius: 10px; background: #fff; color: #111; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.welcome-auth-status { min-height: 16px; margin: 0; color: rgba(255,255,255,.85); font-size: 12px; text-align: center; }
+.welcome-skip { border: 0; background: none; color: rgba(255,255,255,.7); font: inherit; font-size: 12px; cursor: pointer; }
+.welcome-skip:hover { color: #fff; }
