@@ -723,6 +723,7 @@ function loadFavorites() {
     if (!Array.isArray(tracks)) return [];
     if (stored === null && tracks.length)
       localStorage.setItem("velo_favorites", JSON.stringify(tracks));
+      vlfSyncSchedule();
     return tracks;
   } catch (error) {
     console.error("Could not read the saved favorites.", error);
@@ -1941,6 +1942,7 @@ function recordHistory(track) {
   historyTracks = [track].concat(historyTracks.filter(item => !sameTrack(item, track))).slice(0, 100);
   try {
     localStorage.setItem("velo_history", JSON.stringify(historyTracks));
+    vlfSyncSchedule();
   } catch (error) {
     console.error("Could not save playback history.", error);
     toast(lang === "en" ? "Could not save playback history" : "Не удалось сохранить историю прослушивания");
@@ -3181,6 +3183,7 @@ function saveLib() {
 
 function saveFavorites() {
   localStorage.setItem("velo_favorites", JSON.stringify(favorites));
+  vlfSyncSchedule();
   renderForYouHome();
   if (view === "profile") renderUserProfile();
   if (view === "favorites") {
@@ -3195,6 +3198,7 @@ function saveFavorites() {
 
 function savePlaylists() {
   localStorage.setItem("velo_playlists", JSON.stringify(savedPlaylists));
+  vlfSyncSchedule();
   updateSettingsStats();
   if (view === "profile") renderUserProfile();
 }
@@ -5154,4 +5158,85 @@ bindAudioEvents(standbyAudio);
 
 setupSidebarResize();
 setupMediaSession();
+
+const VLF_SYNC_API = window.VLF_API || "";
+let vlfSyncUser = null;
+let vlfSyncCsrf = null;
+let vlfSyncTimer = null;
+
+async function vlfSyncSession() {
+  if (!VLF_SYNC_API || vlfSyncUser) return vlfSyncUser;
+  try {
+    const response = await fetch(VLF_SYNC_API + "/auth/me", { credentials: "include" });
+    if (!response.ok) return null;
+    vlfSyncUser = await response.json();
+  } catch (error) {
+    return null;
+  }
+  return vlfSyncUser;
+}
+
+async function vlfSyncCsrf() {
+  if (vlfSyncCsrf) return vlfSyncCsrf;
+  const response = await fetch(VLF_SYNC_API + "/auth/csrf", { credentials: "include" });
+  const result = await response.json();
+  vlfSyncCsrf = result.token;
+  return vlfSyncCsrf;
+}
+
+function vlfSyncData() {
+  return {
+    favorites: favorites,
+    playlists: savedPlaylists,
+    history: historyTracks,
+    account: JSON.parse(localStorage.getItem("velo_account") || "null")
+  };
+}
+
+function vlfApplyData(data) {
+  if (data.favorites) localStorage.setItem("velo_favorites", JSON.stringify(data.favorites));
+  if (data.playlists) localStorage.setItem("velo_playlists", JSON.stringify(data.playlists));
+  if (data.history) localStorage.setItem("velo_history", JSON.stringify(data.history));
+  if (data.account) localStorage.setItem("velo_account", JSON.stringify(data.account));
+}
+
+async function vlfSyncPull() {
+  const user = await vlfSyncSession();
+  if (!user) return false;
+  const response = await fetch(VLF_SYNC_API + "/sync/" + encodeURIComponent(user.id), { credentials: "include" });
+  if (!response.ok) return false;
+  const result = await response.json();
+  if (!result || !result.data) return false;
+  if (result.updatedAt === (localStorage.getItem("villife_sync_updated") || "")) return false;
+  vlfApplyData(result.data);
+  localStorage.setItem("villife_sync_updated", result.updatedAt);
+  return true;
+}
+
+async function vlfSyncPush() {
+  const user = await vlfSyncSession();
+  if (!user) return;
+  const token = await vlfSyncCsrf();
+  await fetch(VLF_SYNC_API + "/sync/" + encodeURIComponent(user.id), {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+    body: JSON.stringify({ data: vlfSyncData() })
+  });
+}
+
+function vlfSyncSchedule() {
+  clearTimeout(vlfSyncTimer);
+  vlfSyncTimer = setTimeout(() => vlfSyncPush().catch(() => {}), 1200);
+}
+
+(async () => {
+  if (await vlfSyncPull()) {
+    location.reload();
+    return;
+  }
+  const user = await vlfSyncSession();
+  if (user) vlfSyncPush().catch(() => {});
+})();
+
 boot();
