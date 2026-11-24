@@ -2,11 +2,34 @@ const FALLBACK_CLIENT_ID = "39AVoiZVrdvJEMFLH8T0c5WGshQaAPRJ";
 let clientId = FALLBACK_CLIENT_ID;
 
 const headers = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "*",
+  "Access-Control-Allow-Headers": "Content-Type, Range",
   "Access-Control-Allow-Methods": "GET,OPTIONS",
   "X-Villife-Worker": "7"
 };
+
+const allowedOrigins = ["https://villife.hs.vc", "https://web.villife.hs.vc", "http://localhost:5173", "http://127.0.0.1:8080"];
+
+function allowedOrigin(request) {
+  const origin = request && request.headers ? request.headers.get("Origin") : null;
+  return origin && allowedOrigins.includes(origin) ? origin : null;
+}
+
+function responseHeaders(request) {
+  const result = Object.assign({}, headers, {
+    "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+  });
+  const origin = allowedOrigin(request);
+  if (origin) {
+    result["Access-Control-Allow-Origin"] = origin;
+    result["Vary"] = "Origin";
+  }
+  return result;
+}
 
 function media(env) {
   return env && env.MEDIA ? env.MEDIA : null;
@@ -37,10 +60,10 @@ async function storeResponse(env, key, bytes, contentType) {
   });
 }
 
-function json(value, status) {
+function json(value, status, request) {
   return new Response(JSON.stringify(value), {
     status: status || 200,
-    headers: Object.assign({}, headers, { "Content-Type": "application/json; charset=utf-8" })
+    headers: Object.assign(responseHeaders(request), { "Content-Type": "application/json; charset=utf-8" })
   });
 }
 
@@ -114,11 +137,11 @@ function mapPlaylist(item) {
   };
 }
 
-function okResponse(bytes, contentType, cacheControl) {
+function okResponse(bytes, contentType, cacheControl, request) {
   const extra = cacheControl ? { "Cache-Control": cacheControl } : {};
   return new Response(bytes, {
     status: 200,
-    headers: Object.assign({}, headers, { "Content-Type": contentType || "application/octet-stream" }, extra)
+    headers: Object.assign(responseHeaders(request), { "Content-Type": contentType || "application/octet-stream" }, extra)
   });
 }
 
@@ -150,7 +173,7 @@ function serveBytes(bytes, contentType, request, extra) {
   const buffer = bytes instanceof ArrayBuffer ? bytes : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   const size = buffer.byteLength;
   const slice = rangeSlice(request, size);
-  const result = Object.assign({}, headers, {
+  const result = Object.assign(responseHeaders(request), {
     "Content-Type": contentType || "application/octet-stream",
     "Accept-Ranges": "bytes",
     "Content-Length": slice ? String(slice.end - slice.start + 1) : String(size),
@@ -164,10 +187,10 @@ function serveBytes(bytes, contentType, request, extra) {
   return new Response(buffer, { status: 200, headers: result });
 }
 
-function passthrough(response) {
+function passthrough(response, request) {
   const result = new Headers();
   response.headers.forEach((value, name) => result.set(name, value));
-  Object.keys(headers).forEach(name => result.set(name, headers[name]));
+  Object.keys(responseHeaders(request)).forEach(name => result.set(name, responseHeaders(request)[name]));
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers: result });
 }
 
@@ -183,15 +206,15 @@ function rateLimit(request, scope, limit) {
   }
   bucket.count += 1;
   if (bucket.count > limit) {
-    return json({ error: "too many requests" }, 429);
+    return json({ error: "too many requests" }, 429, request);
   }
   return null;
 }
 
 async function proxyHls(targetUrl, base, depth, env, key, request) {
-  if (depth > 4) return json({ error: "too many redirects" }, 502);
+  if (depth > 4) return json({ error: "too many redirects" }, 502, request);
   const host = targetUrl.hostname.toLowerCase();
-  if (!allowedHost(host, ["soundcloud.com", "sndcdn.com", "soundcloud.cloud"])) return json({ error: "forbidden" }, 403);
+  if (!allowedHost(host, ["soundcloud.com", "sndcdn.com", "soundcloud.cloud"])) return json({ error: "forbidden" }, 403, request);
   if (key) {
     const hit = await cachedResponse(env, key, request);
     if (hit) return hit;
@@ -201,7 +224,7 @@ async function proxyHls(targetUrl, base, depth, env, key, request) {
   if (response.status === 206) return passthrough(response);
   if (!response.ok) {
     console.error("hls upstream failed", host, response.status);
-    return json({ error: "upstream failed" }, 502);
+    return json({ error: "upstream failed" }, 502, request);
   }
   const type = response.headers.get("Content-Type") || "";
   const clone = response.clone();
@@ -224,14 +247,14 @@ async function proxyHls(targetUrl, base, depth, env, key, request) {
     }).join("\n");
     const bytes = new TextEncoder().encode(rewritten);
     if (key) await storeResponse(env, key, bytes, "application/vnd.apple.mpegurl");
-    return okResponse(bytes, "application/vnd.apple.mpegurl");
+    return okResponse(bytes, "application/vnd.apple.mpegurl", null, request);
   }
   if (/^https?:\/\//i.test(trimmed)) {
     let next;
     try {
       next = new URL(trimmed);
     } catch (error) {
-      return json({ error: "invalid url" }, 400);
+      return json({ error: "invalid url" }, 400, request);
     }
     return proxyHls(next, base, depth + 1, env, key, request);
   }
@@ -251,7 +274,8 @@ async function proxyHls(targetUrl, base, depth, env, key, request) {
 
 export default {
   async fetch(request, env) {
-    if (request.method === "OPTIONS") return new Response(null, { headers: headers });
+    const reply = (value, status) => json(value, status, request);
+    if (request.method === "OPTIONS") return new Response(null, { headers: responseHeaders(request) });
     const url = new URL(request.url);
     if (env && env.SC_CLIENT_ID) clientId = env.SC_CLIENT_ID;
     const q = url.searchParams.get("q") || "";
@@ -259,35 +283,35 @@ export default {
     if (url.pathname === "/search") {
       const limited = rateLimit(request, "search", 180);
       if (limited) return limited;
-      if (!q) return json({ error: "no query" }, 400);
+      if (!q) return reply({ error: "no query" }, 400);
       const response = await soundcloud("search/tracks?q=" + encodeURIComponent(q) + "&limit=24");
       const data = await response.json();
       const list = Array.isArray(data.collection) ? data.collection.filter(item => item.streamable !== false).map(item => proxyArt(mapTrack(item), url.origin)) : [];
-      return json(list);
+      return reply(list);
     }
     if (url.pathname === "/search/playlists") {
       const limited = rateLimit(request, "search", 180);
       if (limited) return limited;
-      if (!q) return json({ error: "no query" }, 400);
+      if (!q) return reply({ error: "no query" }, 400);
       const response = await soundcloud("search/playlists?q=" + encodeURIComponent(q) + "&limit=12");
       const data = await response.json();
       const list = Array.isArray(data.collection) ? data.collection.map(item => proxyArt(mapPlaylist(item), url.origin)) : [];
-      return json(list);
+      return reply(list);
     }
     if (url.pathname === "/stream") {
       const limited = rateLimit(request, "stream", 120);
       if (limited) return limited;
       const numeric = String(id).replace(/^sc:/, "");
-      if (!/^\d+$/.test(numeric)) return json({ error: "invalid id" }, 400);
+      if (!/^\d+$/.test(numeric)) return reply({ error: "invalid id" }, 400);
       const trackResponse = await soundcloud("tracks/" + numeric);
-      if (!trackResponse.ok) return json({ error: "track unavailable" }, 502);
+      if (!trackResponse.ok) return reply({ error: "track unavailable" }, 502);
       const track = await trackResponse.json();
       const transcodings = (track.media && track.media.transcodings) || [];
       const hls = transcodings.find(item => item.format && String(item.format.protocol || "").toLowerCase() === "hls");
-      if (!hls || !hls.url) return json({ error: "stream unavailable" }, 502);
+      if (!hls || !hls.url) return reply({ error: "stream unavailable" }, 502);
       const source = hls.url + (hls.url.includes("?") ? "&" : "?") + "client_id=" + encodeURIComponent(clientId);
       const playlist = "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=128000\n" + url.origin + "/hls?url=" + encodeURIComponent(source) + "\n";
-      return okResponse(new TextEncoder().encode(playlist), "application/vnd.apple.mpegurl");
+      return okResponse(new TextEncoder().encode(playlist), "application/vnd.apple.mpegurl", null, request);
     }
     if (url.pathname === "/hls") {
       const limited = rateLimit(request, "hls", 300);
@@ -297,12 +321,13 @@ export default {
       try {
         targetUrl = new URL(target);
       } catch (error) {
-        return json({ error: "invalid url" }, 400);
+        return reply({ error: "invalid url" }, 400);
       }
       const key = await cacheKey(targetUrl.origin + targetUrl.pathname);
       return proxyHls(targetUrl, url.origin, 0, env, key, request);
     }
     if (url.pathname === "/debug") {
+      if (!env.PURGE_SECRET || request.headers.get("X-Purge-Key") !== env.PURGE_SECRET) return reply({ error: "not found" }, 404);
       const bucket = media(env);
       let objects = null;
       let error = null;
@@ -314,27 +339,27 @@ export default {
       } catch (failure) {
         error = String(failure);
       }
-      return json({ version: "7", r2: !!bucket, objects: objects, error: error });
+      return reply({ version: "7", r2: !!bucket, objects: objects, error: error });
     }
     if (url.pathname === "/purge") {
       const bucket = media(env);
       const key = url.searchParams.get("key") || "";
       if (!bucket || !env.PURGE_SECRET || request.headers.get("X-Purge-Key") !== env.PURGE_SECRET || !/^[a-f0-9]{64}$/.test(key)) {
-        return json({ error: "not found" }, 404);
+        return reply({ error: "not found" }, 404);
       }
       await bucket.delete(key);
-      return json({ purged: key });
+      return reply({ purged: key });
     }
-    if (url.pathname === "/warm") return json({ ready: true });
+    if (url.pathname === "/warm") return reply({ ready: true });
     if (url.pathname === "/artist") {
       const limited = rateLimit(request, "search", 180);
       if (limited) return limited;
       const name = url.searchParams.get("name") || "";
-      if (!name) return json([], 200);
+      if (!name) return reply([], 200);
       const response = await soundcloud("search/users?q=" + encodeURIComponent(name) + "&limit=5");
       const data = await response.json();
       const list = Array.isArray(data.collection) ? data.collection.map(user => ({ id: "sc:" + user.id, name: user.username || "" })) : [];
-      return json(list);
+      return reply(list);
     }
     if (url.pathname === "/image") {
       const limited = rateLimit(request, "image", 240);
@@ -344,25 +369,25 @@ export default {
       try {
         targetUrl = new URL(target);
       } catch (error) {
-        return json({ error: "invalid url" }, 400);
+        return reply({ error: "invalid url" }, 400);
       }
       const host = targetUrl.hostname.toLowerCase();
-      if (!allowedHost(host, ["soundcloud.com", "sndcdn.com"])) return json({ error: "forbidden" }, 403);
+      if (!allowedHost(host, ["soundcloud.com", "sndcdn.com"])) return reply({ error: "forbidden" }, 403);
       const key = await cacheKey(targetUrl.toString());
       const hit = await cachedResponse(env, key, request);
       if (hit) return hit;
       const range = request.headers.get("Range");
       const response = await fetch(targetUrl.toString(), { redirect: "follow", headers: range ? { Range: range } : {} });
-      if (response.status === 206) return passthrough(response);
+      if (response.status === 206) return passthrough(response, request);
       if (!response.ok) {
         console.error("image upstream failed", host, response.status);
-        return json({ error: "image unavailable" }, 502);
+        return reply({ error: "image unavailable" }, 502);
       }
       const type = response.headers.get("Content-Type") || "image/jpeg";
       const buffer = await response.arrayBuffer();
       await storeResponse(env, key, buffer, type);
       return serveBytes(buffer, type, request, { "X-Villife-Cache": "MISS" });
     }
-    return json({ error: "not found" }, 404);
+    return reply({ error: "not found" }, 404);
   }
 };
