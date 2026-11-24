@@ -430,6 +430,28 @@ Deno.test("upload rejects fake content", async () => {
   const response = await worker.fetch(request("/studio/upload", { method: "POST", headers: { "X-Studio-Key": "studio-secret" }, body: form }), env);
   check(response.status === 400, "fake audio rejected");
 });
+Deno.test("admin requires totp second factor", async () => {
+  const secret = "JBSWY3DPEHPK3PXP";
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const character of secret) bits += alphabet.indexOf(character).toString(2).padStart(5, "0");
+  const keyBytes = [];
+  for (let index = 0; index + 8 <= bits.length; index += 8) keyBytes.push(parseInt(bits.slice(index, index + 8), 2));
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+  const counter = Math.floor(Date.now() / 30000);
+  view.setUint32(0, Math.floor(counter / 0x100000000));
+  view.setUint32(4, counter >>> 0);
+  const key = await crypto.subtle.importKey("raw", new Uint8Array(keyBytes), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+  const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, buffer));
+  const offset = signature[signature.length - 1] & 0x0f;
+  const code = String(((signature[offset] & 0x7f) << 24 | signature[offset + 1] << 16 | signature[offset + 2] << 8 | signature[offset + 3]) % 1000000).padStart(6, "0");
+  const env = { DB: makeDb(() => [], []), ADMIN_SECRET: "secret", ADMIN_TOTP: secret };
+  const denied = await worker.fetch(request("/releases", { headers: { "X-Admin-Key": "secret" } }), env);
+  check(denied.status === 403, "totp missing");
+  const allowed = await worker.fetch(request("/releases", { headers: { "X-Admin-Key": "secret", "X-Admin-Code": code } }), env);
+  check(allowed.status === 200, "totp accepted");
+});
 Deno.test("catalog rejects invalid status", async () => {
   const env = { DB: makeDb(() => [{ id: "rel-1" }], []), ADMIN_SECRET: "secret" };
   const response = await worker.fetch(request("/releases/rel-1/status", {
