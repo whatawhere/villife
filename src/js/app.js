@@ -3518,9 +3518,105 @@ document.querySelectorAll(".lang-card").forEach(card => {
     localStorage.setItem("velo_lang", lang);
     applyI18n();
     renderResults();
-    enterApp();
+    const row = document.querySelector(".lang-row");
+    if (row) row.hidden = true;
+    $("welcome-sub").textContent = lang === "ru" ? "Войди, чтобы синхронизировать профиль" : "Sign in to sync your profile";
+    if ($("welcome-auth")) $("welcome-auth").hidden = false;
   });
 });
+let welcomeStage = "identity";
+let welcomeEmail = "";
+let welcomeCsrf = null;
+
+function welcomeApiBase() { return window.VLF_API || ""; }
+
+async function welcomeCsrfToken() {
+  if (welcomeCsrf) return welcomeCsrf;
+  const response = await fetch(welcomeApiBase() + "/auth/csrf", { credentials: "include" });
+  const data = await response.json();
+  welcomeCsrf = data.token;
+  return welcomeCsrf;
+}
+
+function welcomeStatus(message) {
+  const line = $("welcome-auth-status");
+  if (line) line.textContent = message;
+}
+
+async function welcomeRequest(path, options) {
+  const method = options && options.method ? options.method.toUpperCase() : "GET";
+  const headers = Object.assign({}, options && options.headers);
+  if (method !== "GET") headers["X-CSRF-Token"] = await welcomeCsrfToken();
+  const response = await fetch(welcomeApiBase() + path, Object.assign({ credentials: "include" }, options, { headers }));
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+  return data;
+}
+
+function welcomeFinish(social) {
+  localStorage.setItem("villife_session", "active");
+  if (social) localStorage.setItem("villife_social", "1");
+  welcomeStatus("");
+  enterApp();
+}
+
+async function welcomeContinue() {
+  const button = $("welcome-continue");
+  button.disabled = true;
+  try {
+    if (welcomeStage === "code") {
+      const code = $("welcome-code").value.trim();
+      if (!/^\d{6}$/.test(code)) throw new Error(lang === "ru" ? "Введи шестизначный код" : "Enter the 6-digit code");
+      await welcomeRequest("/auth/email/verify", {
+        method: "POST",
+        body: JSON.stringify({ email: welcomeEmail, code })
+      });
+      welcomeFinish(false);
+      return;
+    }
+    if (welcomeStage === "password") {
+      const password = $("welcome-password").value;
+      if (!password) throw new Error(lang === "ru" ? "Введи пароль" : "Enter your password");
+      await welcomeRequest("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email: $("welcome-identity").value.trim(), password })
+      });
+      welcomeFinish(false);
+      return;
+    }
+    const identity = $("welcome-identity").value.trim();
+    if (!identity) throw new Error(lang === "ru" ? "Введи почту или юзернейм" : "Enter email or username");
+    if (identity.includes("@")) {
+      welcomeEmail = identity;
+      await welcomeRequest("/auth/email/request", {
+        method: "POST",
+        body: JSON.stringify({ email: identity })
+      });
+      $("welcome-code").hidden = false;
+      welcomeStage = "code";
+      welcomeStatus(lang === "ru" ? "Код отправлен на " + identity : "Code sent to " + identity);
+    } else {
+      $("welcome-password").hidden = false;
+      welcomeStage = "password";
+      welcomeStatus(lang === "ru" ? "Введи пароль" : "Enter your password");
+    }
+  } catch (error) {
+    welcomeStatus(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$("welcome-continue").addEventListener("click", welcomeContinue);
+$("welcome-skip").addEventListener("click", () => enterApp());
+$("welcome-microsoft").addEventListener("click", () => { location.href = "/signin/"; });
+$("welcome-gmail").addEventListener("click", () => {
+  $("welcome-identity").value = "";
+  $("welcome-identity").placeholder = "@gmail.com";
+  $("welcome-identity").focus();
+  welcomeStatus(lang === "ru" ? "Введи Gmail-адрес — пришлём код" : "Enter your Gmail address — we will send a code");
+});
+
 
 let dragState = null;
 const edgeZone = 6;
