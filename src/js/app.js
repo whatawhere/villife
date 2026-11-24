@@ -3608,7 +3608,7 @@ async function welcomeContinue() {
 }
 
 $("welcome-continue").addEventListener("click", welcomeContinue);
-$("welcome-skip").addEventListener("click", () => enterApp());
+$("welcome-skip").addEventListener("click", () => { localStorage.setItem("villife_welcome_done", "1"); enterApp(); });
 $("welcome-microsoft").addEventListener("click", () => { location.href = "/signin/"; });
 $("welcome-gmail").addEventListener("click", () => {
   $("welcome-identity").value = "";
