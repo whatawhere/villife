@@ -14,6 +14,7 @@ Velo.exe.WebView2/
 lib/
 norm*.nlp
 .vercel/
+node_modules/
 desktop/node_modules/
 desktop/dist/
 desktop/web/
