@@ -68,8 +68,47 @@ function sessionOptions(maxAge) {
   return "Path=/; Max-Age=" + maxAge + "; Secure; HttpOnly; SameSite=None";
 }
 
-function isAdmin(request, env) {
-  return !!(env && env.ADMIN_SECRET && request.headers.get("X-Admin-Key") === env.ADMIN_SECRET);
+function base32Decode(value) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const character of String(value || "").toUpperCase().replace(/=+$/, "")) {
+    const index = alphabet.indexOf(character);
+    if (index < 0) continue;
+    bits += index.toString(2).padStart(5, "0");
+  }
+  const bytes = [];
+  for (let index = 0; index + 8 <= bits.length; index += 8) bytes.push(parseInt(bits.slice(index, index + 8), 2));
+  return new Uint8Array(bytes);
+}
+
+async function totpCode(secret, counter) {
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+  view.setUint32(0, Math.floor(counter / 0x100000000));
+  view.setUint32(4, counter >>> 0);
+  const key = await crypto.subtle.importKey("raw", base32Decode(secret), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+  const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, buffer));
+  const offset = signature[signature.length - 1] & 0x0f;
+  const value = ((signature[offset] & 0x7f) << 24 | signature[offset + 1] << 16 | signature[offset + 2] << 8 | signature[offset + 3]) % 1000000;
+  return String(value).padStart(6, "0");
+}
+
+async function verifyTotp(secret, code) {
+  if (!secret || !code) return false;
+  const step = Math.floor(Date.now() / 30000);
+  for (let delta = -1; delta <= 1; delta++) {
+    if (await totpCode(secret, step + delta) === String(code).trim()) return true;
+  }
+  return false;
+}
+
+async function isAdmin(request, env) {
+  if (!env.ADMIN_SECRET || request.headers.get("X-Admin-Key") !== env.ADMIN_SECRET) return false;
+  if (env.ADMIN_TOTP) {
+    const code = request.headers.get("X-Admin-Code") || "";
+    if (!(await verifyTotp(env.ADMIN_TOTP, code))) return false;
+  }
+  return true;
 }
 
 async function currentUser(request, env) {
@@ -239,10 +278,38 @@ function unbase64url(value) {
   return bytes;
 }
 
-async function derivePassword(password, salt) {
+async function loadArgon2() {
+  try {
+    const module = await import("@noble/hashes/argon2");
+    return module.argon2id;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function pbkdf2(password, salt) {
   const material = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: new TextEncoder().encode(salt), iterations: 310000, hash: "SHA-256" }, material, 256);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: new TextEncoder().encode(salt), iterations: 100000, hash: "SHA-256" }, material, 256);
   return toHex(bits);
+}
+
+async function derivePassword(password, salt) {
+  const argon2id = await loadArgon2();
+  if (!argon2id) return "pbkdf2$" + await pbkdf2(password, salt);
+  const bytes = argon2id(new TextEncoder().encode(password), new TextEncoder().encode(salt), { t: 3, m: 19456, p: 4, dkLen: 32 });
+  return "argon2id$" + toHex(bytes);
+}
+
+async function verifyPassword(password, salt, stored) {
+  const value = String(stored || "");
+  if (value.startsWith("argon2id$")) {
+    const argon2id = await loadArgon2();
+    if (!argon2id) return false;
+    const bytes = argon2id(new TextEncoder().encode(password), new TextEncoder().encode(salt), { t: 3, m: 19456, p: 4, dkLen: 32 });
+    return "argon2id$" + toHex(bytes) === value;
+  }
+  if (value.startsWith("pbkdf2$")) return "pbkdf2$" + await pbkdf2(password, salt) === value;
+  return await pbkdf2(password, salt) === value;
 }
 
 async function authKey(secret) {
@@ -355,8 +422,7 @@ export default {
       const password = String(body && body.password || "");
       const user = await one(env, "SELECT id, email, display_name, password_hash, salt, role, token_version FROM users WHERE email = ?", [email]);
       if (!user || !user.password_hash || !user.salt) return reply({ error: "invalid credentials" }, 401);
-      const hash = await derivePassword(password, String(user.salt));
-      if (hash !== String(user.password_hash)) return reply({ error: "invalid credentials" }, 401);
+      if (!(await verifyPassword(password, String(user.salt), String(user.password_hash)))) return reply({ error: "invalid credentials" }, 401);
       const token = await makeToken({ sub: user.id, email: user.email, ver: Number(user.token_version), exp: Date.now() + 2592000000 }, env.AUTH_SECRET);
       const response = reply({ id: user.id, email: user.email, displayName: user.display_name, role: user.role, token });
       response.headers.set("Set-Cookie", "villife_session=" + encodeURIComponent(token) + "; " + sessionOptions(2592000));
@@ -514,7 +580,7 @@ export default {
     }
 
     if (path === "/releases" && request.method === "GET") {
-      if (!isAdmin(request, env)) return reply({ error: "forbidden" }, 403);
+      if (!(await isAdmin(request, env))) return reply({ error: "forbidden" }, 403);
       const status = url.searchParams.get("status") || "";
       const rows = await all(env, "SELECT id, album_id, track_id, owner_id, status, reason, territory, license_type, updated_at FROM releases WHERE (? = '' OR status = ?) ORDER BY " + sortOrder(url, ["updated_at", "status"], "updated_at") + " LIMIT ? OFFSET ?", [status, status, page.limit, page.offset]);
       return reply(rows);
@@ -522,7 +588,7 @@ export default {
 
     const statusMatch = path.match(/^\/(releases|lyrics)\/([^/]+)\/status$/);
     if (statusMatch && request.method === "POST") {
-      if (!isAdmin(request, env)) return reply({ error: "forbidden" }, 403);
+      if (!(await isAdmin(request, env))) return reply({ error: "forbidden" }, 403);
       const table = statusMatch[1];
       const id = statusMatch[2];
       let body;
@@ -543,7 +609,7 @@ export default {
     }
 
     if (path === "/catalog/import" && request.method === "POST") {
-      if (!isAdmin(request, env)) return reply({ error: "forbidden" }, 403);
+      if (!(await isAdmin(request, env))) return reply({ error: "forbidden" }, 403);
       let body;
       try {
         body = await request.json();
@@ -575,13 +641,13 @@ export default {
     }
 
     if (path === "/catalog/duplicates" && request.method === "GET") {
-      if (!isAdmin(request, env)) return reply({ error: "forbidden" }, 403);
+      if (!(await isAdmin(request, env))) return reply({ error: "forbidden" }, 403);
       const rows = await all(env, "SELECT lower(trim(t.title)) AS title_key, ar.name AS artist, COUNT(*) AS copies, GROUP_CONCAT(t.id) AS ids FROM tracks t JOIN artists ar ON ar.id = t.artist_id GROUP BY title_key, ar.name HAVING copies > 1 ORDER BY copies DESC LIMIT 100");
       return reply(rows);
     }
 
     if (path === "/analytics" && request.method === "GET") {
-      if (!isAdmin(request, env)) return reply({ error: "forbidden" }, 403);
+      if (!(await isAdmin(request, env))) return reply({ error: "forbidden" }, 403);
       const tables = ["artists", "albums", "tracks", "releases", "lyrics", "rights", "users", "playlists", "listening_history", "moderation_actions"];
       const result = {};
       for (const table of tables) {
