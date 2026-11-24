@@ -3529,8 +3529,14 @@ function closeImport() {
 function boot() {
   applyTheme();
   saveLib();
-  if (!lang) {
+  const signedIn = localStorage.getItem("villife_session") === "active";
+  const skipped = localStorage.getItem("villife_welcome_done") === "1";
+  if (!lang || (!signedIn && !skipped)) {
     $("welcome").style.display = "";
+    if (lang) {
+      const card = document.querySelector('.lang-card[data-lang="' + lang + '"]');
+      if (card) card.classList.add("selected");
+    }
     return;
   }
   applyI18n();
