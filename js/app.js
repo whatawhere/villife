@@ -4108,23 +4108,32 @@ renderAccount();
 $("settings-open-storage").addEventListener("click", () => sendWindowCommand("open-storage"));
 $("settings-website").addEventListener("click", () => sendWindowCommand("website"));
 const CLOUD_SYNC_BASE = "https://villife-catalog.telesamafia.workers.dev";
+let cloudCsrf = null;
 
-function cloudSyncCredentials() {
+function cloudSyncOwner() {
   const owner = localStorage.getItem("villife_sync_owner") || window.prompt("ID для синхронизации");
-  const key = localStorage.getItem("villife_sync_key") || window.prompt("Ключ синхронизации");
-  if (!owner || !key) return null;
+  if (!owner) return null;
   localStorage.setItem("villife_sync_owner", owner);
-  localStorage.setItem("villife_sync_key", key);
-  return { owner, key };
+  return owner;
+}
+
+async function cloudCsrfToken() {
+  if (cloudCsrf) return cloudCsrf;
+  const response = await fetch(CLOUD_SYNC_BASE + "/auth/csrf", { credentials: "include" });
+  const data = await response.json();
+  cloudCsrf = data.token;
+  return cloudCsrf;
 }
 
 async function cloudSyncPush() {
-  const credentials = cloudSyncCredentials();
-  if (!credentials) return;
+  const owner = cloudSyncOwner();
+  if (!owner) return;
   const data = { favorites: favorites, playlists: savedPlaylists, history: historyTracks };
-  const response = await fetch(CLOUD_SYNC_BASE + "/sync/" + encodeURIComponent(credentials.owner), {
+  const token = await cloudCsrfToken();
+  const response = await fetch(CLOUD_SYNC_BASE + "/sync/" + encodeURIComponent(owner), {
     method: "PUT",
-    headers: { "Content-Type": "application/json", "X-Studio-Key": credentials.key },
+    credentials: "include",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
     body: JSON.stringify({ data })
   });
   if (!response.ok) throw new Error("HTTP " + response.status);
@@ -4132,10 +4141,10 @@ async function cloudSyncPush() {
 }
 
 async function cloudSyncPull() {
-  const credentials = cloudSyncCredentials();
-  if (!credentials) return;
-  const response = await fetch(CLOUD_SYNC_BASE + "/sync/" + encodeURIComponent(credentials.owner), {
-    headers: { "X-Studio-Key": credentials.key }
+  const owner = cloudSyncOwner();
+  if (!owner) return;
+  const response = await fetch(CLOUD_SYNC_BASE + "/sync/" + encodeURIComponent(owner), {
+    credentials: "include"
   });
   if (!response.ok) throw new Error("HTTP " + response.status);
   const result = await response.json();
