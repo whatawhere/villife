@@ -268,6 +268,7 @@ const settingsText = {
     settings_accent_title: "Акцентный цвет", settings_accent_description: "Выбери цвет для выделения элементов интерфейса.",
     settings_accent_default: "По умолчанию", settings_accent_blue: "Синий", settings_accent_violet: "Фиолетовый",
     settings_accent_pink: "Розовый", settings_accent_green: "Зелёный", settings_accent_orange: "Оранжевый",
+    settings_header_tint: "Цвет шапки", settings_header_tint_description: "Выбери цвет верхней части плеера.",
     settings_saved_tracks: "Треки в библиотеке", settings_saved_playlists: "Плейлисты",
     settings_storage_used: "Занято настройками и данными", settings_import: "Импортировать из Spotify",
     settings_export: "Экспортировать библиотеку",
@@ -313,6 +314,7 @@ const settingsText = {
     settings_accent_title: "Accent color", settings_accent_description: "Choose a color to highlight interface elements.",
     settings_accent_default: "Default", settings_accent_blue: "Blue", settings_accent_violet: "Violet",
     settings_accent_pink: "Pink", settings_accent_green: "Green", settings_accent_orange: "Orange",
+    settings_header_tint: "Header colour", settings_header_tint_description: "Choose the colour of the player header.",
     settings_saved_tracks: "Tracks in library", settings_saved_playlists: "Playlists",
     settings_storage_used: "Space used by settings and data", settings_import: "Import from Spotify",
     settings_export: "Export library",
@@ -902,6 +904,11 @@ function applyTheme() {
   const accent = Object.prototype.hasOwnProperty.call(themeAccentColors, savedAccent) ? savedAccent : "default";
   if (themeAccentColors[accent]) document.documentElement.style.setProperty("--ring", themeAccentColors[accent]);
   else document.documentElement.style.removeProperty("--ring");
+  const tint = localStorage.getItem("velo_header_tint");
+  if (tint && /^#[0-9a-fA-F]{6}$/.test(tint)) document.documentElement.style.setProperty("--header-tint", tint);
+  else document.documentElement.style.removeProperty("--header-tint");
+  const tintInput = $("settings-header-tint");
+  if (tintInput) tintInput.value = tint && /^#[0-9a-fA-F]{6}$/.test(tint) ? tint : "#c88050";
   document.querySelectorAll("[data-theme-accent-choice]").forEach(button => {
     const selected = button.dataset.themeAccentChoice === accent;
     button.classList.toggle("selected", selected);
@@ -4023,6 +4030,15 @@ document.querySelectorAll("[data-theme-accent-choice]").forEach(button => {
     applyTheme();
   });
 });
+
+const headerTintInput = $("settings-header-tint");
+if (headerTintInput) {
+  headerTintInput.addEventListener("input", () => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(headerTintInput.value)) return;
+    localStorage.setItem("velo_header_tint", headerTintInput.value);
+    document.documentElement.style.setProperty("--header-tint", headerTintInput.value);
+  });
+}
 
 $("settings-export").addEventListener("click", exportLibrary);
 if ($("sidebar-login")) {
