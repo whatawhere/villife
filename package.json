@@ -1,0 +1,7 @@
+{
+  "name": "villife-worker",
+  "private": true,
+  "dependencies": {
+    "@noble/hashes": "1.8.0"
+  }
+}
