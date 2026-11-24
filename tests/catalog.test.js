@@ -110,7 +110,7 @@ Deno.test("studio upload stores file in r2", async () => {
     MEDIA: { put: async (key, value, options) => stored.push({ key, size: value.size, options }) }
   };
   const form = new FormData();
-  form.set("file", new File([new Uint8Array([1, 2, 3])], "song.mp3", { type: "audio/mpeg" }));
+  form.set("file", new File([new Uint8Array([0x49, 0x44, 0x33, 4, 5])], "song.mp3", { type: "audio/mpeg" }));
   const response = await worker.fetch(request("/studio/upload", {
     method: "POST",
     headers: { "X-Studio-Key": "studio-secret" },
@@ -197,7 +197,7 @@ Deno.test("studio uploads cover", async () => {
   const stored = [];
   const env = { DB: makeDb(() => [], []), STUDIO_SECRET: "studio-secret", MEDIA: { put: async (key) => stored.push(key) } };
   const form = new FormData();
-  form.set("file", new File([new Uint8Array([1, 2])], "cover.jpg", { type: "image/jpeg" }));
+  form.set("file", new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0])], "cover.jpg", { type: "image/jpeg" }));
   const response = await worker.fetch(request("/studio/upload-cover", { method: "POST", headers: { "X-Studio-Key": "studio-secret" }, body: form }), env);
   const data = await response.json();
   check(/^covers\/[a-f0-9-]+\.jpg$/.test(data.key), "cover key");
@@ -282,42 +282,15 @@ Deno.test("auth rejects wrong password", async () => {
   check(response.status === 401, "wrong password");
 });
 
-Deno.test("email code login works in debug mode", async () => {
-  let codeRow = null;
-  let user = null;
-  const env = { AUTH_SECRET: "test-secret", EMAIL_DEBUG: "1", DB: makeDb((sql, params) => {
-    if (sql.startsWith("INSERT INTO email_codes")) {
-      codeRow = { hash: params[1], expires: params[2] };
-      return [];
-    }
-    if (sql.startsWith("SELECT hash, expires FROM email_codes")) return codeRow ? [codeRow] : [];
-    if (sql.startsWith("DELETE FROM email_codes")) {
-      codeRow = null;
-      return [];
-    }
-    if (sql.startsWith("SELECT id, email, display_name, role, token_version FROM users")) return user ? [user] : [];
-    if (sql.startsWith("INSERT INTO users")) {
-      user = { id: params[0], email: params[1], display_name: params[2], role: "user", token_version: 0 };
-      return [];
-    }
-    return [];
-  }, []) };
+Deno.test("email code requires configured delivery", async () => {
+  const env = { AUTH_SECRET: "test-secret", DB: makeDb(() => [], []) };
   const requested = await worker.fetch(request("/auth/email/request", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: "code@villife.test" })
   }), env);
-  const challenge = await requested.json();
-  check(requested.status === 200 && /^\d{6}$/.test(challenge.devCode), "code issued");
-  const verified = await worker.fetch(request("/auth/email/verify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "code@villife.test", code: challenge.devCode })
-  }), env);
-  const result = await verified.json();
-  check(verified.status === 200 && result.token, "email token");
+  check(requested.status === 503, "email unavailable");
 });
-
 Deno.test("qr login approves from phone", async () => {
   let session = null;
   let user = null;
@@ -364,7 +337,7 @@ Deno.test("qr login approves from phone", async () => {
 
   const status = await worker.fetch(request("/auth/qr/status?session=" + qr.session), env);
   const state = await status.json();
-  check(state.status === "approved" && state.token, "qr status token");
+  check(state.status === "approved" && (status.headers.get("Set-Cookie") || "").includes("villife_session"), "qr status cookie");
 });
 
 Deno.test("catalog recommends tracks by history", async () => {
@@ -419,12 +392,44 @@ Deno.test("catalog sync persists state", async () => {
 Deno.test("catalog upload returns checksum", async () => {
   const env = { DB: makeDb(() => [], []), STUDIO_SECRET: "studio-secret", MEDIA: { put: async () => {} } };
   const form = new FormData();
-  form.set("file", new File([new Uint8Array([1, 2, 3])], "song.mp3", { type: "audio/mpeg" }));
+  form.set("file", new File([new Uint8Array([0x49, 0x44, 0x33, 4, 5])], "song.mp3", { type: "audio/mpeg" }));
   const response = await worker.fetch(request("/studio/upload", { method: "POST", headers: { "X-Studio-Key": "studio-secret" }, body: form }), env);
   const data = await response.json();
   check(/^[a-f0-9]{64}$/.test(data.sha256), "checksum");
 });
 
+Deno.test("cors only allows own origins", async () => {
+  const env = { DB: makeDb(() => [], []) };
+  const allowed = await worker.fetch(request("/artists", { headers: { Origin: "https://villife.hs.vc" } }), env);
+  check(allowed.headers.get("Access-Control-Allow-Origin") === "https://villife.hs.vc", "allowed origin");
+  const denied = await worker.fetch(request("/artists", { headers: { Origin: "https://evil.example" } }), env);
+  check(denied.headers.get("Access-Control-Allow-Origin") === null, "denied origin");
+  check(denied.headers.get("X-Frame-Options") === "DENY", "frame header");
+});
+
+Deno.test("csrf protects browser mutations", async () => {
+  const env = { DB: makeDb(() => [], []), AUTH_SECRET: "secret" };
+  const rejected = await worker.fetch(request("/users/ar-1/follow", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: "https://villife.hs.vc" },
+    body: JSON.stringify({ followerId: "u1" })
+  }), env);
+  check(rejected.status === 403, "csrf rejected");
+  const accepted = await worker.fetch(request("/users/ar-1/follow", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: "https://villife.hs.vc", "X-CSRF-Token": "abc", Cookie: "villife_csrf=abc" },
+    body: JSON.stringify({ followerId: "u1" })
+  }), env);
+  check(accepted.status === 200, "csrf accepted");
+});
+
+Deno.test("upload rejects fake content", async () => {
+  const env = { DB: makeDb(() => [], []), STUDIO_SECRET: "studio-secret", MEDIA: { put: async () => {} } };
+  const form = new FormData();
+  form.set("file", new File([new Uint8Array([1, 2, 3, 4])], "song.mp3", { type: "audio/mpeg" }));
+  const response = await worker.fetch(request("/studio/upload", { method: "POST", headers: { "X-Studio-Key": "studio-secret" }, body: form }), env);
+  check(response.status === 400, "fake audio rejected");
+});
 Deno.test("catalog rejects invalid status", async () => {
   const env = { DB: makeDb(() => [{ id: "rel-1" }], []), ADMIN_SECRET: "secret" };
   const response = await worker.fetch(request("/releases/rel-1/status", {
