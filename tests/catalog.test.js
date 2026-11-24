@@ -158,7 +158,7 @@ Deno.test("catalog applies sort and order", async () => {
   const env = { DB: makeDb(() => [], captured) };
   await worker.fetch(request("/tracks?sort=duration&order=desc"), env);
   const query = captured.find(item => item.sql.startsWith("SELECT t.id"));
-  check(query.sql.includes("ORDER BY duration DESC"), "sort clause");
+  check(query.sql.includes("ORDER BY t.duration DESC"), "sort clause");
 });
 
 Deno.test("catalog imports valid tracks and rejects bad ones", async () => {
