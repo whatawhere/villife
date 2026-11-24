@@ -2,6 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f5f0">
   <meta name="robots" content="noindex, follow">
@@ -35,6 +37,7 @@
     const session = params.get("session") || "";
     const device = params.get("device") || "неизвестного устройства";
     const box = document.getElementById("qr-content");
+    let csrfToken = null;
 
     function escapeHtml(value) {
       return String(value || "").replace(/[&<>"']/g, character => ({
@@ -42,29 +45,48 @@
       }));
     }
 
+    function setText(text) {
+      box.textContent = text;
+    }
+
+    async function getCsrf() {
+      if (csrfToken) return csrfToken;
+      const response = await fetch(API + "/auth/csrf", { credentials: "include" });
+      const data = await response.json();
+      csrfToken = data.token;
+      return csrfToken;
+    }
+
     async function decide(decision) {
-      box.innerHTML = '<p class="qr-result">Отправляем ответ...</p>';
+      setText("Отправляем ответ...");
       try {
+        const token = await getCsrf();
         const response = await fetch(API + "/auth/qr/approve", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + localStorage.getItem("villife_token") },
+          credentials: "include",
+          headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
           body: JSON.stringify({ session, decision })
         });
         if (!response.ok) {
           const data = await response.json().catch(() => ({}));
           throw new Error(data.error || ("HTTP " + response.status));
         }
-        box.innerHTML = '<p class="qr-result">' + (decision === "approve" ? "Вход подтверждён. Можно закрыть страницу." : "Вход отклонён.") + "</p>";
+        setText(decision === "approve" ? "Вход подтверждён. Можно закрыть страницу." : "Вход отклонён.");
       } catch (error) {
-        box.innerHTML = '<p class="qr-result">Ошибка: ' + escapeHtml(error.message) + "</p>";
+        setText("Ошибка: " + error.message);
       }
     }
 
-    if (!session) {
-      box.innerHTML = "<p>Нет данных сессии. Отсканируй QR заново.</p>";
-    } else if (!localStorage.getItem("villife_token")) {
-      box.innerHTML = '<p>Войди в Villife на этом телефоне, чтобы подтвердить вход.</p><div class="qr-actions"><a class="button button-primary" href="/signin/">Войти в аккаунт</a></div>';
-    } else {
+    async function boot() {
+      if (!session) {
+        setText("Нет данных сессии. Отсканируй QR заново.");
+        return;
+      }
+      const me = await fetch(API + "/auth/me", { credentials: "include" });
+      if (!me.ok) {
+        box.innerHTML = '<p>Войди в Villife на этом телефоне, чтобы подтвердить вход.</p><div class="qr-actions"><a class="button button-primary" href="/signin/">Войти в аккаунт</a></div>';
+        return;
+      }
       setTimeout(() => {
         box.innerHTML = '<p>Вы пытаетесь войти с устройства <span class="qr-device">' + escapeHtml(device) + "</span>?</p>" +
           '<div class="qr-actions"><button class="qr-yes" type="button" id="qr-yes">Да</button><button class="qr-no" type="button" id="qr-no">Нет</button></div>';
@@ -72,6 +94,8 @@
         document.getElementById("qr-no").addEventListener("click", () => decide("deny"));
       }, 1000);
     }
+
+    boot();
   </script>
 </body>
 </html>
