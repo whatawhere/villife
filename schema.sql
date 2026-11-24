@@ -124,6 +124,12 @@ CREATE TABLE IF NOT EXISTS follows (
   PRIMARY KEY (follower_id, artist_id)
 );
 
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 0,
+  start INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS email_codes (
   email TEXT PRIMARY KEY,
   hash TEXT NOT NULL,
