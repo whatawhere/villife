@@ -98,10 +98,11 @@ function phrase(value) {
   return "%" + String(value || "").replace(/[%"_]/g, "") + "%";
 }
 
-function sortOrder(url, allowed, fallback) {
+function sortOrder(url, allowed, fallback, prefix) {
   const field = String(url.searchParams.get("sort") || "");
   const direction = String(url.searchParams.get("order") || "").toLowerCase() === "desc" ? "DESC" : "ASC";
-  return (allowed.includes(field) ? field : fallback) + " " + direction;
+  const chosen = allowed.includes(field) ? field : fallback;
+  return (prefix ? prefix + "." + chosen : chosen) + " " + direction;
 }
 
 function toHex(bytes) {
@@ -481,14 +482,14 @@ export default {
 
     if (path === "/albums" && request.method === "GET") {
       const artist = url.searchParams.get("artist") || "";
-      const rows = await all(env, "SELECT a.id, a.title, a.artwork_url, a.release_date, ar.name AS artist FROM albums a JOIN artists ar ON ar.id = a.artist_id WHERE (a.title LIKE ? OR ar.name LIKE ?) AND (? = '' OR ar.id = ?) AND EXISTS (SELECT 1 FROM releases r WHERE r.album_id = a.id AND r.status = 'published') ORDER BY " + sortOrder(url, ["title", "release_date"], "release_date") + " LIMIT ? OFFSET ?", [phrase(q), phrase(q), artist, artist, page.limit, page.offset]);
+      const rows = await all(env, "SELECT a.id, a.title, a.artwork_url, a.release_date, ar.name AS artist FROM albums a JOIN artists ar ON ar.id = a.artist_id WHERE (a.title LIKE ? OR ar.name LIKE ?) AND (? = '' OR ar.id = ?) AND EXISTS (SELECT 1 FROM releases r WHERE r.album_id = a.id AND r.status = 'published') ORDER BY " + sortOrder(url, ["title", "release_date"], "release_date", "a") + " LIMIT ? OFFSET ?", [phrase(q), phrase(q), artist, artist, page.limit, page.offset]);
       return reply(rows);
     }
 
     if (path === "/tracks" && request.method === "GET") {
       const album = url.searchParams.get("album") || "";
       const artist = url.searchParams.get("artist") || "";
-      const rows = await all(env, "SELECT t.id, t.title, t.duration, t.artwork_url, ar.name AS artist, al.title AS album FROM tracks t JOIN artists ar ON ar.id = t.artist_id LEFT JOIN albums al ON al.id = t.album_id WHERE (t.title LIKE ? OR ar.name LIKE ?) AND (? = '' OR t.album_id = ?) AND (? = '' OR t.artist_id = ?) AND " + publishedTrack("t") + " ORDER BY " + sortOrder(url, ["title", "duration"], "title") + " LIMIT ? OFFSET ?", [phrase(q), phrase(q), album, album, artist, artist, page.limit, page.offset]);
+      const rows = await all(env, "SELECT t.id, t.title, t.duration, t.artwork_url, ar.name AS artist, al.title AS album FROM tracks t JOIN artists ar ON ar.id = t.artist_id LEFT JOIN albums al ON al.id = t.album_id WHERE (t.title LIKE ? OR ar.name LIKE ?) AND (? = '' OR t.album_id = ?) AND (? = '' OR t.artist_id = ?) AND " + publishedTrack("t") + " ORDER BY " + sortOrder(url, ["title", "duration"], "title", "t") + " LIMIT ? OFFSET ?", [phrase(q), phrase(q), album, album, artist, artist, page.limit, page.offset]);
       return reply(rows);
     }
 
@@ -691,7 +692,7 @@ export default {
 
     if (path === "/studio/upload" && request.method === "POST") {
       if (!(await hasStudioAccess(request, env))) return reply({ error: "forbidden" }, 403);
-      const form = await request.formData();
+      let form; try { form = await request.formData(); } catch (error) { return reply({ error: "invalid form" }, 400); }
       const file = form.get("file");
       if (!file || typeof file === "string") return reply({ error: "no file" }, 400);
       if (file.size > 52428800) return reply({ error: "file too large" }, 400);
@@ -707,7 +708,7 @@ export default {
 
     if (path === "/studio/upload-cover" && request.method === "POST") {
       if (!(await hasStudioAccess(request, env))) return reply({ error: "forbidden" }, 403);
-      const form = await request.formData();
+      let form; try { form = await request.formData(); } catch (error) { return reply({ error: "invalid form" }, 400); }
       const file = form.get("file");
       if (!file || typeof file === "string") return reply({ error: "no file" }, 400);
       if (file.size > 10485760) return reply({ error: "file too large" }, 400);
