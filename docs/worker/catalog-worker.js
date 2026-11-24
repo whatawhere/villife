@@ -205,6 +205,7 @@ async function smtpSend(env, to, subject, text) {
     await writer.write(encoder.encode(line + "\r\n"));
     const reply = await readResponse();
     const status = reply.slice(0, 3);
+
     if (!/^\d{3} /.test(status)) console.error("smtp unexpected reply", line.split(" ")[0], reply.slice(0, 200));
     return reply;
   };
@@ -223,8 +224,8 @@ async function smtpSend(env, to, subject, text) {
     reply = await command("DATA");
     if (!reply.startsWith("354")) return false;
     const message = [
-      "From: \"Villife <villife@villife.hs.vc>\" <" + env.MAIL_USER + ">",
-      "Reply-To: villife@villife.hs.vc",
+      "From: Villife <" + env.MAIL_USER + ">",
+      "Reply-To: " + env.MAIL_USER,
       "To: " + to,
       "Subject: " + subject,
       "MIME-Version: 1.0",
