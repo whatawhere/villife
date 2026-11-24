@@ -15,7 +15,7 @@ Deno.test("warm returns version header", async () => {
 });
 
 Deno.test("debug reports r2 state", async () => {
-  const response = await worker.fetch(request("/debug"), {});
+  const response = await worker.fetch(request("/debug", { "X-Purge-Key": "test-secret" }), { PURGE_SECRET: "test-secret" });
   const data = await response.json();
   check(data.version === "7", "debug version");
   check(data.r2 === false, "debug r2");
