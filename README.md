@@ -26,7 +26,7 @@
 
 Villife is a player first: find a track, throw it into the queue, save it, and keep listening. Shuffle, repeat, crossfade and a sleep timer are there too.
 
-There are profiles now — an avatar, a few listening stats, public playlists and the artists you follow. Sign in with Microsoft on the site, link the desktop app with a one-time code, and the avatar follows you between the site, the web player and the app.
+There are profiles now — an avatar, a few listening stats, public playlists and the artists you follow. Sign in with Microsoft, a code from your email, a password, or a QR code confirmed on your phone. Session cookies and one-time activation codes keep the profile in sync between the site, the web player and the app.
 
 `web.villife.hs.vc` is the same app in the browser. You can play tracks straight from the website now.
 
@@ -39,7 +39,7 @@ Search and audio go through a Cloudflare Worker. Covers and audio chunks are cac
 - **Website** — https://villife.hs.vc/
 - **Web player** — https://web.villife.hs.vc/
 
-The web player opens with a Spotify-style sign-in screen. After signing in it shows the same player interface as the desktop app.
+The web player has the same player interface as the desktop app. Sign in there with Microsoft, email code, password, or QR.
 
 ## Install
 
@@ -63,30 +63,30 @@ You get `Villife.exe` in the project root.
 
 ```text
 .
+├── docs/                   GitHub Pages site (villife.hs.vc and web.villife.hs.vc)
+│   ├── activate/ signin/ qr/ status/   site pages
+│   ├── css/ js/ db/ assets/ fonts/    site assets and database schema
+│   ├── worker/             Cloudflare Workers (search, stream, catalog and auth API)
+│   ├── desktop/ scripts/   Electron shell and helper scripts
+│   └── index.html          web player entry point
 ├── src/                    Windows app: window, local server, C# logic
 │   ├── villife.cs          window, local HTTP server, provider calls
 │   ├── discord.cs          Discord Rich Presence
 │   ├── index.html          interface markup
-│   ├── css/app.css         styles
-│   └── js/app.js           player logic
-├── desktop/                Electron shell for macOS and Linux builds
-├── activate/               device activation page
-├── signin/                 Microsoft sign-in page
-├── css/ js/ fonts/         assets served by the web root
-├── search-worker.js        Cloudflare Worker (search, stream and image proxy)
+│   └── css/app.css         styles
 ├── .github/workflows/      release pipeline
-├── installer.iss           Inno Setup script
-├── villife.ico             icon
-└── README.md
+├── runtime/                local build artifacts (not in git)
+├── README.md
+└── villife.ico
 ```
 
 ## About the data
 
-Library, favorites, history and settings stay in the local WebView2 profile (or browser storage in the web player). No account is required to listen. The profile is local as well; Microsoft OAuth is only used to identify the account, and the desktop app receives it through a one-time activation code.
+Library, favorites, history and settings stay in the local WebView2 profile (or browser storage in the web player). No account is required to listen. Sign-in uses HttpOnly session cookies; the API keeps secrets on the server, hashes passwords with Argon2id, and protects admin actions with TOTP. The desktop app receives the profile through a one-time activation code.
 
 ## Questions
 
-**Do I need a Spotify account?** No. Spotify is used only for public track metadata, not for playback.
+**Do I need an account?** No. Listening and the local library work without signing in. An account is only needed for cloud sync and Studio.
 
 **Where is my library?** In the local WebView2 profile. There is a JSON export if you want a portable copy.
 
