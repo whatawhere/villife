@@ -6,7 +6,7 @@
 <title>Villife</title>
 <link rel="icon" type="image/x-icon" href="/villife.ico">
   <link rel="manifest" href="/manifest.webmanifest">
-<link rel="stylesheet" href="/css/app.css?v=187">
+<link rel="stylesheet" href="/css/app.css?v=188">
 <style>
   .web-login-overlay { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(0 0 0 / 68%); backdrop-filter: blur(8px); }
   .web-login-overlay[hidden] { display: none !important; }
@@ -60,7 +60,6 @@
     <div class="blob blob1"></div>
     <div class="blob blob2"></div>
     <div class="blob blob3"></div>
-    <div class="welcome-grid"></div>
   </div>
   <div class="welcome-content welcome-anim">
     <div class="welcome-mark" aria-hidden="true"></div>
@@ -78,8 +77,8 @@
     </div>
     <div class="welcome-auth" id="welcome-auth" hidden>
       <div class="welcome-social">
-        <button class="welcome-social-btn" type="button" id="welcome-microsoft">Войти через Microsoft</button>
-        <button class="welcome-social-btn" type="button" id="welcome-gmail">Войти через Gmail</button>
+        <button class="welcome-social-btn" type="button" id="welcome-microsoft" data-social="microsoft">Войти через Microsoft</button>
+        <button class="welcome-social-btn" type="button" id="welcome-gmail" data-social="gmail">Войти через Gmail</button>
       </div>
       <div class="welcome-divider">или</div>
       <input class="welcome-input" id="welcome-identity" type="text" placeholder="Почта или юзернейм" autocomplete="username">
