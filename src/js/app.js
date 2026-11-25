@@ -3881,14 +3881,14 @@ function renderUserProfile() {
     emptyPlaylists: "No public playlists yet",
     emptyTop: "Play a few tracks and your top artists will show up here",
     emptyFollowing: "Artists you like will appear here as you save their music",
-    artist: "Artist", changePhoto: "Change photo", noProfile: "Your profile is ready when you are"
+    artist: "Artist", changePhoto: "Change photo", noProfile: "Your profile is ready when you are", signOut: "Sign out"
   } : {
     title: "Профиль", edit: "Редактировать профиль", settings: "Настройки", more: "Ещё действия", playlists: "Открытые плейлисты",
     top: "Топ исполнителей этого месяца", topSub: "Видны только тебе", following: "Уже подписаны",
     emptyPlaylists: "Открытых плейлистов пока нет",
     emptyTop: "Послушай треки — и здесь появятся твои исполнители",
     emptyFollowing: "Исполнители появятся здесь, когда ты добавишь их музыку в избранное",
-    artist: "Исполнитель", changePhoto: "Сменить фото", noProfile: "Расскажи немного о себе"
+    artist: "Исполнитель", changePhoto: "Сменить фото", noProfile: "Расскажи немного о себе", signOut: "Выйти из аккаунта"
   };
   const shownName = [account && account.name, account && account.username]
     .map(value => String(value || "").trim())
@@ -3915,6 +3915,7 @@ function renderUserProfile() {
     ? profileCount(savedPlaylists.length, ["public playlist", "public playlists", "public playlists"]) + " · " + profileCount(artists.length, ["follow", "follows", "follows"])
     : profileCount(savedPlaylists.length, ["открытый плейлист", "открытых плейлиста", "открытых плейлистов"]) + " · " + profileCount(artists.length, ["подписка", "подписки", "подписок"]);
   $("profile-edit").textContent = words.edit;
+  $("profile-signout").textContent = words.signOut;
   $("profile-more").setAttribute("aria-label", words.more);
   $("profile-settings").setAttribute("aria-label", words.settings);
   $("profile-top-title").textContent = words.top;
@@ -3966,6 +3967,7 @@ function openAccountSettings() {
 $("about-account-edit").addEventListener("click", openAccountSettings);
 
 $("profile-edit").addEventListener("click", openAccountSettings);
+$("profile-signout").addEventListener("click", () => villifeSignOut());
 $("profile-settings").addEventListener("click", () => showView("settings"));
 $("profile-avatar-trigger").addEventListener("click", () => $("profile-avatar-file").click());
 $("profile-avatar-file").addEventListener("change", async event => {
@@ -5286,6 +5288,30 @@ async function vlfSyncCsrf() {
   vlfCsrfTokenValue = result.token;
   return vlfCsrfTokenValue;
 }
+
+async function villifeSignOut() {
+  if (vlfSyncTimer) {
+    clearInterval(vlfSyncTimer);
+    vlfSyncTimer = null;
+  }
+  try {
+    await fetch(VLF_SYNC_API + "/auth/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: { "X-CSRF-Token": await vlfSyncCsrf() }
+    });
+  } catch (error) {
+  }
+  vlfSyncUser = null;
+  vlfCsrfTokenValue = "";
+  localStorage.removeItem("velo_account");
+  localStorage.setItem("villife_session", "inactive");
+  localStorage.removeItem("villife_social");
+  localStorage.removeItem("villife_sync_updated");
+  if (typeof renderAccount === "function") renderAccount();
+  location.reload();
+}
+window.villifeSignOut = villifeSignOut;
 
 function vlfSyncData() {
   return {
