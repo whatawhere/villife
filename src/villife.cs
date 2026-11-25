@@ -2176,6 +2176,9 @@ namespace Villife
                             case "open-activate":
                                 OpenExternal("https://web.villife.hs.vc/activate/");
                                 return;
+                            case "open-signin":
+                                OpenExternal("https://web.villife.hs.vc/signin/?next=/activate/");
+                                return;
                             case "drag-start":
                                 if (fullscreenActive) return;
                                 nativeDragStarted = false;
