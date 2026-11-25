@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using Microsoft.Web.WebView2.WinForms;
 
 namespace Villife
@@ -81,10 +82,26 @@ namespace Villife
         }
 
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             wwwPath = ResolveWebRoot();
+            RegisterProtocol();
+
+            string pendingProfile = null;
+            bool pendingSignout = false;
+            foreach (var arg in args)
+            {
+                if (string.IsNullOrEmpty(arg) || !arg.StartsWith("villife://", StringComparison.OrdinalIgnoreCase)) continue;
+                if (arg.StartsWith("villife://signout", StringComparison.OrdinalIgnoreCase))
+                {
+                    pendingSignout = true;
+                    continue;
+                }
+                pendingProfile = ProfileFromActivation(arg);
+                break;
+            }
+            if (pendingProfile != null && ForwardProfile(pendingProfile)) return;
 
             string browserMessage;
             if (!EnsureBrowser(out browserMessage))
@@ -102,7 +119,86 @@ namespace Villife
                 return;
             }
             mainForm = new MainForm(port);
+            if (pendingSignout)
+            {
+                mainForm.Load += (sender, e) => mainForm.SignOut();
+            }
+            else if (pendingProfile != null)
+            {
+                mainForm.Load += (sender, e) => mainForm.SyncProfile(pendingProfile);
+            }
             Application.Run(mainForm);
+        }
+
+        static void RegisterProtocol()
+        {
+            try
+            {
+                string exe = Application.ExecutablePath;
+                using (var root = Registry.CurrentUser.CreateSubKey("Software\\Classes\\villife"))
+                {
+                    root.SetValue("", "URL:Villife Protocol");
+                    root.SetValue("URL Protocol", "");
+                    using (var icon = root.CreateSubKey("DefaultIcon"))
+                    {
+                        icon.SetValue("", "\"" + exe + "\",0");
+                    }
+                    using (var command = root.CreateSubKey("shell\\open\\command"))
+                    {
+                        command.SetValue("", "\"" + exe + "\" \"%1\"");
+                    }
+                }
+            }
+            catch (Exception error)
+            {
+                Trace.TraceError("Could not register the villife protocol: " + error);
+            }
+        }
+
+        static string ProfileFromActivation(string url)
+        {
+            try
+            {
+                var query = new Uri(url).Query.TrimStart('?');
+                foreach (var part in query.Split('&'))
+                {
+                    var pair = part.Split(new[] { '=' }, 2);
+                    if (pair.Length != 2 || !pair[0].Equals("data", StringComparison.OrdinalIgnoreCase)) continue;
+                    var data = Uri.UnescapeDataString(pair[1]).Replace("-", "+").Replace("_", "/");
+                    data += new string('=', (4 - data.Length % 4) % 4);
+                    var json = Encoding.UTF8.GetString(Convert.FromBase64String(data));
+                    return IsFreshProfile(json) ? json : null;
+                }
+            }
+            catch (Exception error)
+            {
+                Trace.TraceError("Could not read the Villife activation link: " + error);
+            }
+            return null;
+        }
+
+        static bool ForwardProfile(string json)
+        {
+            var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(json))
+                .Replace("+", "-").Replace("/", "_").Replace("=", "");
+            for (int p = 8080; p < 8090; p++)
+            {
+                try
+                {
+                    var request = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:" + p + "/api/sync-profile?data=" + data);
+                    request.Timeout = 700;
+                    request.ReadWriteTimeout = 700;
+                    using (var response = (HttpWebResponse)request.GetResponse())
+                    using (var reader = new StreamReader(response.GetResponseStream()))
+                    {
+                        if (reader.ReadToEnd() == "ok") return true;
+                    }
+                }
+                catch
+                {
+                }
+            }
+            return false;
         }
 
         static SecurityProtocolType SecurityPointManagerType()
@@ -2036,6 +2132,7 @@ namespace Villife
         bool miniWindowActive;
         bool nativeDragStarted;
         bool fullscreenActive;
+        volatile bool pageLoaded;
         Rectangle fullscreenBounds;
         bool fullscreenWasTopMost;
         const int WmNcHitTest = 0x0084;
@@ -2127,6 +2224,7 @@ namespace Villife
                 settings.IsStatusBarEnabled = false;
                 web.CoreWebView2.NavigationCompleted += delegate
                 {
+                    pageLoaded = true;
                     try { BeginInvoke((MethodInvoker)NotifyMaximizedState); }
                     catch (Exception error) { Trace.TraceError("Maximized sync failed: " + error); }
                 };
@@ -2727,21 +2825,53 @@ namespace Villife
             }
         }
 
-        public void SyncProfile(string json)
+        void RunScriptWhenReady(string script)
         {
             if (web == null || web.CoreWebView2 == null) return;
+            if (pageLoaded)
+            {
+                web.CoreWebView2.ExecuteScriptAsync(script);
+                return;
+            }
+            System.EventHandler<Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs> handler = null;
+            handler = (sender, args) =>
+            {
+                web.CoreWebView2.NavigationCompleted -= handler;
+                if (args.IsSuccess) web.CoreWebView2.ExecuteScriptAsync(script);
+            };
+            web.CoreWebView2.NavigationCompleted += handler;
+        }
+
+        public void SyncProfile(string json)
+        {
             try
             {
                 BeginInvoke(new Action(() =>
                 {
                     var payload = new JavaScriptSerializer().Serialize(json);
-                    var script = "(function(){try{localStorage.setItem('velo_account', " + payload + "); if (typeof renderAccount === 'function') renderAccount();}catch(e){}})()";
-                    web.CoreWebView2.ExecuteScriptAsync(script);
+                    var script = "(function(){var n=0;var t=setInterval(function(){if(location.protocol==='http:'){clearInterval(t);try{localStorage.setItem('velo_account', " + payload + "); if (typeof renderAccount === 'function') renderAccount();}catch(e){}}else if(++n>50){clearInterval(t);}},150);})()";
+                    RunScriptWhenReady(script);
                 }));
             }
             catch (Exception error)
             {
                 Trace.TraceError("Could not sync profile into the app: " + error);
+            }
+        }
+
+        public void SignOut()
+        {
+            try
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    const string script = "(function(){var n=0;var t=setInterval(function(){if(typeof window.villifeSignOut==='function'){clearInterval(t);window.villifeSignOut();}else if(++n>50){clearInterval(t);}},150);})()";
+                    RunScriptWhenReady(script);
+                }));
+            }
+            catch (Exception error)
+            {
+                Trace.TraceError("Could not sign out of Villife: " + error);
             }
         }
 
