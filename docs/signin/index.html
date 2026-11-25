@@ -118,6 +118,7 @@
             <div class="signup-avatar" id="signin-avatar"></div>
           <strong id="signin-name"></strong>
           <span id="signin-done-text"></span>
+          <button class="button button-primary signup-submit" id="signin-open-app" type="button">Перейти в приложение Villife</button>
           <button class="button button-quiet signup-submit" id="signout" type="button">Sign out</button>
         </div>
         <p class="signup-foot">No account yet? <a href="/signup/">Sign up</a></p>
@@ -196,8 +197,15 @@
       error.textContent = "";
       localStorage.setItem("villife_session", "active");
       villifeShowProfile(profile);
+      if (villifeNext) villifeOpenApp();
     });
 
+    function villifeOpenApp() {
+      const target = villifeNext && villifeNext.startsWith("/") ? villifeNext : "/activate/";
+      sessionStorage.removeItem("villife_next");
+      location.href = target;
+    }
+    document.getElementById("signin-open-app").addEventListener("click", villifeOpenApp);
     document.getElementById("signout").addEventListener("click", () => {
       localStorage.setItem("villife_session", "inactive");
       location.href = "/signin/";
@@ -218,10 +226,7 @@
     villifeMicrosoftCallback().then(result => {
       if (result && result.name) {
         villifeShowProfile(result);
-        if (villifeNext && villifeNext.startsWith("/")) {
-          sessionStorage.removeItem("villife_next");
-          setTimeout(() => { location.href = villifeNext; }, 900);
-        }
+        if (villifeNext) setTimeout(villifeOpenApp, 900);
       } else if (result && result.error) {
         const message = result.error === "state_mismatch"
           ? "Sign-in session expired. Please try again."
@@ -232,7 +237,10 @@
         if (raw && localStorage.getItem("villife_session") !== "inactive") {
           try {
             const profile = JSON.parse(raw);
-            if (profile && profile.name) villifeShowProfile(profile);
+            if (profile && profile.name) {
+              villifeShowProfile(profile);
+              if (villifeNext) setTimeout(villifeOpenApp, 500);
+            }
           } catch (e) {
             localStorage.removeItem("villife_signup");
           }
