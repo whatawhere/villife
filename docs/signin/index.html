@@ -151,6 +151,7 @@
       }
     }
     const villifeNext = new URLSearchParams(location.search).get("next") || sessionStorage.getItem("villife_next") || "";
+    let villifeProfile = null;
     const form = document.getElementById("signin-form");
     const error = document.getElementById("signin-error");
     const done = document.getElementById("signin-done");
@@ -163,6 +164,7 @@
     }
 
     function villifeShowProfile(profile) {
+      villifeProfile = profile;
       auth.classList.add("is-hidden");
       done.classList.add("is-visible");
       const avatar = document.getElementById("signin-avatar");
@@ -201,9 +203,26 @@
     });
 
     function villifeOpenApp() {
-      const target = villifeNext && villifeNext.startsWith("/") ? villifeNext : "/activate/";
       sessionStorage.removeItem("villife_next");
-      location.href = target;
+      if (villifeProfile) {
+        const parts = String(villifeProfile.name || "").trim().split(/\s+/).filter(Boolean);
+        const payload = {
+          name: villifeProfile.name || "",
+          firstName: villifeProfile.firstName || (parts[0] || ""),
+          lastName: villifeProfile.lastName || parts.slice(1).join(" "),
+          username: villifeProfile.username || "",
+          email: villifeProfile.email || "",
+          photo: villifeProfile.photo || "",
+          ts: Date.now()
+        };
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        let binary = "";
+        bytes.forEach(b => { binary += String.fromCharCode(b); });
+        const data = btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        location.href = "villife://open/?data=" + data;
+        return;
+      }
+      location.href = villifeNext && villifeNext.startsWith("/") ? villifeNext : "/activate/";
     }
     document.getElementById("signin-open-app").addEventListener("click", villifeOpenApp);
     document.getElementById("signout").addEventListener("click", () => {
