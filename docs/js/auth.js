@@ -1,3 +1,35 @@
+function villifeProfileKey(profile) {
+  return "villife_profile_" + String((profile && (profile.email || profile.username)) || "").toLowerCase();
+}
+
+function villifeRestoreProfile(profile) {
+  const email = String(profile.email || profile.username || "").toLowerCase();
+  if (!email) return profile;
+  const merged = Object.assign({}, profile);
+  ["villife_signup", "villife_profile_" + email].forEach(key => {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) {}
+    if (!saved || typeof saved !== "object") return;
+    if (String(saved.email || saved.username || "").toLowerCase() !== email) return;
+    if (!merged.photo && saved.photo) merged.photo = saved.photo;
+    if (!merged.tint && saved.tint) merged.tint = saved.tint;
+    if (!merged.birthDate && saved.birthDate) merged.birthDate = saved.birthDate;
+    if (!merged.publicPlaylists && saved.publicPlaylists) merged.publicPlaylists = saved.publicPlaylists;
+    if (!merged.playlists && saved.playlists) merged.playlists = saved.playlists;
+    if (!merged.following && saved.following) merged.following = saved.following;
+    if (!merged.followedArtists && saved.followedArtists) merged.followedArtists = saved.followedArtists;
+  });
+  return merged;
+}
+
+function villifeSaveProfile(profile) {
+  try {
+    localStorage.setItem("villife_signup", JSON.stringify(profile));
+    const key = villifeProfileKey(profile);
+    if (key !== "villife_profile_") localStorage.setItem(key, JSON.stringify(profile));
+  } catch (e) {}
+}
+
 const VILLIFE_CLIENT_ID = "c68beaeb-2b07-4a86-a56f-f40f5a319657";
 const VILLIFE_TENANT = "e2b609df-e29d-42c3-84f2-75e4a9390e74";
 const VILLIFE_REDIRECT = location.origin + "/signin/";
@@ -77,7 +109,7 @@ async function villifeMicrosoftCallback() {
     const tokens = await response.json();
     const claims = villifeDecodeJwt(tokens.id_token);
     if (claims.aud !== VILLIFE_CLIENT_ID || claims.nonce !== nonce) return { error: "invalid_token" };
-    const profile = {
+    let profile = {
       name: claims.name || claims.preferred_username || "Microsoft user",
       username: claims.preferred_username || claims.email || "",
       email: claims.email || claims.preferred_username || "",
@@ -104,7 +136,8 @@ async function villifeMicrosoftCallback() {
         profile.photo = "";
       }
     }
-    localStorage.setItem("villife_signup", JSON.stringify(profile));
+    profile = villifeRestoreProfile(profile);
+    villifeSaveProfile(profile);
     localStorage.setItem("villife_session", "active");
     sessionStorage.removeItem("villife_pkce");
     sessionStorage.removeItem("villife_state");
