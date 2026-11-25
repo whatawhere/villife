@@ -2827,7 +2827,12 @@ namespace Villife
 
         void RunScriptWhenReady(string script)
         {
-            if (web == null || web.CoreWebView2 == null) return;
+            if (web == null) return;
+            if (web.CoreWebView2 == null)
+            {
+                web.CoreWebView2InitializationCompleted += (sender, args) => RunScriptWhenReady(script);
+                return;
+            }
             if (pageLoaded)
             {
                 web.CoreWebView2.ExecuteScriptAsync(script);
