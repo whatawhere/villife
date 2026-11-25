@@ -79,7 +79,7 @@ const homeText = {
 const ht = key => (homeText[lang] && homeText[lang][key]) || homeText.ru[key] || key;
 
 const dict = (() => {
-  const keys = "nav_search nav_library theme theme_light lang_name import import_go cancel import_title import_ph search_ph section_library section_playlists section_tracks album playlist track_count playlist_empty playlist_error empty_results empty_results_sub empty_lib empty_lib_sub welcome_sub copied import_none import_done import_fail processing play_all rename_playlist track_count_label loading_tracks back seek playback_error spotify_full_track_unavailable search_error search_error_sub no_preview tracks playing artist_kicker followers artist_error".split(" ");
+  const keys = "nav_search nav_library theme theme_light lang_name import import_go cancel import_title import_ph search_ph section_library section_playlists section_tracks album playlist track_count playlist_empty playlist_error empty_results empty_results_sub empty_lib empty_lib_sub welcome_sub copied import_none import_done import_fail processing play_all rename_playlist track_count_label loading_tracks back seek playback_error spotify_full_track_unavailable search_error search_error_sub no_preview tracks playing artist_kicker followers artist_error welcome_title welcome_ms welcome_gmail welcome_or welcome_identity_ph welcome_password_ph welcome_code_ph welcome_continue welcome_skip".split(" ");
   const values = {
     ru: [
       "Поиск", "Библиотека", "Тёмная тема", "Светлая тема", "Русский", "Импорт", "Импортировать", "Отмена", "Импорт из Spotify",
@@ -92,7 +92,8 @@ const dict = (() => {
       "Изменить название плейлиста", "треков", "Загружаем треки…", "Назад", "Перемотка",
       "Не удалось запустить воспроизведение", "Не удалось найти полную версию этого трека",
       "Не удалось выполнить поиск", "Проверь подключение к интернету и попробуй ещё раз", "нет превью", "треков", "играет",
-      "Исполнитель", "подписчиков", "Не удалось открыть исполнителя"
+      "Исполнитель", "подписчиков", "Не удалось открыть исполнителя",
+      "Добро пожаловать в Villife!", "Войти через Microsoft", "Войти через Gmail", "или", "Почта или юзернейм", "Пароль", "Код из письма", "Продолжить", "Продолжить без входа"
     ],
     en: [
       "Search", "Library", "Dark theme", "Light theme", "English", "Import", "Import", "Cancel", "Import from Spotify",
@@ -105,7 +106,8 @@ const dict = (() => {
       "Loading tracks…", "Back", "Seek", "Could not start playback",
       "No exact full-length audio match was found", "Search failed", "Check your internet connection and try again",
       "no preview", "tracks", "playing",
-      "Artist", "followers", "Could not open artist"
+      "Artist", "followers", "Could not open artist",
+      "Welcome to Villife!", "Sign in with Microsoft", "Sign in with Gmail", "or", "Email or username", "Password", "Email code", "Continue", "Continue without signing in"
     ]
   };
   return Object.fromEntries(Object.entries(values).map(([language, strings]) => [
@@ -924,6 +926,15 @@ function applyI18n() {
   $("import-text").placeholder = t("import_ph");
   $("import-title").textContent = t("import_title");
   $("welcome-sub").textContent = t("welcome_sub");
+  document.querySelector("#welcome h1").textContent = t("welcome_title");
+  $("welcome-microsoft").textContent = t("welcome_ms");
+  $("welcome-gmail").textContent = t("welcome_gmail");
+  document.querySelector(".welcome-divider").textContent = t("welcome_or");
+  $("welcome-identity").placeholder = t("welcome_identity_ph");
+  $("welcome-password").placeholder = t("welcome_password_ph");
+  $("welcome-code").placeholder = t("welcome_code_ph");
+  $("welcome-continue").textContent = t("welcome_continue");
+  $("welcome-skip").textContent = t("welcome_skip");
   document.querySelectorAll("[data-settings-i18n]").forEach(el => { el.textContent = st(el.dataset.settingsI18n); });
   document.querySelectorAll("[data-settings-placeholder]").forEach(el => {
     el.placeholder = st(el.dataset.settingsPlaceholder);
@@ -5308,6 +5319,7 @@ async function villifeSignOut() {
   localStorage.setItem("villife_session", "inactive");
   localStorage.removeItem("villife_social");
   localStorage.removeItem("villife_sync_updated");
+  localStorage.removeItem("villife_welcome_done");
   if (typeof renderAccount === "function") renderAccount();
   location.reload();
 }
