@@ -929,7 +929,7 @@ html.reduced-motion .wave-backdrop > img { animation-duration: 28s !important; a
 .lyrics-content { position: relative; min-height: 0; overflow-y: auto; padding: 0.5rem 0.5rem 1rem 0; scrollbar-color: rgb(255 255 255 / 0.25) transparent; }
 .lyrics-line { margin: 0 0 1rem; color: rgb(255 255 255 / 0.35); font-size: 1rem; font-weight: 700; line-height: 1.35; letter-spacing: -0.02em; overflow-wrap: anywhere; transition: color 0.45s ease, transform 0.25s ease, opacity 0.7s ease; }
 .lyrics-line.active { color: #fff; transform: translateX(0.2rem); }
-.lyrics-line.is-past { opacity: 0; pointer-events: none; }
+.lyrics-line.is-past { color: rgb(255 255 255 / 0.3); pointer-events: none; }
 .lyrics-line.lyrics-pause, .lyrics-line.lyrics-pause.active { color: rgb(255 255 255 / 0.38); }
 .lyrics-line.lyrics-pause { display: none; align-items: center; gap: 0.45rem; min-height: 1.35em; }
 .lyrics-line.lyrics-pause.active { display: flex; }
