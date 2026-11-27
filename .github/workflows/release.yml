@@ -136,7 +136,6 @@ jobs:
           Copy-Item wv2pkg/lib/net462/Microsoft.Web.WebView2.Core.dll webview2/
           Copy-Item wv2pkg/lib/net462/Microsoft.Web.WebView2.WinForms.dll webview2/
           Copy-Item wv2pkg/build/native/x64/WebView2Loader.dll webview2/
-          Copy-Item wv2pkg/build/native/x86/WebView2Loader.dll webview2/
 
       - name: Fetch .NET Framework reference assemblies
         shell: pwsh
