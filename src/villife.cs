@@ -2254,6 +2254,10 @@ namespace Villife
                         switch (command)
                         {
                             case "minimize":
+                                if (WindowState == FormWindowState.Normal && Bounds.Left > -10000 && Bounds.Width > 0)
+                                {
+                                    lastNormalBounds = Bounds;
+                                }
                                 WindowState = FormWindowState.Minimized;
                                 return;
                             case "maximize":
@@ -3033,10 +3037,18 @@ namespace Villife
                     restoreFixPending = false;
                     if (WindowState == FormWindowState.Normal && lastNormalBounds.Width > 0 && Bounds != lastNormalBounds)
                         Bounds = lastNormalBounds;
+                    if (web != null)
+                    {
+                        var webSize = ((Control)web).Size;
+                        ((Control)web).Size = new Size(webSize.Width + 1, webSize.Height + 1);
+                        ((Control)web).Size = webSize;
+                        ((Control)web).Invalidate();
+                    }
                 });
                 return;
             }
-            lastNormalBounds = Bounds;
+            if (WindowState == FormWindowState.Normal && Bounds.Left > -10000 && Bounds.Width > 0)
+                lastNormalBounds = Bounds;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
