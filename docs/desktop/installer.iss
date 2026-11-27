@@ -29,6 +29,7 @@ Source: "Villife.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Villife.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "villife.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "src\*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs
+Source: "webview2\*"; DestDir: "{app}\webview2"; Flags: ignoreversion recursesubdirs
 Source: "WebView2RuntimeInstaller.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Icons]
