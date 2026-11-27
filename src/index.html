@@ -36,9 +36,6 @@
 
 <div id="welcome">
   <div class="welcome-bg">
-    <div class="blob blob1"></div>
-    <div class="blob blob2"></div>
-    <div class="blob blob3"></div>
   </div>
   <div class="welcome-content welcome-anim">
     <div class="welcome-mark" aria-hidden="true"></div>
@@ -112,7 +109,6 @@
       </button>
     </div>
   </aside>
-  <div class="sidebar-resize" id="sidebar-resize" role="separator" aria-label="Изменить ширину боковой панели" aria-orientation="vertical" aria-valuemin="68" aria-valuemax="360" tabindex="0"></div>
 
   <div class="main">
     <div class="topbar">
@@ -136,6 +132,14 @@
     <div class="content">
       <div class="content-inner">
         <div id="view-search">
+          <section class="home-hero" id="home-hero" hidden>
+            <h1 id="home-hero-title"></h1>
+            <p id="home-hero-sub"></p>
+            <div class="home-hero-actions">
+              <button type="button" class="home-hero-play" id="home-hero-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span id="home-hero-play-label"></span></button>
+            </div>
+            <div class="home-cards" id="home-cards"></div>
+          </section>
           <section class="search-section for-you-home" id="for-you-home" hidden>
             <div class="section-head">
               <h2 data-home-i18n="for_you">Для тебя</h2>
@@ -222,11 +226,21 @@
           </div>
         </section>
         <div id="view-library" style="display:none">
-          <div class="section-head">
+          <div class="section-head" hidden>
             <h2 id="section-title">Библиотека</h2>
             <span class="badge badge-outline" id="section-count" style="display:none">0</span>
           </div>
+          <div class="library-tabs" id="library-tabs" role="tablist">
+            <button type="button" class="library-tab active" data-library-tab="all" role="tab"></button>
+            <button type="button" class="library-tab" data-library-tab="playlists" role="tab"></button>
+            <button type="button" class="library-tab" data-library-tab="artists" role="tab"></button>
+            <button type="button" class="library-tab" data-library-tab="tracks" role="tab"></button>
+          </div>
+          <h2 class="library-heading" id="library-playlists-head"></h2>
           <div class="library-playlists grid" id="library-playlists"></div>
+          <h2 class="library-heading" id="library-artists-head"></h2>
+          <div class="library-artists" id="library-artists"></div>
+          <h2 class="library-heading" id="library-tracks-head"></h2>
           <div class="list" id="library"></div>
           <div class="empty" id="library-empty">
             <div class="empty-icon">
@@ -239,7 +253,6 @@
         <div id="view-favorites" style="display:none">
           <div class="favorites-hero">
             <h1 id="favorites-title" data-home-i18n="favorites_title">Избранные</h1>
-            <p data-home-i18n="favorites_subtitle">Треки, к которым хочется возвращаться.</p>
           </div>
           <button type="button" class="favorites-liked" id="favorites-play-all" hidden>
             <span class="favorites-liked-art" id="favorites-cover-art"></span>
@@ -298,9 +311,18 @@
           </div>
         </div>
         <div id="view-history" style="display:none">
-          <div class="section-head">
-            <h2 data-home-i18n="history_title">История</h2>
+          <header class="page-head" id="history-head">
+            <span class="page-head-art"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5m4-1v5l3 2"/></svg></span>
+            <div class="page-head-copy">
+              <h1 data-home-i18n="history_title">История</h1>
+              <p id="history-count-label"></p>
+            </div>
             <span class="badge badge-outline" id="history-count" hidden>0</span>
+          </header>
+          <div class="page-actions" id="history-actions">
+            <button type="button" class="page-action primary" id="history-play-all"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span id="history-play-label"></span></button>
+            <button type="button" class="page-action round" id="history-shuffle-all" aria-label="Перемешать"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 4 4-4 4"/><path d="M4 17h2.5a5 5 0 0 0 4-2l3-4a5 5 0 0 1 4-2H20"/><path d="m16 13 4 4-4 4"/><path d="M4 7h2.5a5 5 0 0 1 4 2"/></svg></button>
+            <button type="button" class="page-action" id="history-queue-all"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="M17 15v6M14 18h6"/></svg><span id="history-queue-label"></span></button>
           </div>
           <div class="list" id="history-list"></div>
           <div class="empty" id="history-empty">
@@ -356,34 +378,48 @@
           </section>
         </div>
         <div id="view-settings" class="settings-overlay" hidden aria-hidden="true">
-          <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title">
-            <header class="settings-dialog-head">
-              <div class="settings-heading">
-                <svg class="settings-heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 2.7 4 0 .7 2.6a7.7 7.7 0 0 1 1.8 1l2.5-.8 2 3.5-2 1.8a7.7 7.7 0 0 1 0 2.2l2 1.8-2 3.5-2.5-.8a7.7 7.7 0 0 1-1.8 1l-.7 2.6h-4l-.7-2.6a7.7 7.7 0 0 1-1.8-1l-2.5.8-2-3.5 2-1.8a7.7 7.7 0 0 1 0-2.2l-2-1.8 2-3.5 2.5.8a7.7 7.7 0 0 1 1.8-1z"/><circle cx="12" cy="12" r="3"/></svg>
-                <div class="settings-heading-copy">
-                  <span class="settings-heading-brand">VILLIFE</span>
-                  <h1 id="settings-dialog-title" data-settings-i18n="settings_title">Настройки</h1>
-                </div>
-              </div>
-              <button class="btn btn-ghost btn-icon settings-close" id="settings-close" aria-label="Закрыть настройки" title="Закрыть настройки">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
-            </header>
+          <section class="settings-dialog" role="dialog" aria-modal="true" aria-label="Настройки">
+            <button class="btn btn-ghost btn-icon settings-close" id="settings-close" aria-label="Закрыть настройки" title="Закрыть настройки">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
           <div class="settings-layout">
             <nav class="settings-nav" aria-label="Settings sections">
+              <button class="settings-profile" id="settings-profile" type="button">
+                <span class="settings-profile-avatar" id="settings-profile-avatar"></span>
+                <span class="settings-profile-text">
+                  <span class="settings-profile-name" id="settings-profile-name"></span>
+                  <span class="settings-profile-sub" id="settings-profile-sub"></span>
+                </span>
+              </button>
+              <div class="settings-stats">
+                <span class="settings-stats-count" id="settings-stats-count"></span>
+                <span class="settings-stats-bar"><span id="settings-stats-fill"></span></span>
+              </div>
               <label class="settings-search" for="settings-search-input">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
                 <input id="settings-search-input" type="search" autocomplete="off" data-settings-placeholder="settings_search_placeholder" aria-label="Поиск в настройках" placeholder="Поиск в настройках">
               </label>
-              <div class="settings-nav-list">
-                <span class="settings-nav-label" data-settings-i18n="settings_group_general">Параметры</span>
+              <div class="settings-nav-group">
+                <span class="settings-nav-label" data-settings-i18n="settings_group_general">Приложение</span>
+                <div class="settings-nav-list">
               <button class="settings-nav-item active" data-settings-tab="interface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span data-settings-i18n="settings_interface">Интерфейс</span></button>
-              <button class="settings-nav-item" data-settings-tab="collection"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span data-settings-i18n="settings_collection">Импорт и экспорт</span></button>
               <button class="settings-nav-item" data-settings-tab="theme"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg><span data-settings-i18n="settings_theme">Тема</span></button>
-              <button class="settings-nav-item" data-settings-tab="storage"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg><span data-settings-i18n="settings_storage">Хранилище</span></button>
               <button class="settings-nav-item" data-settings-tab="playback"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg><span data-settings-i18n="settings_playback">Воспроизведение</span></button>
+                </div>
+              </div>
+              <div class="settings-nav-group">
+                <span class="settings-nav-label" data-settings-i18n="settings_group_data">Данные</span>
+                <div class="settings-nav-list">
+              <button class="settings-nav-item" data-settings-tab="collection"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span data-settings-i18n="settings_collection">Импорт и экспорт</span></button>
+              <button class="settings-nav-item" data-settings-tab="storage"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/></svg><span data-settings-i18n="settings_storage">Хранилище</span></button>
+                </div>
+              </div>
+              <div class="settings-nav-group">
+                <span class="settings-nav-label" data-settings-i18n="settings_group_other">Прочее</span>
+                <div class="settings-nav-list">
               <button class="settings-nav-item" data-settings-tab="advanced"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10m4 0h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span data-settings-i18n="settings_advanced">Дополнительно</span></button>
               <button class="settings-nav-item" data-settings-tab="about"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 11v5m0-8h.01"/></svg><span data-settings-i18n="settings_about">Об приложении</span></button>
+                </div>
               </div>
             </nav>
             <div class="settings-panel">
@@ -398,6 +434,45 @@
                 <div class="settings-choice-row language-choice-row">
                   <button class="settings-choice" data-language-choice="ru"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20m-10-10a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg>Русский</button>
                   <button class="settings-choice" data-language-choice="en"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20m-10-10a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10"/></svg>English</button>
+                </div>
+                <div class="settings-block">
+                  <h3 class="settings-block-title" data-settings-i18n="pref_dock">Положение панели</h3>
+                  <div class="settings-choice-row">
+                    <button class="settings-choice" type="button" data-pref="dock" data-value="left"><span data-settings-i18n="pref_left">Слева</span></button>
+                    <button class="settings-choice" type="button" data-pref="dock" data-value="right"><span data-settings-i18n="pref_right">Справа</span></button>
+                    <button class="settings-choice" type="button" data-pref="dock" data-value="top"><span data-settings-i18n="pref_top">Сверху</span></button>
+                    <button class="settings-choice" type="button" data-pref="dock" data-value="bottom"><span data-settings-i18n="pref_bottom">Снизу</span></button>
+                  </div>
+                </div>
+                <div class="settings-block">
+                  <h3 class="settings-block-title" data-settings-i18n="pref_density">Плотность списков</h3>
+                  <div class="settings-choice-row">
+                    <button class="settings-choice" type="button" data-pref="density" data-value="comfort"><span data-settings-i18n="pref_comfort">Обычная</span></button>
+                    <button class="settings-choice" type="button" data-pref="density" data-value="compact"><span data-settings-i18n="pref_compact">Компактная</span></button>
+                  </div>
+                </div>
+                <div class="settings-block">
+                  <h3 class="settings-block-title" data-settings-i18n="pref_corners">Скругление</h3>
+                  <div class="settings-choice-row">
+                    <button class="settings-choice" type="button" data-pref="corners" data-value="sharp"><span data-settings-i18n="pref_sharp">Малое</span></button>
+                    <button class="settings-choice" type="button" data-pref="corners" data-value="normal"><span data-settings-i18n="pref_normal">Среднее</span></button>
+                    <button class="settings-choice" type="button" data-pref="corners" data-value="round"><span data-settings-i18n="pref_round">Большое</span></button>
+                  </div>
+                </div>
+                <div class="settings-block">
+                  <h3 class="settings-block-title" data-settings-i18n="pref_text">Размер текста</h3>
+                  <div class="settings-choice-row">
+                    <button class="settings-choice" type="button" data-pref="text" data-value="s"><span data-settings-i18n="pref_s">Мелкий</span></button>
+                    <button class="settings-choice" type="button" data-pref="text" data-value="m"><span data-settings-i18n="pref_m">Обычный</span></button>
+                    <button class="settings-choice" type="button" data-pref="text" data-value="l"><span data-settings-i18n="pref_l">Крупный</span></button>
+                  </div>
+                </div>
+                <div class="settings-block">
+                  <h3 class="settings-block-title" data-settings-i18n="pref_search">Строка поиска</h3>
+                  <div class="settings-choice-row">
+                    <button class="settings-choice" type="button" data-pref="search" data-value="show"><span data-settings-i18n="pref_show">Показывать</span></button>
+                    <button class="settings-choice" type="button" data-pref="search" data-value="hide"><span data-settings-i18n="pref_hide">Скрыть</span></button>
+                  </div>
                 </div>
               </section>
               <section class="settings-section" data-settings-panel="collection">
