@@ -262,6 +262,7 @@ const themeAccentColors = {
 const settingsText = {
   ru: {
     pref_dock: "Положение панели", pref_left: "Слева", pref_right: "Справа", pref_top: "Сверху", pref_bottom: "Снизу", pref_density: "Плотность списков", pref_comfort: "Обычная", pref_compact: "Компактная", pref_corners: "Скругление", pref_sharp: "Малое", pref_normal: "Среднее", pref_round: "Большое", pref_text: "Размер текста", pref_s: "Мелкий", pref_m: "Обычный", pref_l: "Крупный", pref_search: "Строка поиска", pref_show: "Показывать", pref_hide: "Скрыть",
+    bg_title: "Фон приложения", bg_choose: "Выбрать фото", bg_clear: "Убрать фото", bg_dim: "Яркость фото", bg_blur: "Размытие фона", bg_panels: "Непрозрачность панелей",
     settings_title: "Настройки", settings_close: "Закрыть настройки", settings_sections_label: "Разделы настроек", settings_search_placeholder: "Поиск в настройках", settings_search_empty_title: "Ничего не найдено", settings_search_empty_description: "Попробуй другой запрос", settings_group_general: "Приложение", settings_group_data: "Данные", settings_group_other: "Прочее", settings_interface_description: "Выбери язык и настрой вид приложения.", settings_description: "Настройки Villife", settings_interface: "Интерфейс",
     settings_collection: "Импорт и экспорт", settings_collection_description: "Перенеси плейлисты из Spotify и сохрани копию библиотеки.",
     settings_theme: "Тема", settings_storage: "Хранилище", settings_playback: "Воспроизведение",
@@ -309,6 +310,7 @@ const settingsText = {
   },
   en: {
     pref_dock: "Panel position", pref_left: "Left", pref_right: "Right", pref_top: "Top", pref_bottom: "Bottom", pref_density: "List density", pref_comfort: "Comfortable", pref_compact: "Compact", pref_corners: "Corners", pref_sharp: "Small", pref_normal: "Medium", pref_round: "Large", pref_text: "Text size", pref_s: "Small", pref_m: "Default", pref_l: "Large", pref_search: "Search bar", pref_show: "Show", pref_hide: "Hide",
+    bg_title: "App background", bg_choose: "Choose photo", bg_clear: "Remove photo", bg_dim: "Photo brightness", bg_blur: "Background blur", bg_panels: "Panel opacity",
     settings_title: "Settings", settings_close: "Close settings", settings_sections_label: "Settings sections", settings_search_placeholder: "Search settings", settings_search_empty_title: "No settings found", settings_search_empty_description: "Try a different search", settings_group_general: "App", settings_group_data: "Data", settings_group_other: "Other", settings_interface_description: "Choose a language and adjust how the app looks.", settings_description: "Villife settings", settings_interface: "Interface",
     settings_collection: "Import & export", settings_collection_description: "Import tracks from Spotify and keep a backup of your library.",
     settings_theme: "Theme", settings_storage: "Storage", settings_playback: "Playback",
@@ -852,6 +854,79 @@ function openAppConfirm(message) {
 
 let themeFadeTimer = 0;
 
+const BG_DEFAULTS = { dim: 40, blur: 0, panels: 92 };
+
+function applyBackground() {
+  const root = document.documentElement;
+  const image = localStorage.getItem("velo_bg_image");
+  const read = (key, fallback) => {
+    const value = Number(localStorage.getItem("velo_bg_" + key));
+    return Number.isFinite(value) && localStorage.getItem("velo_bg_" + key) !== null ? value : fallback;
+  };
+  const dim = read("dim", BG_DEFAULTS.dim);
+  const blur = read("blur", BG_DEFAULTS.blur);
+  const panels = read("panels", BG_DEFAULTS.panels);
+  const layer = $("user-bg");
+  layer.style.backgroundImage = image ? "url(" + image + ")" : "none";
+  root.classList.toggle("has-bg", Boolean(image));
+  root.style.setProperty("--bg-opacity", String(dim / 100));
+  root.style.setProperty("--bg-blur", blur + "px");
+  root.style.setProperty("--panel-alpha", String(panels / 100));
+  [["bg-dim", dim], ["bg-blur", blur], ["bg-panels", panels]].forEach(pair => {
+    const input = $(pair[0]);
+    if (!input) return;
+    input.value = String(pair[1]);
+    const span = Number(input.max) - Number(input.min);
+    input.style.setProperty("--value", Math.round((pair[1] - Number(input.min)) / span * 100) + "%");
+    $(pair[0] + "-value").textContent = pair[0] === "bg-blur" ? pair[1] + "px" : pair[1] + "%";
+  });
+  $("bg-preview").style.backgroundImage = image ? "url(" + image + ")" : "none";
+  $("bg-preview").classList.toggle("has-image", Boolean(image));
+  $("bg-clear").disabled = !image;
+}
+
+function loadBackgroundFile(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    const scale = Math.min(1, 1920 / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    try {
+      localStorage.setItem("velo_bg_image", canvas.toDataURL("image/jpeg", 0.82));
+    } catch (error) {
+      toast(lang === "en" ? "The photo is too large to save" : "Фото слишком большое, выбери поменьше");
+      return;
+    }
+    applyBackground();
+  };
+  img.onerror = () => URL.revokeObjectURL(url);
+  img.src = url;
+}
+
+$("bg-file").addEventListener("change", event => {
+  loadBackgroundFile(event.target.files[0]);
+  event.target.value = "";
+});
+
+$("bg-clear").addEventListener("click", () => {
+  localStorage.removeItem("velo_bg_image");
+  applyBackground();
+});
+
+[["bg-dim", "dim"], ["bg-blur", "blur"], ["bg-panels", "panels"]].forEach(pair => {
+  $(pair[0]).addEventListener("input", event => {
+    localStorage.setItem("velo_bg_" + pair[1], event.target.value);
+    applyBackground();
+  });
+});
+
+setInterval(() => { if (typeof renderHomeHero === "function") renderHomeHero(); }, 60000);
+
 const PREF_DEFAULTS = { dock: "left", density: "comfort", corners: "normal", text: "m", search: "show" };
 let dockMoveTimer = null;
 
@@ -894,6 +969,7 @@ function applyPref(name, value, animate) {
 }
 
 function initPrefs() {
+  applyBackground();
   Object.keys(PREF_DEFAULTS).forEach(name => applyPref(name, readPref(name), false));
 }
 
@@ -1542,7 +1618,11 @@ function homeHeading() {
   const part = hour >= 5 && hour < 12 ? 0 : hour >= 12 && hour < 18 ? 1 : hour >= 18 && hour < 23 ? 2 : 3;
   const ru = ["Доброе утро,", "Добрый день,", "Добрый вечер,", "Доброй ночи,"];
   const en = ["Good morning,", "Good afternoon,", "Good evening,", "Good night,"];
-  return [(lang === "en" ? en : ru)[part] + "<br>" + (lang === "en" ? "this is for" : "это для"), lang === "en" ? "you" : "вас"];
+  const account = loadAccount();
+  const name = account ? String(account.name || account.username || "").trim() : "";
+  const greeting = (lang === "en" ? en : ru)[part];
+  if (name) return [greeting + "<br>", name];
+  return [greeting + "<br>" + (lang === "en" ? "this is for" : "это для"), lang === "en" ? "you" : "вас"];
 }
 
 function homeMosaic(tracks) {
@@ -1557,7 +1637,7 @@ function renderHomeHero() {
   hero.hidden = !visible;
   if (!visible) return;
   const heading = homeHeading();
-  $("home-hero-title").innerHTML = heading[0] + " <span>" + esc(heading[1]) + "</span>";
+  $("home-hero-title").innerHTML = heading[0] + (heading[0].endsWith("<br>") ? "" : " ") + "<span>" + esc(heading[1]) + "</span>";
   $("home-hero-sub").textContent = lang === "en" ? "My taste" : "Мой вкус";
   $("home-hero-play-label").textContent = lang === "en" ? "Play" : "Слушать";
   const cards = [
@@ -1651,7 +1731,7 @@ function renderResults() {
           '<button class="btn btn-ghost btn-icon btn-sm favorite-button favorite-control' + (isFavorite(tr) ? " is-liked" : "") + '" data-favorite="' + i + '" aria-label="' + esc(ht(isFavorite(tr) ? "search_favorite_remove" : "search_favorite_add")) + '" title="' + esc(ht(isFavorite(tr) ? "search_favorite_remove" : "search_favorite_add")) + '">' + favoriteIconSvg() + "</button>" +
           '<button class="btn btn-ghost btn-icon btn-sm not-interested-control' + (isNotInterested(tr) ? " is-not-interested" : "") + '" data-not-interested="' + i + '" aria-label="' + esc(ht(isNotInterested(tr) ? "track_interested_again" : "track_not_interested")) + '" title="' + esc(ht(isNotInterested(tr) ? "track_interested_again" : "track_not_interested")) + '">' + notInterestedIconSvg() + "</button>" +
           '<button class="btn btn-ghost btn-icon btn-sm queue-add-control" data-queue-add="' + i + '" aria-label="' + esc(ht("queue_add")) + '" title="' + esc(ht("queue_add")) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m17 14 4 4-4 4"/></svg></button>' +
-          '<button class="btn btn-ghost btn-icon btn-sm" data-play="' + i + '" aria-label="' + esc(ht("play_track") + " " + tr.title) + '" title="' + esc(ht("play_track")) + '"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>' +
+          '<button class="btn btn-ghost btn-icon btn-sm" data-play="' + i + '" aria-label="' + esc(ht("play_track") + " " + tr.title) + '" title="' + esc(ht("play_track")) + '"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.2 5.4C8 4.7 9.2 4.6 10.2 5.2l8.4 5.4c1 .7 1 2.1 0 2.8l-8.4 5.4c-1 .6-2.2.5-3-.2 1.4-2.4 1.4-10.8 0-13.2z"/></svg></button>' +
           trackMoreButton() +
         "</div>" +
       "</div>";
@@ -2068,7 +2148,7 @@ function renderHistory() {
       '<div class="row-sub">' + artistHtml(track) + '</div></div><span class="row-dur">' + fmt(track.duration) +
       '</span><button class="btn btn-ghost btn-icon btn-sm history-play" data-history-play="' + index +
       '" aria-label="' + esc(ht("play_track")) + '" title="' + esc(ht("play_track")) +
-      '"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>' +
+      '"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.2 5.4C8 4.7 9.2 4.6 10.2 5.2l8.4 5.4c1 .7 1 2.1 0 2.8l-8.4 5.4c-1 .6-2.2.5-3-.2 1.4-2.4 1.4-10.8 0-13.2z"/></svg></button>' +
       trackMoreButton() + '</div>'
   ).join("");
   list.style.display = historyTracks.length ? "" : "none";
@@ -2902,8 +2982,8 @@ function renderPlayer() {
   $("mini-player-artist").textContent = tr.artist || "";
   const miniPlayIcon = $("mini-player-play");
   miniPlayIcon.innerHTML = audio.paused
-    ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'
-    : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.2 5.4C8 4.7 9.2 4.6 10.2 5.2l8.4 5.4c1 .7 1 2.1 0 2.8l-8.4 5.4c-1 .6-2.2.5-3-.2 1.4-2.4 1.4-10.8 0-13.2z"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5.5A1.5 1.5 0 0 1 8.5 4h1A1.5 1.5 0 0 1 11 5.5v13A1.5 1.5 0 0 1 9.5 20h-1A1.5 1.5 0 0 1 7 18.5zM13 5.5A1.5 1.5 0 0 1 14.5 4h1A1.5 1.5 0 0 1 17 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5z"/></svg>';
   miniPlayIcon.setAttribute("aria-label", audio.paused ? "Воспроизвести" : "Пауза");
   setAmbientArtwork(tr.artwork);
   renderNowPlayingTrack(tr);
@@ -2921,8 +3001,8 @@ function renderPlayer() {
     idChip.style.display = "none";
   }
   $("pl-icon").innerHTML = audio.paused
-    ? '<path d="M8 5v14l11-7z"/>'
-    : '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>';
+    ? '<path d="M7.2 5.4C8 4.7 9.2 4.6 10.2 5.2l8.4 5.4c1 .7 1 2.1 0 2.8l-8.4 5.4c-1 .6-2.2.5-3-.2 1.4-2.4 1.4-10.8 0-13.2z"/>'
+    : '<path d="M7 5.5A1.5 1.5 0 0 1 8.5 4h1A1.5 1.5 0 0 1 11 5.5v13A1.5 1.5 0 0 1 9.5 20h-1A1.5 1.5 0 0 1 7 18.5zM13 5.5A1.5 1.5 0 0 1 14.5 4h1A1.5 1.5 0 0 1 17 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5z"/>';
   updateDiscordPresence();
 }
 
