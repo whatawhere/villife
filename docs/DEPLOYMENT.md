@@ -6,7 +6,7 @@
 2. Прогнать тесты: `deno test --no-config --allow-env --allow-net tests/`.
 3. Прогнать интеграционные тесты: `VILLIFE_LIVE=1 deno test --no-config --allow-env --allow-net tests/live.test.js`.
 4. Залить в staging: `deno run -A npm:wrangler@3 deploy --env staging`.
-5. Проверить staging: `/warm`, `/search?q=test`, `/debug`.
+5. Проверить staging: `/warm`, `/search?q=villife`, `/debug`.
 6. Залить в production: `deno run -A npm:wrangler@3 deploy`.
 7. Проверить production и страницу `/status/`.
 8. Собрать десктопные сборки через CI, проверить установку и удаление.
