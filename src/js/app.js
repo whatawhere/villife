@@ -2,7 +2,7 @@ const homeText = {
   ru: {
     for_you: "Для тебя", for_you_based: "Подборка из избранных треков",
     discover_recent: "Недавно слушали", search_home_title: "Найди музыку", search_home_subtitle: "Начни вводить название трека или исполнителя.",
-    favorites_title: "Коллекция", favorites_empty_title: "Пока ничего нет", favorites_subtitle: "Всё, что хочется оставить рядом.", favorites_accent: "",
+    favorites_title: "Коллекция", favorites_empty_title: "Пока ничего нет", favorites_accent: "",
     favorites_liked: "Мне нравится", favorites_kicker: "Твоя музыка", favorites_artists_title: "Исполнители",
     favorites_playlists_title: "Плейлисты", favorites_tab_saved: "Созданные",
     favorites_tab_liked: "Сохранённые", favorites_playlists_empty: "Не добавлено",
@@ -40,7 +40,7 @@ const homeText = {
   en: {
     for_you: "For you", for_you_based: "A mix from your favorites",
     discover_recent: "Recently played", search_home_title: "Find music", search_home_subtitle: "Start typing a track or artist.",
-    favorites_title: "Collection", favorites_empty_title: "Nothing here yet", favorites_subtitle: "The music you want to keep close.", favorites_accent: "",
+    favorites_title: "Collection", favorites_empty_title: "Nothing here yet", favorites_accent: "",
     favorites_liked: "Liked songs", favorites_kicker: "Your music", favorites_artists_title: "Artists",
     favorites_playlists_title: "Playlists", favorites_tab_saved: "Created",
     favorites_tab_liked: "Saved", favorites_playlists_empty: "Nothing added",
@@ -261,7 +261,8 @@ const themeAccentColors = {
 };
 const settingsText = {
   ru: {
-    settings_title: "Настройки", settings_close: "Закрыть настройки", settings_sections_label: "Разделы настроек", settings_search_placeholder: "Поиск в настройках", settings_search_empty_title: "Ничего не найдено", settings_search_empty_description: "Попробуй другой запрос", settings_group_general: "Параметры", settings_interface_description: "Выбери язык и настрой вид приложения.", settings_description: "Настройки Villife", settings_interface: "Интерфейс",
+    pref_dock: "Положение панели", pref_left: "Слева", pref_right: "Справа", pref_top: "Сверху", pref_bottom: "Снизу", pref_density: "Плотность списков", pref_comfort: "Обычная", pref_compact: "Компактная", pref_corners: "Скругление", pref_sharp: "Малое", pref_normal: "Среднее", pref_round: "Большое", pref_text: "Размер текста", pref_s: "Мелкий", pref_m: "Обычный", pref_l: "Крупный", pref_search: "Строка поиска", pref_show: "Показывать", pref_hide: "Скрыть",
+    settings_title: "Настройки", settings_close: "Закрыть настройки", settings_sections_label: "Разделы настроек", settings_search_placeholder: "Поиск в настройках", settings_search_empty_title: "Ничего не найдено", settings_search_empty_description: "Попробуй другой запрос", settings_group_general: "Приложение", settings_group_data: "Данные", settings_group_other: "Прочее", settings_interface_description: "Выбери язык и настрой вид приложения.", settings_description: "Настройки Villife", settings_interface: "Интерфейс",
     settings_collection: "Импорт и экспорт", settings_collection_description: "Перенеси плейлисты из Spotify и сохрани копию библиотеки.",
     settings_theme: "Тема", settings_storage: "Хранилище", settings_playback: "Воспроизведение",
     settings_advanced: "Дополнительно", settings_about: "Об приложении", settings_language_description: "Выбери язык интерфейса Villife.",
@@ -307,7 +308,8 @@ const settingsText = {
     settings_export_error: "Не удалось экспортировать библиотеку"
   },
   en: {
-    settings_title: "Settings", settings_close: "Close settings", settings_sections_label: "Settings sections", settings_search_placeholder: "Search settings", settings_search_empty_title: "No settings found", settings_search_empty_description: "Try a different search", settings_group_general: "Settings", settings_interface_description: "Choose a language and adjust how the app looks.", settings_description: "Villife settings", settings_interface: "Interface",
+    pref_dock: "Panel position", pref_left: "Left", pref_right: "Right", pref_top: "Top", pref_bottom: "Bottom", pref_density: "List density", pref_comfort: "Comfortable", pref_compact: "Compact", pref_corners: "Corners", pref_sharp: "Small", pref_normal: "Medium", pref_round: "Large", pref_text: "Text size", pref_s: "Small", pref_m: "Default", pref_l: "Large", pref_search: "Search bar", pref_show: "Show", pref_hide: "Hide",
+    settings_title: "Settings", settings_close: "Close settings", settings_sections_label: "Settings sections", settings_search_placeholder: "Search settings", settings_search_empty_title: "No settings found", settings_search_empty_description: "Try a different search", settings_group_general: "App", settings_group_data: "Data", settings_group_other: "Other", settings_interface_description: "Choose a language and adjust how the app looks.", settings_description: "Villife settings", settings_interface: "Interface",
     settings_collection: "Import & export", settings_collection_description: "Import tracks from Spotify and keep a backup of your library.",
     settings_theme: "Theme", settings_storage: "Storage", settings_playback: "Playback",
     settings_advanced: "Advanced", settings_about: "About", settings_language_description: "Choose the Villife interface language.",
@@ -655,56 +657,9 @@ function seekAudio(time) {
 document.querySelector(".main").appendChild($("player"));
  document.querySelector(".main").appendChild($("now-playing-view"));
 const sidebar = document.querySelector(".sidebar");
-const sidebarResize = $("sidebar-resize");
-let sidebarResizeStart = null;
-function setSidebarWidth(width, persist) {
-  const collapsed = width < 128;
-  const nextWidth = collapsed ? 68 : Math.max(200, Math.min(360, width));
-  sidebar.style.width = nextWidth + "px";
-  sidebar.classList.toggle("collapsed", collapsed);
-  sidebarResize.setAttribute("aria-valuenow", nextWidth);
-  sidebarResize.setAttribute("aria-valuetext", collapsed ? "Иконки" : nextWidth + " px");
-  if (persist) localStorage.setItem("velo_sidebar_width", String(nextWidth));
-}
-
 function setupSidebarResize() {
-  const savedWidth = parseInt(localStorage.getItem("velo_sidebar_width"), 10);
-  setSidebarWidth(Number.isFinite(savedWidth) ? savedWidth : 240, false);
-
-  sidebarResize.addEventListener("pointerdown", e => {
-    if (e.button !== 0) return;
-    sidebarResizeStart = { x: e.clientX, width: parseInt(sidebarResize.getAttribute("aria-valuenow"), 10) };
-    document.body.classList.add("sidebar-resizing");
-    sidebarResize.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-
-  sidebarResize.addEventListener("pointermove", e => {
-    if (!sidebarResizeStart) return;
-    setSidebarWidth(sidebarResizeStart.width + e.clientX - sidebarResizeStart.x, false);
-  });
-
-  function finishSidebarResize(e) {
-    if (!sidebarResizeStart) return;
-    sidebarResizeStart = null;
-    document.body.classList.remove("sidebar-resizing");
-    setSidebarWidth(parseInt(sidebarResize.getAttribute("aria-valuenow"), 10), true);
-    if (sidebarResize.hasPointerCapture(e.pointerId))
-      sidebarResize.releasePointerCapture(e.pointerId);
-  }
-
-  sidebarResize.addEventListener("pointerup", finishSidebarResize);
-  sidebarResize.addEventListener("pointercancel", finishSidebarResize);
-  sidebarResize.addEventListener("keydown", e => {
-    let width = parseInt(sidebarResize.getAttribute("aria-valuenow"), 10);
-    if (e.key === "ArrowLeft") width = width <= 68 ? 68 : width - 24;
-    else if (e.key === "ArrowRight") width = width < 128 ? 200 : width + 24;
-    else if (e.key === "Home") width = 68;
-    else if (e.key === "End") width = 360;
-    else return;
-    e.preventDefault();
-    setSidebarWidth(width, true);
-  });
+  sidebar.style.width = "68px";
+  sidebar.classList.add("collapsed");
 }
 
 function loadLibrary() {
@@ -895,7 +850,68 @@ function openAppConfirm(message) {
   return new Promise(resolve => { confirmResolver = resolve; });
 }
 
+let themeFadeTimer = 0;
+
+const PREF_DEFAULTS = { dock: "left", density: "comfort", corners: "normal", text: "m", search: "show" };
+let dockMoveTimer = null;
+
+function readPref(name) {
+  const value = localStorage.getItem("velo_pref_" + name);
+  const allowed = Array.from(document.querySelectorAll('[data-pref="' + name + '"]')).map(button => button.dataset.value);
+  return allowed.includes(value) ? value : PREF_DEFAULTS[name];
+}
+
+function moveWithDock(change) {
+  const targets = [".sidebar", "#player", ".topbar", ".content"]
+    .map(selector => document.querySelector(selector))
+    .filter(Boolean);
+  const before = targets.map(element => element.getBoundingClientRect());
+  change();
+  const still = document.documentElement.classList.contains("reduced-motion") ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  targets.forEach((element, index) => {
+    const from = before[index];
+    if (!from.width || !from.height) return;
+    const to = element.getBoundingClientRect();
+    const dx = from.left - to.left;
+    const dy = from.top - to.top;
+    if (!dx && !dy) return;
+    const fade = element.classList.contains("sidebar") || element.classList.contains("content") ? 0.5 : 1;
+    element.animate(
+      still ? [{ opacity: 0 }, { opacity: 1 }] : [{ transform: "translate(" + dx + "px," + dy + "px)", opacity: fade }, { transform: "none", opacity: 1 }],
+      { duration: 320, easing: "cubic-bezier(0.4, 0, 0.2, 1)" }
+    );
+  });
+}
+
+function applyPref(name, value, animate) {
+  const root = document.documentElement;
+  const set = () => { root.dataset[name] = value; };
+  if (name === "dock" && animate) moveWithDock(set); else set();
+  document.querySelectorAll('[data-pref="' + name + '"]').forEach(button => {
+    button.classList.toggle("selected", button.dataset.value === value);
+  });
+}
+
+function initPrefs() {
+  Object.keys(PREF_DEFAULTS).forEach(name => applyPref(name, readPref(name), false));
+}
+
+document.addEventListener("click", event => {
+  const button = event.target.closest("[data-pref]");
+  if (!button) return;
+  localStorage.setItem("velo_pref_" + button.dataset.pref, button.dataset.value);
+  applyPref(button.dataset.pref, button.dataset.value, true);
+});
+
 function applyTheme() {
+  const root = document.documentElement;
+  if (root.dataset.themeReady) {
+    root.classList.add("theme-fade");
+    clearTimeout(themeFadeTimer);
+    themeFadeTimer = setTimeout(() => root.classList.remove("theme-fade"), 300);
+  }
+  root.dataset.themeReady = "1";
   const saved = localStorage.getItem("velo_theme");
   const dark = saved === "dark" || (saved !== "light" && saved !== "system") ||
     (saved === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -984,6 +1000,7 @@ function applyI18n() {
   renderAccount();
   updateSettingsSearch();
   applyTheme();
+  initPrefs();
 }
 
 function updateSection() {
@@ -1089,6 +1106,7 @@ function showView(next) {
   }
   if (next === "wave" && !$("now-playing-view").hidden) setNowPlayingOpen(false);
   closeSettings(false);
+  const previousView = view;
   view = next;
   document.querySelector(".main").classList.toggle("wave-open", next === "wave");
   $("playlist-detail").style.display = "none";
@@ -1118,6 +1136,14 @@ function showView(next) {
   if (next === "queue") renderQueue();
   if (next === "history") renderHistory();
   updateSection();
+  if (previousView !== next) {
+    const entering = $(next === "wave" ? "view-wave" : "view-" + next);
+    if (entering) {
+      entering.classList.remove("view-enter");
+      void entering.offsetWidth;
+      entering.classList.add("view-enter");
+    }
+  }
 }
 
 function openWave(seed) {
@@ -1217,6 +1243,7 @@ function openSettings() {
     return;
   }
   settingsReturnFocus = document.activeElement;
+  renderSettingsProfile();
   overlay.hidden = false;
   overlay.classList.remove("is-closing");
   overlay.setAttribute("aria-hidden", "false");
@@ -1412,7 +1439,6 @@ function favoriteIconSvg() {
   return '<svg class="favorite-heart" viewBox="0 0 32 32" aria-hidden="true">' +
     '<path class="heart-fill" d="' + path + '"/>' +
     '<path class="heart-outline" d="' + path + '"/>' +
-    '<g class="heart-rays"><path d="M16 1.5v3M4.6 5.9l2.1 2.1M27.4 5.9l-2.1 2.1M1.5 16h3M27.5 16h3"/></g>' +
   '</svg>';
 }
 
@@ -1511,7 +1537,47 @@ function setSearchArtwork(track) {
   icon.hidden = true;
 }
 
+function homeHeading() {
+  const hour = new Date().getHours();
+  const part = hour >= 5 && hour < 12 ? 0 : hour >= 12 && hour < 18 ? 1 : hour >= 18 && hour < 23 ? 2 : 3;
+  const ru = ["Доброе утро,", "Добрый день,", "Добрый вечер,", "Доброй ночи,"];
+  const en = ["Good morning,", "Good afternoon,", "Good evening,", "Good night,"];
+  return [(lang === "en" ? en : ru)[part] + "<br>" + (lang === "en" ? "this is for" : "это для"), lang === "en" ? "you" : "вас"];
+}
+
+function homeMosaic(tracks) {
+  const arts = tracks.filter(item => item && item.artwork).slice(0, 4);
+  if (arts.length < 2) return arts.length ? '<img src="' + esc(arts[0].artwork) + '" alt="" draggable="false">' : '<span class="home-card-empty"></span>';
+  return '<span class="home-card-mosaic">' + arts.map(item => '<img src="' + esc(item.artwork) + '" alt="" draggable="false">').join("") + "</span>";
+}
+
+function renderHomeHero() {
+  const hero = $("home-hero");
+  const visible = !lastQuery.trim() && (lib.length || favorites.length || historyTracks.length);
+  hero.hidden = !visible;
+  if (!visible) return;
+  const heading = homeHeading();
+  $("home-hero-title").innerHTML = heading[0] + " <span>" + esc(heading[1]) + "</span>";
+  $("home-hero-sub").textContent = lang === "en" ? "My taste" : "Мой вкус";
+  $("home-hero-play-label").textContent = lang === "en" ? "Play" : "Слушать";
+  const cards = [
+    { id: "wave", title: ht("for_you"), tracks: (favorites.length ? favorites : lib), line: "" },
+    { id: "favorites", title: ht("favorites_title"), tracks: favorites, line: trackCountText(favorites.length) },
+    { id: "history", title: ht("history_title"), tracks: historyTracks, line: trackCountText(historyTracks.length) },
+    { id: "library", title: t("nav_library"), tracks: lib, line: trackCountText(lib.length) }
+  ].filter(card => card.tracks.length);
+  $("home-cards").innerHTML = cards.map(card => {
+    const names = [];
+    card.tracks.forEach(item => { if (item && item.artist && !names.includes(item.artist) && names.length < 4) names.push(item.artist); });
+    return '<button type="button" class="home-card" data-home-card="' + card.id + '">' +
+      '<span class="home-card-art">' + homeMosaic(card.tracks) + "</span>" +
+      "<strong>" + esc(card.title) + "</strong>" +
+      "<small>" + esc(card.id === "wave" ? names.join(", ") : card.line) + "</small></button>";
+  }).join("");
+}
+
 function renderForYouHome() {
+  renderHomeHero();
   const section = $("for-you-home");
   const availableTracks = (favorites.length ? favorites : lib)
     .filter(item => item && !isNotInterested(item));
@@ -1525,13 +1591,13 @@ function renderForYouHome() {
 
 function renderRecentHome() {
   const visible = !lastQuery.trim();
-  const recent = historyTracks.slice(0, 6);
+  const recent = historyTracks.slice(0, 20);
   $("discover-recent").hidden = !visible || !recent.length;
   $("discover-recent-list").innerHTML = recent.map((track, index) =>
     '<button type="button" class="discover-recent-track" data-discover-history="' + index + '">' +
       '<span class="discover-recent-art">' + artHtml(track) + '</span>' +
       '<span class="discover-recent-copy"><strong>' + esc(track.title || "") + '</strong><small>' + esc(track.artist || "") + '</small></span>' +
-      '<span class="discover-recent-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>' +
+      '<span class="discover-recent-time">' + fmt(track.duration) + '</span>' +
     '</button>'
   ).join("");
 }
@@ -1692,6 +1758,77 @@ function uniqueSearchTracks(tracks) {
   return unique.map(item => item.track);
 }
 
+let libraryTab = "all";
+
+function libraryArtists() {
+  const groups = new Map();
+  lib.forEach(track => {
+    const names = Array.isArray(track.artistNames) && track.artistNames.length ? track.artistNames : String(track.artist || "").split(",");
+    names.map(name => String(name || "").trim()).filter(Boolean).forEach(name => {
+      const key = name.toLocaleLowerCase();
+      const group = groups.get(key) || { name, count: 0, track, artistId: names.length === 1 ? track.artistId : null, source: track.source };
+      if (!group.track.artwork && track.artwork) group.track = track;
+      group.count++;
+      groups.set(key, group);
+    });
+  });
+  return Array.from(groups.values()).sort((a, b) => b.count - a.count);
+}
+
+function applyLibraryTab() {
+  const all = libraryTab === "all";
+  const show = {
+    playlists: all || libraryTab === "playlists",
+    artists: all || libraryTab === "artists",
+    tracks: all || libraryTab === "tracks"
+  };
+  const hasPlaylists = savedPlaylists.length > 0;
+  const hasArtists = lib.length > 0;
+  $("library-playlists").style.display = show.playlists && hasPlaylists ? "" : "none";
+  $("library-playlists-head").style.display = show.playlists && hasPlaylists ? "" : "none";
+  $("library-artists").style.display = show.artists && hasArtists ? "" : "none";
+  $("library-artists-head").style.display = show.artists && hasArtists ? "" : "none";
+  $("library").style.display = show.tracks && lib.length ? "" : "none";
+  $("library-tracks-head").style.display = show.tracks && lib.length ? "" : "none";
+  document.querySelectorAll("[data-library-tab]").forEach(button => {
+    button.classList.toggle("active", button.dataset.libraryTab === libraryTab);
+    button.setAttribute("aria-selected", button.dataset.libraryTab === libraryTab ? "true" : "false");
+  });
+}
+
+function renderLibraryTabs() {
+  const names = lang === "en"
+    ? { all: "All", playlists: "Playlists", artists: "Artists", tracks: "Tracks" }
+    : { all: "Все", playlists: "Плейлисты", artists: "Исполнители", tracks: "Треки" };
+  document.querySelectorAll("[data-library-tab]").forEach(button => {
+    button.textContent = names[button.dataset.libraryTab];
+  });
+  $("library-playlists-head").textContent = names.playlists;
+  $("library-artists-head").textContent = names.artists;
+  $("library-tracks-head").textContent = names.tracks;
+  $("library-artists").innerHTML = libraryArtists().slice(0, 24).map(artist =>
+    '<button type="button" class="library-artist" data-library-artist="' + esc(artist.name) + '">' +
+      '<span class="library-artist-art">' + artHtml(artist.track) + "</span>" +
+      "<strong>" + esc(artist.name) + "</strong>" +
+      "<small>" + trackCountText(artist.count) + "</small></button>"
+  ).join("");
+}
+
+document.addEventListener("click", event => {
+  const tab = event.target.closest("[data-library-tab]");
+  if (tab) {
+    libraryTab = tab.dataset.libraryTab;
+    applyLibraryTab();
+    return;
+  }
+  const artist = event.target.closest("[data-library-artist]");
+  if (artist) {
+    const name = artist.dataset.libraryArtist;
+    const match = libraryArtists().find(item => item.name === name);
+    openArtistFromLink({ dataset: { artist: match && match.artistId ? match.artistId : "", artistName: name } });
+  }
+});
+
 function renderLibrary() {
   const box = $("library");
   const empty = $("library-empty");
@@ -1707,13 +1844,17 @@ function renderLibrary() {
       '<div class="tile-sub">' + (playlist.artist ? artistHtml(playlist) : "Spotify") + " · " + trackCountText(trackCount) + "</div>" +
     "</div>";
   }).join("");
+  renderLibraryTabs();
   if (!lib.length && !savedPlaylists.length) {
     box.style.display = "none";
     empty.style.display = "";
+    $("library-tabs").style.display = "none";
+    applyLibraryTab();
     updateSection();
     return;
   }
   empty.style.display = "none";
+  $("library-tabs").style.display = "";
   box.style.display = lib.length ? "" : "none";
   box.innerHTML = lib.map((tr, i) => {
     const playing = isPlaying(tr);
@@ -1733,6 +1874,7 @@ function renderLibrary() {
       "</div>" +
       "</div>";
   }).join("");
+  applyLibraryTab();
   updateSection();
 }
 
@@ -1849,12 +1991,9 @@ function renderFavorites() {
     const link = item.artistId && item.source !== "spotify"
       ? 'data-artist="' + esc(item.artistId) + '"'
       : 'data-artist-name="' + esc(item.name) + '"';
-    const crown = index === 0
-      ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m3 7 3.5 3L12 5l5.5 5L21 7l-1.8 12H4.8L3 7Z"/></svg>'
-      : "";
     return '<button type="button" class="favorite-artist" data-artist-index="' + index + '" ' + link + ">" +
       '<span class="favorite-artist-art">' + image + "</span>" +
-      '<span class="favorite-artist-rank">' + crown + (index + 1) + "</span>" +
+      '<span class="favorite-artist-rank">' + (index + 1) + "</span>" +
       "<strong>" + esc(item.name) + "</strong>" +
       "<small>" + trackCountText(item.count) + "</small></button>";
   }).join("");
@@ -1934,8 +2073,25 @@ function renderHistory() {
   ).join("");
   list.style.display = historyTracks.length ? "" : "none";
   $("history-empty").style.display = historyTracks.length ? "none" : "";
+  $("history-head").style.display = historyTracks.length ? "" : "none";
+  $("history-actions").style.display = historyTracks.length ? "" : "none";
+  $("history-count-label").textContent = trackCountText(historyTracks.length);
+  $("history-play-label").textContent = lang === "en" ? "Play" : "Слушать";
+  $("history-queue-label").textContent = lang === "en" ? "Add to queue" : "В очередь";
   updateSection();
 }
+
+$("history-play-all").addEventListener("click", () => {
+  if (historyTracks.length) playAt(historyTracks.slice(), 0, "history");
+});
+$("history-shuffle-all").addEventListener("click", () => {
+  if (!historyTracks.length) return;
+  const mixed = historyTracks.slice().sort(() => Math.random() - 0.5);
+  playAt(mixed, 0, "history");
+});
+$("history-queue-all").addEventListener("click", () => {
+  historyTracks.slice().reverse().forEach(track => addToQueue(track));
+});
 
 function addToQueue(track) {
   if (!track) return;
@@ -2710,6 +2866,18 @@ function syncTrayStatus(track) {
   window.chrome.webview.postMessage("villife-tray:" + JSON.stringify(payload));
 }
 
+let lastRenderedTrackId = null;
+
+function crossFade(ids) {
+  ids.forEach(id => {
+    const node = $(id);
+    if (!node) return;
+    node.classList.remove("track-swap");
+    void node.offsetWidth;
+    node.classList.add("track-swap");
+  });
+}
+
 function renderPlayer() {
   const pl = $("player");
   if (qIndex < 0 || !queue[qIndex]) {
@@ -2723,6 +2891,10 @@ function renderPlayer() {
   }
   pl.classList.remove("off");
   const tr = queue[qIndex];
+  if (tr.id !== lastRenderedTrackId) {
+    if (lastRenderedTrackId !== null) crossFade(["pl-art", "pl-title", "pl-artist", "mini-player-art", "mini-player-title"]);
+    lastRenderedTrackId = tr.id;
+  }
   syncTrayStatus(tr);
   if (view === "wave") renderWave(tr);
   $("mini-player-art").innerHTML = artHtml(tr);
@@ -3768,6 +3940,13 @@ document.querySelectorAll(".nav-item[data-view]").forEach(item => {
 });
 $("brand-wave").addEventListener("click", () => openWave());
 $("for-you-card").addEventListener("click", () => openWave());
+$("home-hero-play").addEventListener("click", () => openWave());
+$("home-cards").addEventListener("click", event => {
+  const card = event.target.closest("[data-home-card]");
+  if (!card) return;
+  if (card.dataset.homeCard === "wave") openWave();
+  else showView(card.dataset.homeCard);
+});
 $("wave-back").addEventListener("click", () => showView("search"));
 $("wave-find-music").addEventListener("click", () => {
   showView("search");
@@ -3855,6 +4034,26 @@ function favoritesSubtitle(tracks) {
     : minutes + (lang === "en" ? " min" : " мин.");
   return avatar + "<span>" + esc(name ? name + " · " : "") + esc(trackCountText(tracks.length)) + " · " + esc(duration) + "</span>";
 }
+
+function renderSettingsProfile() {
+  const account = loadAccount();
+  const name = account && (account.name || account.username) ? (account.name || account.username) : st("account_no_profile");
+  const avatar = document.getElementById("settings-profile-avatar");
+  if (!avatar) return;
+  avatar.innerHTML = account && account.photo ? '<img src="' + esc(account.photo) + '" alt="">' : esc(account ? accountInitials(account) : "?");
+  document.getElementById("settings-profile-name").textContent = name;
+  document.getElementById("settings-profile-sub").textContent = account && account.email ? account.email : st("account_open");
+  const total = lib.length;
+  document.getElementById("settings-stats-count").textContent = trackCountText(total);
+  document.getElementById("settings-stats-fill").style.width = Math.min(100, Math.round(favorites.length / Math.max(1, total) * 100)) + "%";
+}
+
+document.addEventListener("click", event => {
+  if (event.target.closest("#settings-profile")) {
+    closeSettings();
+    showView("profile");
+  }
+});
 
 function renderAccount() {
   const account = loadAccount();
