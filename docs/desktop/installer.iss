@@ -13,7 +13,7 @@ DefaultDirName={autopf}\Villife
 DefaultGroupName=Villife
 DisableProgramGroupPage=yes
 OutputBaseFilename=VillifeSetup
-OutputDir=release-out
+OutputDir=..\..\release-out
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -25,12 +25,12 @@ CloseApplications=yes
 RestartApplications=no
 
 [Files]
-Source: "Villife.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Villife.exe.config"; DestDir: "{app}"; Flags: ignoreversion
-Source: "villife.ico"; DestDir: "{app}"; Flags: ignoreversion
-Source: "src\*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs
-Source: "webview2\*"; DestDir: "{app}\webview2"; Flags: ignoreversion recursesubdirs
-Source: "WebView2RuntimeInstaller.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "..\..\Villife.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\Villife.exe.config"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\villife.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\src\*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs
+Source: "..\..\webview2\*"; DestDir: "{app}\webview2"; Flags: ignoreversion recursesubdirs
+Source: "..\..\WebView2RuntimeInstaller.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Icons]
 Name: "{autoprograms}\Villife"; Filename: "{app}\Villife.exe"
