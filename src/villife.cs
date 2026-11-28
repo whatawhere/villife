@@ -886,11 +886,13 @@ namespace Villife
                             string smime;
                             try
                             {
-                                if (ProxyProgressiveTrack(stream, id, GetHeader(head, "Range"))) return;
                                 var hls = GetHlsStreamUrl(id);
                                 if (!string.IsNullOrEmpty(hls))
                                 {
-                                    var playlist = "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=160000\nhttps://villife-search.telesamafia.workers.dev/hls?url=" + Uri.EscapeDataString(hls) + "\n";
+                                    var cacheBusted = hls + (hls.Contains("?") ? "&" : "?") + "cb=" + DateTime.UtcNow.Ticks;
+                                    var direct = ResolveHlsPlaylistUrl(hls);
+                                    var target = string.IsNullOrEmpty(direct) ? cacheBusted : direct;
+                                    var playlist = "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=160000\nhttps://villife-search.telesamafia.workers.dev/hls?url=" + Uri.EscapeDataString(target) + "\n";
                                     body = Encoding.UTF8.GetBytes(playlist);
                                     smime = "application/vnd.apple.mpegurl";
                                 }
@@ -1751,6 +1753,21 @@ namespace Villife
                     streamUrls[id] = new StreamEntry { Url = url, At = DateTime.UtcNow };
                 }
                 return url;
+            }
+            return null;
+        }
+
+        static string ResolveHlsPlaylistUrl(string hls)
+        {
+            try
+            {
+                var url = hls + (hls.Contains("?") ? "&" : "?") + "client_id=" + clientId;
+                var data = new JavaScriptSerializer().DeserializeObject(HttpGet(url)) as Dictionary<string, object>;
+                if (data != null && data.ContainsKey("url")) return Convert.ToString(data["url"]);
+            }
+            catch (Exception error)
+            {
+                Trace.TraceError("HLS playlist resolve failed: " + error);
             }
             return null;
         }

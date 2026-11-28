@@ -814,13 +814,24 @@
   </button>
   <div class="now-playing-layout">
     <div class="now-playing-track">
-      <div class="now-playing-art" id="now-playing-art"></div>
+      <div class="np-art-wrap">
+        <div class="now-playing-art" id="now-playing-art"></div>
+        <button class="np-like favorite-button favorite-control" id="np-like" type="button" aria-label="В избранное" title="В избранное"></button>
+      </div>
       <h1 id="now-playing-title"></h1>
       <div class="now-playing-artist" id="now-playing-artist"></div>
       <div class="now-playing-progress">
         <span class="np-time" id="np-cur">0:00</span>
         <div class="bar np-bar" id="np-bar"><div class="bar-track"><div class="bar-fill" id="np-fill"></div></div></div>
         <span class="np-time" id="np-dur">0:00</span>
+      </div>
+      <div class="np-controls">
+        <button class="btn btn-ghost btn-icon playback-mode-button" id="np-repeat" type="button" aria-label="Повтор" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5v-1A3.5 3.5 0 0 1 7.5 7H19"/><path d="m16.5 4.5 2.7 2.5-2.7 2.5"/><path d="M20 12.5v1a3.5 3.5 0 0 1-3.5 3.5H5"/><path d="m7.5 14.5-2.7 2.5 2.7 2.5"/></svg>
+        <span class="repeat-one-badge" aria-hidden="true">1</span></button>
+        <button class="btn btn-ghost btn-icon" id="np-prev" type="button" aria-label="Предыдущий трек"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.5 5.6a1.2 1.2 0 0 1 2.4 0v12.8a1.2 1.2 0 0 1-2.4 0z"/><path d="M19.4 5.4c-.8-.7-2-.8-3-.2L8.2 10.6c-1 .7-1 2.1 0 2.8l8.2 5.4c1 .6 2.2.5 3-.2-1.4-2.4-1.4-10.8 0-13.2z"/></svg></button>
+        <button class="np-play" id="np-play" type="button" aria-label="Играть / пауза"><svg id="np-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.2 5.4C8 4.7 9.2 4.6 10.2 5.2l8.4 5.4c1 .7 1 2.1 0 2.8l-8.4 5.4c-1 .6-2.2.5-3-.2 1.4-2.4 1.4-10.8 0-13.2z"/></svg></button>
+        <button class="btn btn-ghost btn-icon" id="np-next" type="button" aria-label="Следующий трек"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="translate(24 0) scale(-1 1)"><path d="M4.5 5.6a1.2 1.2 0 0 1 2.4 0v12.8a1.2 1.2 0 0 1-2.4 0z"/><path d="M19.4 5.4c-.8-.7-2-.8-3-.2L8.2 10.6c-1 .7-1 2.1 0 2.8l8.2 5.4c1 .6 2.2.5 3-.2-1.4-2.4-1.4-10.8 0-13.2z"/></g></svg></button>
+        <button class="btn btn-ghost btn-icon playback-mode-button" id="np-shuffle" type="button" aria-label="Перемешать" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7h3.2c1.5 0 2.8.7 3.6 1.9l3.4 5.2c.8 1.2 2.1 1.9 3.6 1.9h3.2"/><path d="M3.5 17h3.2c1.5 0 2.8-.7 3.6-1.9M13.7 8.9c.8-1.2 2.1-1.9 3.6-1.9h3.2"/><path d="m18 4.7 2.6 2.3L18 9.3M18 14.7l2.6 2.3L18 19.3"/></svg></button>
       </div>
     </div>
     <div class="now-playing-lyrics-panel">
@@ -911,7 +922,7 @@
 
 <script src="/js/hls.min.js"></script>
 <script src="/js/config.js"></script>
-  <script src="/js/app.js?v=113" defer></script>
+  <script src="/js/app.js?v=117" defer></script>
 <script id="ht-vs" type="x-shader/x-vertex">
 attribute vec2 a_pos;
 varying vec2 v_uv;

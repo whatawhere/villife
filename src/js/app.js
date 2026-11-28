@@ -2096,6 +2096,16 @@ function applyPlaybackModeLabels() {
   const repeatLabel = ht("repeat_" + repeatMode);
   repeat.setAttribute("aria-label", repeatLabel);
   repeat.title = repeatLabel;
+  const npShuffle = $("np-shuffle");
+  const npRepeat = $("np-repeat");
+  if (npShuffle && npRepeat) {
+    npShuffle.className = shuffle.className;
+    npShuffle.setAttribute("aria-pressed", shuffle.getAttribute("aria-pressed"));
+    npShuffle.title = shuffle.title;
+    npRepeat.className = repeat.className;
+    npRepeat.setAttribute("aria-pressed", repeat.getAttribute("aria-pressed"));
+    npRepeat.title = repeatLabel;
+  }
 }
 
 function toggleShuffle() {
@@ -2345,7 +2355,7 @@ async function refreshSpotifyPlaylistTracks(playlist, loadId) {
       const index = next++;
       if (index >= tracks.length) return;
       const track = tracks[index];
-      if (!track || track.source !== "spotify" || track.spotifyMetadataVersion === 4) continue;
+      if (!track || track.source !== "spotify" || (track.spotifyMetadataVersion === 4 && (track.stream || track.preview))) continue;
       try {
         await ensureSpotifyTrackResolved(track);
       } catch (error) {
@@ -2362,7 +2372,7 @@ async function refreshSpotifyPlaylistTracks(playlist, loadId) {
 
 async function refreshSpotifyLibraryTracks() {
   if (spotifyLibraryRefreshing) return;
-  const tracks = lib.filter(track => track && track.source === "spotify" && track.spotifyMetadataVersion !== 4);
+  const tracks = lib.filter(track => track && track.source === "spotify" && !(track.spotifyMetadataVersion === 4 && (track.stream || track.preview)));
   if (!tracks.length) return;
   spotifyLibraryRefreshing = true;
   tracks.forEach(track => {
@@ -2588,7 +2598,7 @@ async function doSearch(q) {
 
 function trackSrc(tr) {
   if (tr.source === "spotify")
-    return tr.spotifyMetadataVersion === 4 ? tr.stream || "" : "";
+    return tr.spotifyMetadataVersion === 4 ? tr.stream || tr.preview || "" : tr.preview || "";
   return tr.stream || tr.preview || "";
 }
 
@@ -3033,10 +3043,19 @@ function setAmbientArtwork(url) {
   if (image.complete && image.naturalWidth) image.onload();
 }
 
+function syncNowPlayingLike() {
+  const button = $("np-like");
+  if (!button) return;
+  const track = qIndex >= 0 ? queue[qIndex] : null;
+  if (!button.firstChild) button.innerHTML = favoriteIconSvg();
+  button.classList.toggle("is-liked", !!track && isFavorite(track));
+}
+
 function renderNowPlayingTrack(track) {
   $("now-playing-art").innerHTML = artHtml(track);
   $("now-playing-title").textContent = track.title || "";
   $("now-playing-artist").innerHTML = artistHtml(track);
+  syncNowPlayingLike();
   $("pl-open-now-playing").title = lang === "en" ? "Lyrics" : "Текст песни";
   updateLyricsToggleLabel();
   const leaving = document.body.classList.contains("fullscreen-on");
@@ -3253,6 +3272,21 @@ function renderLyrics(data, showLoadingDots) {
   credits.appendChild(composer);
   content.appendChild(credits);
   updateActiveLyric(true);
+  snapActiveLyric();
+  // fade the whole block in instead of letting it jump into place
+  content.classList.remove("lyrics-enter");
+  void content.offsetWidth;
+  content.classList.add("lyrics-enter");
+}
+
+// Put the active line in the centre instantly (no easing) so fresh lyrics don't scroll in from the top.
+function snapActiveLyric() {
+  if (lyricsScrollFrame) cancelAnimationFrame(lyricsScrollFrame);
+  lyricsScrollFrame = 0;
+  const content = $("lyrics-content");
+  const line = activeLyricIndex >= 0 ? content.querySelectorAll(".lyrics-line")[activeLyricIndex] : null;
+  if (!line) { content.scrollTop = 0; return; }
+  content.scrollTop = lyricScrollTarget(content, line);
 }
 
 function updateActiveLyric(forceScroll) {
@@ -3289,6 +3323,8 @@ function updateActiveLyric(forceScroll) {
   lines.forEach((line, i) => {
     line.classList.toggle("active", i === index);
     line.classList.toggle("is-past", index >= 0 && i < index);
+    if (index >= 0) line.dataset.d = String(Math.max(-9, Math.min(9, i - index)));
+    else delete line.dataset.d;
     const ahead = i - index - 1;
     const fade = index < 0 || ahead < 0 ? "" : String(Math.max(0, 0.72 - ahead * 0.14).toFixed(2));
     line.style.opacity = fade;
@@ -3297,29 +3333,29 @@ function updateActiveLyric(forceScroll) {
   if (index >= 0) followActiveLyric();
 }
 
+function lyricScrollTarget(content, line) {
+  return line.offsetTop - content.clientHeight / 2 + line.offsetHeight / 2;
+}
+
 function followActiveLyric() {
-  if (lyricsScrollFrame) return;
   const content = $("lyrics-content");
-  const animate = () => {
-    const line = content.querySelectorAll(".lyrics-line")[activeLyricIndex];
-    if (!line || !content.isConnected) {
-      lyricsScrollFrame = 0;
-      return;
-    }
-    const containerBounds = content.getBoundingClientRect();
-    const lineBounds = line.getBoundingClientRect();
-    const target = content.scrollTop + lineBounds.top - containerBounds.top -
-      content.clientHeight / 2 + lineBounds.height / 2;
-    const difference = target - content.scrollTop;
-    if (Math.abs(difference) < 0.5) {
-      content.scrollTop = target;
-      lyricsScrollFrame = 0;
-      return;
-    }
-    content.scrollTop += difference * 0.18;
-    lyricsScrollFrame = requestAnimationFrame(animate);
+  const line = content.querySelectorAll(".lyrics-line")[activeLyricIndex];
+  if (!line) return;
+  if (lyricsScrollFrame) cancelAnimationFrame(lyricsScrollFrame);
+  lyricsScrollFrame = 0;
+  const from = content.scrollTop;
+  const distance = lyricScrollTarget(content, line) - from;
+  if (Math.abs(distance) < 0.5) return;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const duration = reduced ? 1 : 850;
+  const started = performance.now();
+  const step = now => {
+    if (!content.isConnected) { lyricsScrollFrame = 0; return; }
+    const k = Math.min(1, (now - started) / duration);
+    content.scrollTop = from + distance * (1 - Math.pow(1 - k, 3));
+    lyricsScrollFrame = k < 1 ? requestAnimationFrame(step) : 0;
   };
-  lyricsScrollFrame = requestAnimationFrame(animate);
+  lyricsScrollFrame = requestAnimationFrame(step);
 }
 
 function updateMediaMetadata(track) {
@@ -3526,15 +3562,14 @@ function matchSpotifyTrack(metadata, candidates) {
   let bestScore = 0;
   candidates.forEach(candidate => {
     const normalized = normalizeTrackTitle(candidate, expectedArtists);
-    if (!expected.key || !normalized.key || !expectedDuration ||
-        hasAlternateTrackVersion(candidate.title, metadata.title)) return;
+    if (!expected.key || !normalized.key || !expectedDuration) return;
     const candidateArtistKey = normalizeTrackTitle({ title: "", artist: candidate.artist || "" }, []).artistKey;
     const artistMatch = expectedArtistKeys.indexOf(candidateArtistKey) >= 0;
     const titleCreditsArtist = expectedArtistKeys.some(artist =>
       (" " + normalized.key + " ").indexOf(" " + artist + " ") >= 0);
     const candidateDuration = Number(candidate.duration) || 0;
-    if (!candidateDuration || candidateDuration < expectedDuration * 0.7) return;
-    const durationTolerance = Math.max(15, expectedDuration * 0.12);
+    if (!candidateDuration || candidateDuration < expectedDuration * 0.5) return;
+    const durationTolerance = Math.max(30, expectedDuration * 0.25);
     if (Math.abs(candidateDuration - expectedDuration) > durationTolerance) return;
     const durationDifference = Math.abs(candidateDuration - expectedDuration);
     const titleExact = normalized.key === expected.key;
@@ -3560,6 +3595,15 @@ function matchSpotifyTrack(metadata, candidates) {
       bestScore = score;
     }
   });
+  if (!best && candidates.length) {
+    best = candidates.find(candidate => {
+      const normalized = normalizeTrackTitle(candidate, expectedArtists);
+      const candidateArtistKey = normalizeTrackTitle({ title: "", artist: candidate.artist || "" }, []).artistKey;
+      return expectedArtistKeys.indexOf(candidateArtistKey) >= 0 ||
+        (expected.key && normalized.key &&
+          (normalized.key.indexOf(expected.key) === 0 || expected.key.indexOf(normalized.key) === 0));
+    }) || candidates.find(candidate => candidate && candidate.stream) || null;
+  }
   return best;
 }
 
@@ -3638,7 +3682,7 @@ async function resolveSpotifyTrack(metadata, fetchCanonicalMetadata) {
     artist: spotifyTrack.artist,
     artwork: spotifyTrack.artwork || metadata.artwork || "",
     duration: Number(spotifyTrack.duration) || 0,
-    preview: "",
+    preview: spotifyTrack.preview || metadata.preview || "",
     stream: match && match.stream || "",
     source: "spotify",
     spotifyMetadataVersion: canonicalMetadataLoaded ? 4 : 1
@@ -3646,7 +3690,7 @@ async function resolveSpotifyTrack(metadata, fetchCanonicalMetadata) {
 }
 
 function ensureSpotifyTrackResolved(track) {
-  if (track.spotifyMetadataVersion === 4) return Promise.resolve(track);
+  if (track.spotifyMetadataVersion === 4 && (track.stream || track.preview)) return Promise.resolve(track);
   if (!track.spotifyResolvePromise) {
     track.spotifyResolvePromise = resolveSpotifyTrack(track, true)
       .then(resolved => Object.assign(track, resolved))
@@ -4962,6 +5006,20 @@ document.addEventListener("keydown", e => {
 });
 
 $("pl-play").addEventListener("click", togglePlay);
+$("np-play").addEventListener("click", togglePlay);
+$("np-prev").addEventListener("click", previousTrack);
+$("np-next").addEventListener("click", () => step(1));
+$("np-shuffle").addEventListener("click", toggleShuffle);
+$("np-repeat").addEventListener("click", cycleRepeatMode);
+$("np-like").addEventListener("click", () => {
+  if (qIndex < 0) return;
+  toggleFavorite(queue[qIndex]);
+  syncNowPlayingLike();
+});
+new MutationObserver(() => { $("np-icon").innerHTML = $("pl-icon").innerHTML; })
+  .observe($("pl-icon"), { childList: true, subtree: true });
+$("np-icon").innerHTML = $("pl-icon").innerHTML;
+applyPlaybackModeLabels();
 $("pl-prev").addEventListener("click", previousTrack);
 $("pl-next").addEventListener("click", () => step(1));
 $("pl-open-now-playing").addEventListener("click", openNowPlaying);
@@ -5660,3 +5718,29 @@ function vlfSyncSchedule() {
 })();
 
 boot();
+
+
+// Fullscreen lyrics: hide window buttons, controls and progress when idle or when the window loses focus.
+(function () {
+  const IDLE_MS = 3000;
+  let idleTimer = 0;
+  const active = () => document.body.classList.contains("fullscreen-on") && document.body.classList.contains("np-open");
+  function setIdle(on) { document.body.classList.toggle("np-idle", on && active()); }
+  function wake() {
+    setIdle(false);
+    clearTimeout(idleTimer);
+    if (active() && document.hasFocus()) idleTimer = setTimeout(() => setIdle(true), IDLE_MS);
+  }
+  ["mousemove", "mousedown", "keydown", "wheel", "touchstart"].forEach(name =>
+    window.addEventListener(name, wake, { passive: true }));
+  window.addEventListener("blur", () => { clearTimeout(idleTimer); setIdle(true); });
+  window.addEventListener("focus", wake);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) setIdle(true); else wake(); });
+  let wasActive = false;
+  new MutationObserver(() => {
+    const now = active();
+    if (now === wasActive) return;
+    wasActive = now;
+    if (now) wake(); else { clearTimeout(idleTimer); document.body.classList.remove("np-idle"); }
+  }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+})();
