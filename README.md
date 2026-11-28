@@ -73,7 +73,6 @@ You will get `Villife.exe` in the project root.
 │   ├── index.html          player interface
 │   └── css/app.css         styles
 ├── .github/workflows/      release pipeline
-├── runtime/                local build artifacts (not in git)
 ├── README.md
 └── villife.ico
 ```
