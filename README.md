@@ -5,7 +5,7 @@
 <h1 align="center">Villife</h1>
 
 <p align="center">
-  A free music player for Windows, macOS, Linux and the browser. Search, local library, playlists, queue and playback history — in English and Russian.
+  A free music player for Windows, macOS, Linux, iOS and the browser. Search, local library, playlists, queue and playback history — in English and Russian.
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux%20%C2%B7%20Web-1687d9?style=flat-square" alt="Platforms">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux%20%C2%B7%20iOS%20%C2%B7%20Web-1687d9?style=flat-square" alt="Platforms">
   <img src="https://img.shields.io/badge/Interface-EN%20%7C%20RU-6956a5?style=flat-square" alt="EN and RU">
   <img src="https://img.shields.io/badge/Status-In%20development-e39a31?style=flat-square" alt="In development">
 </p>
@@ -30,7 +30,7 @@ There are profiles now: set an avatar, see your listening stats, build public pl
 
 The player also runs in the browser at `web.villife.hs.vc` — nothing to install.
 
-On Windows you get media keys, a tray icon and Discord Rich Presence so friends can see what is playing. There are builds for macOS and Linux too.
+On Windows you get media keys, a tray icon and Discord Rich Presence so friends can see what is playing. There are builds for macOS, Linux and iOS too.
 
 Audio and covers are cached on an intermediate server, so tracks keep loading and playing even when the original source is slow or blocked in your network.
 
@@ -38,6 +38,7 @@ Audio and covers are cached on an intermediate server, so tracks keep loading an
 
 - **Website** — https://villife.hs.vc/
 - **Web player** — https://web.villife.hs.vc/
+- **iOS app** — https://github.com/theVillife/villife-ios
 
 ## Install
 
@@ -46,6 +47,8 @@ Audio and covers are cached on an intermediate server, so tracks keep loading an
 **macOS** — `Villife-macOS-arm64.dmg` for Apple Silicon (M1–M4) or `Villife-macOS-x64.dmg` for Intel. Zip archives are available too.
 
 **Linux** — `Villife-linux-x64.AppImage` or `Villife-linux-amd64.deb`.
+
+**iOS** — download `Villife.ipa` from the [iOS releases](https://github.com/theVillife/villife-ios/releases/latest). Install it with Sideloadly, TrollStore, AltStore or 3uTools. This build is in beta.
 
 ## Build
 
